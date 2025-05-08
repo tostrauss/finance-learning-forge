@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,17 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom colors matching the design
+				'app-purple': '#6b3fa0',
+				'app-light-purple': '#9b87f5',
+				'app-dark-purple': '#4a2b70',
+				'app-pink': '#ff4088',
+				'app-light-gray': '#f5f5f7',
+				'app-dark-gray': '#333333',
+				'app-orange': '#ff9f4a',
+				'app-green': '#4caf50',
+				'app-blue': '#2196f3',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +95,16 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'progress': {
+					'0%': { width: '0%' },
+					'100%': { width: 'var(--progress-width)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'progress': 'progress 1s ease-out forwards'
 			}
 		}
 	},

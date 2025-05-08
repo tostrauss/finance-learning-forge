@@ -1,10 +1,11 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 0 0% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -98,4 +99,45 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.prose {
+  @apply text-gray-800;
+  max-width: 100%;
+}
+
+.prose h1 {
+  @apply text-2xl font-bold mb-4 text-app-purple;
+}
+
+.prose h2 {
+  @apply text-xl font-semibold mb-3 mt-6 text-app-purple;
+}
+
+.prose h3 {
+  @apply text-lg font-semibold mb-2 mt-5;
+}
+
+.prose p {
+  @apply mb-4;
+}
+
+.prose ul, .prose ol {
+  @apply mb-4 pl-6;
+}
+
+.prose ul {
+  @apply list-disc;
+}
+
+.prose ol {
+  @apply list-decimal;
+}
+
+.prose li {
+  @apply mb-1;
+}
+
+.prose strong {
+  @apply font-semibold;
 }
