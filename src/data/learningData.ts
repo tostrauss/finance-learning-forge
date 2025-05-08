@@ -1,4 +1,3 @@
-
 import { Course, UserProgress, Quiz } from '../types/learning';
 
 export const userProgress: UserProgress = {
@@ -452,6 +451,80 @@ Developed by Harry Markowitz, MPT suggests that by combining assets with differe
     ]
   },
   {
+    id: 'accounting-principles',
+    title: 'Accounting Principles',
+    description: 'Master the foundational concepts of accounting, including the accounting cycle, financial statements, and basic bookkeeping practices.',
+    level: 'beginner',
+    progress: 0,
+    modules: [
+      {
+        id: 'accounting-1',
+        title: 'Introduction to Accounting',
+        description: 'Understand the purpose and importance of accounting in business.',
+        content: '<h1>Introduction to Accounting</h1><p>Accounting is the language of business. It measures the results of an organization\'s economic activities and conveys this information to management, investors, creditors, and others.</p><h2>Learning Objectives</h2><ul><li>Explain the role of accounting in business and society</li><li>Distinguish between financial and managerial accounting</li><li>Identify key users of accounting information</li></ul>',
+        duration: 25,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'accounting-2',
+        title: 'The Accounting Equation',
+        description: 'Learn the fundamental accounting equation and how it forms the basis of the double-entry system.',
+        content: '<h1>The Accounting Equation</h1><p>The accounting equation (Assets = Liabilities + Equity) is the foundation of the double-entry bookkeeping system. It shows that a company\'s assets are financed by either debt or equity.</p><h2>Key Concepts</h2><ul><li>Understanding assets, liabilities, and equity</li><li>Analyzing transactions using the accounting equation</li><li>Maintaining the balance in the accounting equation</li></ul>',
+        duration: 30,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'accounting-3',
+        title: 'Financial Statements',
+        description: 'Explore the primary financial statements: income statement, balance sheet, and cash flow statement.',
+        content: '<h1>Financial Statements</h1><p>Financial statements provide a structured representation of a company\'s financial position and performance. They are the end product of the accounting process.</p><h2>Types of Financial Statements</h2><ul><li>Balance Sheet: Reports assets, liabilities, and equity</li><li>Income Statement: Reports revenues and expenses</li><li>Statement of Cash Flows: Reports cash inflows and outflows</li></ul>',
+        duration: 35,
+        quizId: '',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'economics-basics',
+    title: 'Economics for Finance',
+    description: 'Understand key economic principles that impact financial markets and decision-making.',
+    level: 'beginner',
+    progress: 0,
+    modules: [
+      {
+        id: 'economics-1',
+        title: 'Microeconomic Principles',
+        description: 'Learn about supply, demand, and market equilibrium.',
+        content: '<h1>Microeconomic Principles</h1><p>Microeconomics studies the behavior of individuals and firms in making decisions regarding the allocation of scarce resources.</p><h2>Key Topics</h2><ul><li>Supply and demand analysis</li><li>Consumer and producer surplus</li><li>Market structures and competition</li></ul>',
+        duration: 30,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'economics-2',
+        title: 'Macroeconomic Factors',
+        description: 'Explore GDP, inflation, unemployment, and economic cycles.',
+        content: '<h1>Macroeconomic Factors</h1><p>Macroeconomics studies economy-wide phenomena such as inflation, GDP, and unemployment.</p><h2>Important Indicators</h2><ul><li>Gross Domestic Product (GDP)</li><li>Consumer Price Index (CPI) and inflation</li><li>Unemployment rate and labor market conditions</li></ul>',
+        duration: 35,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'economics-3',
+        title: 'Economic Policy',
+        description: 'Understand monetary and fiscal policy and their impact on financial markets.',
+        content: '<h1>Economic Policy</h1><p>Economic policies are actions that governments take to influence the economy.</p><h2>Policy Types</h2><ul><li>Monetary policy: Interest rates and money supply</li><li>Fiscal policy: Government spending and taxation</li><li>Policy impacts on financial markets</li></ul>',
+        duration: 30,
+        quizId: '',
+        completed: false
+      }
+    ]
+  },
+  
+  // Intermediate Level Courses
+  {
     id: 'corporate-finance',
     title: 'Corporate Finance Essentials',
     description: 'Understand how corporations make financial decisions, manage capital structure, and evaluate investments.',
@@ -462,7 +535,7 @@ Developed by Harry Markowitz, MPT suggests that by combining assets with differe
         id: 'corporate-finance-1',
         title: 'Capital Structure and Financing Decisions',
         description: 'Learn how companies choose between debt and equity financing.',
-        content: '',
+        content: '<h1>Capital Structure and Financing Decisions</h1><p>Capital structure refers to how a company finances its operations through a combination of debt and equity.</p><h2>Key Concepts</h2><ul><li>Optimal capital structure theories</li><li>Cost of capital calculation</li><li>Debt vs. equity financing considerations</li></ul>',
         duration: 40,
         quizId: '',
         completed: false
@@ -471,25 +544,117 @@ Developed by Harry Markowitz, MPT suggests that by combining assets with differe
         id: 'corporate-finance-2',
         title: 'Capital Budgeting',
         description: 'Understand how companies evaluate and select long-term investment projects.',
-        content: '',
+        content: '<h1>Capital Budgeting</h1><p>Capital budgeting is the process companies use to evaluate potential major investments or expenditures.</p><h2>Evaluation Methods</h2><ul><li>Net Present Value (NPV)</li><li>Internal Rate of Return (IRR)</li><li>Payback Period</li><li>Profitability Index</li></ul>',
         duration: 35,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'corporate-finance-3',
+        title: 'Working Capital Management',
+        description: 'Learn strategies for effectively managing a company\'s current assets and liabilities.',
+        content: '<h1>Working Capital Management</h1><p>Working capital management involves optimizing the company\'s current assets and liabilities to ensure operational efficiency.</p><h2>Components</h2><ul><li>Cash management techniques</li><li>Inventory control methods</li><li>Accounts receivable policies</li><li>Short-term financing options</li></ul>',
+        duration: 30,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'corporate-finance-4',
+        title: 'Dividend Policy',
+        description: 'Understand how companies make decisions about paying dividends to shareholders.',
+        content: '<h1>Dividend Policy</h1><p>Dividend policy determines how much of a company\'s profits are distributed to shareholders versus retained for growth.</p><h2>Policy Considerations</h2><ul><li>Dividend payout ratios</li><li>Dividend stability</li><li>Share repurchases as alternatives</li><li>Impact on company valuation</li></ul>',
+        duration: 25,
         quizId: '',
         completed: false
       }
     ]
   },
   {
+    id: 'investments',
+    title: 'Investment Analysis and Portfolio Management',
+    description: 'Learn how to analyze securities, construct portfolios, and manage investment risk.',
+    level: 'intermediate',
+    progress: 0,
+    modules: [
+      {
+        id: 'investments-1',
+        title: 'Asset Classes and Markets',
+        description: 'Explore various asset classes and the markets where they are traded.',
+        content: '<h1>Asset Classes and Markets</h1><p>Understanding different investment vehicles and their characteristics is essential for portfolio construction.</p><h2>Major Asset Classes</h2><ul><li>Equities: Characteristics and valuation</li><li>Fixed income securities: Bonds and yield curves</li><li>Alternative investments: Real estate, commodities, private equity</li></ul>',
+        duration: 35,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'investments-2',
+        title: 'Modern Portfolio Theory',
+        description: 'Understand risk, return, and diversification in portfolio construction.',
+        content: '<h1>Modern Portfolio Theory</h1><p>Modern Portfolio Theory (MPT) explains how rational investors use diversification to optimize their investment portfolios.</p><h2>Core Concepts</h2><ul><li>Risk and return relationship</li><li>Diversification benefits</li><li>Efficient frontier and optimal portfolios</li></ul>',
+        duration: 40,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'investments-3',
+        title: 'Security Analysis',
+        description: 'Learn fundamental and technical analysis techniques for evaluating securities.',
+        content: '<h1>Security Analysis</h1><p>Security analysis is the process of evaluating securities for investment opportunities.</p><h2>Analysis Approaches</h2><ul><li>Fundamental analysis: Financial statement analysis, industry analysis, economic forecasting</li><li>Technical analysis: Chart patterns, indicators, trend identification</li><li>Behavioral considerations in security pricing</li></ul>',
+        duration: 45,
+        quizId: '',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'financial-markets',
+    title: 'Financial Markets and Institutions',
+    description: 'Understand the structure and function of financial markets and the institutions that operate within them.',
+    level: 'intermediate',
+    progress: 0,
+    modules: [
+      {
+        id: 'markets-1',
+        title: 'Money Markets',
+        description: 'Explore short-term debt instruments and their role in liquidity management.',
+        content: '<h1>Money Markets</h1><p>Money markets deal in short-term, highly liquid debt securities.</p><h2>Instruments</h2><ul><li>Treasury bills</li><li>Commercial paper</li><li>Certificates of deposit</li><li>Repurchase agreements</li></ul>',
+        duration: 30,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'markets-2',
+        title: 'Capital Markets',
+        description: 'Learn about long-term financing through stocks and bonds.',
+        content: '<h1>Capital Markets</h1><p>Capital markets enable businesses and governments to raise long-term funds.</p><h2>Primary Components</h2><ul><li>Equity markets: IPO process, secondary markets</li><li>Bond markets: Government, municipal, and corporate bonds</li><li>Market efficiency concepts</li></ul>',
+        duration: 35,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'markets-3',
+        title: 'Financial Institutions',
+        description: 'Understand banks, insurance companies, and other financial intermediaries.',
+        content: '<h1>Financial Institutions</h1><p>Financial institutions serve as intermediaries between savers and borrowers.</p><h2>Types of Institutions</h2><ul><li>Commercial banks</li><li>Investment banks</li><li>Insurance companies</li><li>Pension funds</li><li>Mutual funds and ETFs</li></ul>',
+        duration: 30,
+        quizId: '',
+        completed: false
+      }
+    ]
+  },
+  
+  // Advanced Level Courses
+  {
     id: 'stock-analysis',
     title: 'Stock Analysis: Fundamental & Technical',
     description: 'Master both fundamental and technical analysis approaches to evaluating stocks.',
-    level: 'intermediate',
+    level: 'advanced',
     progress: 0,
     modules: [
       {
         id: 'stock-analysis-1',
         title: 'Fundamental Analysis Basics',
         description: 'Learn how to evaluate a company\'s financial health and growth prospects.',
-        content: '',
+        content: '<h1>Fundamental Analysis Basics</h1><p>Fundamental analysis involves examining a company\'s financial statements, industry position, and economic environment to determine its intrinsic value.</p><h2>Key Components</h2><ul><li>Financial statement analysis techniques</li><li>Ratio analysis: Profitability, liquidity, solvency</li><li>Growth rate estimation</li></ul>',
         duration: 45,
         quizId: '',
         completed: false
@@ -498,8 +663,226 @@ Developed by Harry Markowitz, MPT suggests that by combining assets with differe
         id: 'stock-analysis-2',
         title: 'Technical Analysis Foundations',
         description: 'Understand price patterns, indicators, and chart analysis.',
-        content: '',
+        content: '<h1>Technical Analysis Foundations</h1><p>Technical analysis uses past price movement data to forecast future price movements.</p><h2>Technical Tools</h2><ul><li>Chart patterns: Head and shoulders, double tops/bottoms</li><li>Moving averages and crossovers</li><li>Momentum oscillators: RSI, MACD</li><li>Volume analysis</li></ul>',
         duration: 50,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'stock-analysis-3',
+        title: 'Valuation Models',
+        description: 'Explore discounted cash flow, relative valuation, and other stock valuation methods.',
+        content: '<h1>Valuation Models</h1><p>Valuation models provide frameworks for determining the fair price of a stock.</p><h2>Common Models</h2><ul><li>Discounted Cash Flow (DCF) analysis</li><li>Relative valuation: P/E, P/B, EV/EBITDA</li><li>Dividend discount models</li><li>Free cash flow to equity models</li></ul>',
+        duration: 40,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'stock-analysis-4',
+        title: 'Advanced Chart Patterns',
+        description: 'Master complex technical patterns and indicators for trading decisions.',
+        content: '<h1>Advanced Chart Patterns</h1><p>Beyond basic patterns, advanced technical analysis involves more complex formations and indicators.</p><h2>Advanced Topics</h2><ul><li>Elliott Wave Theory</li><li>Fibonacci retracement levels</li><li>Ichimoku Cloud</li><li>Advanced candlestick patterns</li></ul>',
+        duration: 45,
+        quizId: '',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'derivatives',
+    title: 'Derivatives and Risk Management',
+    description: 'Study options, futures, swaps, and their applications in managing financial risk.',
+    level: 'advanced',
+    progress: 0,
+    modules: [
+      {
+        id: 'derivatives-1',
+        title: 'Options Fundamentals',
+        description: 'Learn the basics of options contracts, terminology, and pricing.',
+        content: '<h1>Options Fundamentals</h1><p>Options provide the right, but not the obligation, to buy or sell an underlying asset at a predetermined price.</p><h2>Key Concepts</h2><ul><li>Calls and puts</li><li>Strike prices and expiration</li><li>Option payoff diagrams</li><li>Basic options strategies</li></ul>',
+        duration: 40,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'derivatives-2',
+        title: 'Futures Markets',
+        description: 'Explore futures contracts and their role in commodity and financial markets.',
+        content: '<h1>Futures Markets</h1><p>Futures contracts obligate parties to buy or sell an asset at a predetermined price at a specified time.</p><h2>Market Mechanics</h2><ul><li>Contract specifications</li><li>Margin requirements</li><li>Contango and backwardation</li><li>Hedging with futures</li></ul>',
+        duration: 35,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'derivatives-3',
+        title: 'Swaps and Forward Contracts',
+        description: 'Understand interest rate swaps, currency swaps, and forward agreements.',
+        content: '<h1>Swaps and Forward Contracts</h1><p>Swaps are agreements to exchange cash flows or liabilities, while forwards are customized contracts to buy or sell an asset.</p><h2>Contract Types</h2><ul><li>Interest rate swaps</li><li>Currency swaps</li><li>Commodity swaps</li><li>Forward rate agreements</li></ul>',
+        duration: 40,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'derivatives-4',
+        title: 'Risk Management Applications',
+        description: 'Learn how derivatives are used to hedge various financial risks.',
+        content: '<h1>Risk Management Applications</h1><p>Derivatives serve as powerful tools for managing financial risks in various contexts.</p><h2>Hedging Strategies</h2><ul><li>Interest rate risk hedging</li><li>Foreign exchange risk management</li><li>Commodity price risk mitigation</li><li>Portfolio insurance techniques</li></ul>',
+        duration: 45,
+        quizId: '',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'financial-modeling',
+    title: 'Advanced Financial Modeling',
+    description: 'Build sophisticated financial models for valuation, forecasting, and decision support.',
+    level: 'advanced',
+    progress: 0,
+    modules: [
+      {
+        id: 'modeling-1',
+        title: 'Financial Modeling Principles',
+        description: 'Learn the core concepts and best practices in financial model development.',
+        content: '<h1>Financial Modeling Principles</h1><p>Financial models are mathematical representations of a company\'s financials used for analysis and forecasting.</p><h2>Best Practices</h2><ul><li>Model structure and organization</li><li>Documentation standards</li><li>Input-process-output methodology</li><li>Model validation techniques</li></ul>',
+        duration: 35,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'modeling-2',
+        title: 'Three-Statement Modeling',
+        description: 'Build integrated income statement, balance sheet, and cash flow models.',
+        content: '<h1>Three-Statement Modeling</h1><p>Three-statement modeling connects the income statement, balance sheet, and cash flow statement in a dynamic financial model.</p><h2>Model Components</h2><ul><li>Revenue and expense forecasting</li><li>Balance sheet projections</li><li>Cash flow derivation</li><li>Balancing mechanisms</li></ul>',
+        duration: 50,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'modeling-3',
+        title: 'DCF Valuation Modeling',
+        description: 'Construct detailed discounted cash flow models for company valuation.',
+        content: '<h1>DCF Valuation Modeling</h1><p>DCF modeling estimates a company\'s intrinsic value based on projected future cash flows.</p><h2>Model Sections</h2><ul><li>Free cash flow projections</li><li>Terminal value calculation</li><li>Discount rate determination</li><li>Sensitivity analysis</li></ul>',
+        duration: 45,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'modeling-4',
+        title: 'M&A and LBO Modeling',
+        description: 'Model mergers, acquisitions, and leveraged buyout transactions.',
+        content: '<h1>M&A and LBO Modeling</h1><p>These specialized models analyze the financial impact of corporate transactions.</p><h2>Analysis Types</h2><ul><li>Accretion/dilution analysis</li><li>Synergy valuation</li><li>LBO returns modeling</li><li>Debt schedule creation</li></ul>',
+        duration: 55,
+        quizId: '',
+        completed: false
+      }
+    ]
+  },
+  
+  // Specialized Courses
+  {
+    id: 'behavioral-finance',
+    title: 'Behavioral Finance',
+    description: 'Explore the psychological factors that influence financial decisions and market behavior.',
+    level: 'intermediate',
+    progress: 0,
+    modules: [
+      {
+        id: 'behavioral-1',
+        title: 'Cognitive Biases in Finance',
+        description: 'Understand how mental shortcuts affect financial decision-making.',
+        content: '<h1>Cognitive Biases in Finance</h1><p>Cognitive biases are systematic patterns of deviation from norm or rationality in judgment.</p><h2>Common Biases</h2><ul><li>Confirmation bias</li><li>Anchoring effect</li><li>Loss aversion</li><li>Overconfidence bias</li></ul>',
+        duration: 30,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'behavioral-2',
+        title: 'Market Anomalies',
+        description: 'Learn about persistent patterns that seem to contradict market efficiency.',
+        content: '<h1>Market Anomalies</h1><p>Market anomalies are patterns of price behavior that contradict the efficient market hypothesis.</p><h2>Major Anomalies</h2><ul><li>Value effect</li><li>Momentum effect</li><li>Size effect</li><li>Calendar anomalies</li></ul>',
+        duration: 35,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'behavioral-3',
+        title: 'Behavioral Portfolio Theory',
+        description: 'Explore how investor psychology affects portfolio construction.',
+        content: '<h1>Behavioral Portfolio Theory</h1><p>Behavioral portfolio theory explains how psychological factors influence investment portfolio decisions.</p><h2>Key Elements</h2><ul><li>Mental accounting</li><li>Prospect theory applications</li><li>Goals-based investing</li><li>Behavioral asset allocation</li></ul>',
+        duration: 40,
+        quizId: '',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fintech',
+    title: 'Financial Technology and Innovation',
+    description: 'Explore how technology is transforming finance through blockchain, AI, and digital banking.',
+    level: 'intermediate',
+    progress: 0,
+    modules: [
+      {
+        id: 'fintech-1',
+        title: 'Blockchain and Cryptocurrencies',
+        description: 'Understand distributed ledger technology and digital assets.',
+        content: '<h1>Blockchain and Cryptocurrencies</h1><p>Blockchain technology enables secure, decentralized record-keeping that powers cryptocurrencies.</p><h2>Key Concepts</h2><ul><li>Blockchain architecture</li><li>Consensus mechanisms</li><li>Smart contracts</li><li>Cryptocurrency fundamentals</li></ul>',
+        duration: 40,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'fintech-2',
+        title: 'AI and Machine Learning in Finance',
+        description: 'Learn how artificial intelligence is revolutionizing financial analysis.',
+        content: '<h1>AI and Machine Learning in Finance</h1><p>AI and machine learning algorithms are transforming financial analysis, risk assessment, and decision-making.</p><h2>Applications</h2><ul><li>Algorithmic trading</li><li>Credit scoring</li><li>Fraud detection</li><li>Robo-advisory services</li></ul>',
+        duration: 35,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'fintech-3',
+        title: 'Digital Banking and Payment Systems',
+        description: 'Explore innovations in banking and payment technologies.',
+        content: '<h1>Digital Banking and Payment Systems</h1><p>Digital technologies are transforming how financial services are delivered and how payments are processed.</p><h2>Innovations</h2><ul><li>Mobile banking platforms</li><li>Peer-to-peer payment systems</li><li>Open banking APIs</li><li>Central bank digital currencies</li></ul>',
+        duration: 30,
+        quizId: '',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'sustainable-finance',
+    title: 'Sustainable and ESG Investing',
+    description: 'Learn how environmental, social, and governance factors are integrated into investment decisions.',
+    level: 'intermediate',
+    progress: 0,
+    modules: [
+      {
+        id: 'esg-1',
+        title: 'ESG Integration',
+        description: 'Understand how ESG factors are incorporated into investment analysis.',
+        content: '<h1>ESG Integration</h1><p>ESG integration involves incorporating environmental, social, and governance factors into investment decisions.</p><h2>Integration Methods</h2><ul><li>ESG data sources and metrics</li><li>Materiality assessment</li><li>ESG scoring methodologies</li><li>Portfolio construction with ESG factors</li></ul>',
+        duration: 35,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'esg-2',
+        title: 'Impact Investing',
+        description: 'Explore investments made with the intention to generate positive social and environmental impact.',
+        content: '<h1>Impact Investing</h1><p>Impact investing aims to generate specific beneficial social or environmental effects in addition to financial returns.</p><h2>Key Elements</h2><ul><li>Impact measurement frameworks</li><li>Social return on investment</li><li>Impact investment vehicles</li><li>Case studies of successful impact investments</li></ul>',
+        duration: 30,
+        quizId: '',
+        completed: false
+      },
+      {
+        id: 'esg-3',
+        title: 'Sustainable Finance Regulation',
+        description: 'Learn about evolving regulations and standards in sustainable finance.',
+        content: '<h1>Sustainable Finance Regulation</h1><p>Regulatory frameworks are developing to standardize sustainable finance practices and prevent greenwashing.</p><h2>Regulatory Initiatives</h2><ul><li>EU Sustainable Finance Disclosure Regulation</li><li>Task Force on Climate-related Financial Disclosures</li><li>Green bond standards</li><li>Corporate sustainability reporting requirements</li></ul>',
+        duration: 35,
         quizId: '',
         completed: false
       }
