@@ -43,7 +43,7 @@ const Sidebar = () => {
   const pathname = location.pathname;
   
   const navItems = [
-    { to: "/", icon: <Home size={18} />, label: "Dashboard" },
+    { to: "/dashboard", icon: <Home size={18} />, label: "Dashboard" },
     { to: "/watchlist", icon: <Star size={18} />, label: "Watchlist" },
     { to: "/stock-analysis", icon: <BarChart2 size={18} />, label: "Stock Analysis" },
     { to: "/options-trading", icon: <FileSpreadsheet size={18} />, label: "Options Trading" },

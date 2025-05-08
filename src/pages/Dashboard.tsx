@@ -1,7 +1,7 @@
 import React from 'react';
 import Layout from '../components/Layout';
+import StockSearch from '../components/StockSearch'; // ✅ FIXED: now using default import
 
-// 1️⃣ Import Responsive grid and CSS
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -13,15 +13,14 @@ import {
   CardContent,
 } from '@/components/ui/card';
 
-// 2️⃣ Wrap Responsive so it auto-sizes to its container
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
-// 3️⃣ Define your initial layout
 const initialLayout = [
   { i: 'market', x: 0, y: 0, w: 2, h: 2 },
   { i: 'top',    x: 2, y: 0, w: 1, h: 1 },
   { i: 'watch',  x: 2, y: 1, w: 1, h: 1 },
   { i: 'news',   x: 0, y: 2, w: 3, h: 1 },
+  { i: 'search', x: 0, y: 3, w: 3, h: 2 },
 ];
 
 const Dashboard = () => {
@@ -51,7 +50,6 @@ const Dashboard = () => {
                 <CardTitle>Market Overview</CardTitle>
               </CardHeader>
               <CardContent className="h-full flex items-center justify-center bg-gray-50">
-                {/* your chart/widget goes here */}
                 <p className="text-gray-500">Overview Widget</p>
               </CardContent>
             </Card>
@@ -89,6 +87,18 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent className="h-full flex items-center justify-center bg-gray-50">
                 <p className="text-gray-500">News Widget</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Stock Autocomplete Search */}
+          <div key="search">
+            <Card>
+              <CardHeader className="card-handle cursor-move">
+                <CardTitle>Search Securities</CardTitle>
+              </CardHeader>
+              <CardContent className="h-full bg-gray-50 overflow-y-auto">
+                <StockSearch />
               </CardContent>
             </Card>
           </div>

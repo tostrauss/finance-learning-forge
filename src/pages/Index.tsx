@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
@@ -15,13 +14,15 @@ const Index = () => {
             />
             <h1 className="text-2xl font-bold text-app-purple">Stock Trading App</h1>
           </div>
-          <Button className="bg-app-pink hover:bg-app-pink/90 text-white">Sign Up</Button>
+          <Link to="/signup">
+            <Button className="bg-app-pink hover:bg-app-pink/90 text-white">Sign Up</Button>
+          </Link>
         </div>
       </header>
       
       <main className="flex-grow flex items-center bg-gradient-to-br from-white to-app-light-purple/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
             <div>
               <h2 className="text-4xl font-bold text-app-purple mb-4">
                 Master Stock Trading & Financial Analysis
@@ -30,7 +31,8 @@ const Index = () => {
                 Comprehensive trading platform with real-time market data, in-depth analysis tools,
                 and educational resources to enhance your investment journey.
               </p>
-              <div className="flex space-x-4">
+
+              <div className="flex space-x-4 mt-6">
                 <Link to="/learning">
                   <Button className="bg-app-purple hover:bg-app-dark-purple text-white">
                     Start Learning
@@ -43,6 +45,7 @@ const Index = () => {
                 </Link>
               </div>
             </div>
+
             <div className="hidden md:block">
               <img 
                 src="/lovable-uploads/c8f339f9-e514-4f19-b101-d560f37865b0.png" 

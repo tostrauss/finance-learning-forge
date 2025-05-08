@@ -9,12 +9,20 @@ type LayoutProps = {
 };
 
 const Layout = ({ children }: LayoutProps) => {
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth(); // ✅ includes loading state
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
+  // ✅ Delay rendering until Firebase auth state is fully known
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen text-xl">
+        Loading...
+      </div>
+    );
+  }
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -37,7 +45,7 @@ const Layout = ({ children }: LayoutProps) => {
                 onClick={() => setMenuOpen((o) => !o)}
                 className="px-4 py-2 bg-app-pink hover:bg-app-pink/90 text-white rounded"
               >
-                {user.displayName || user.email}
+                {user.displayName || user.email || 'User'}
               </button>
               {menuOpen && (
                 <div className="absolute right-4 top-full mt-2 w-40 bg-white border rounded shadow-lg z-10">
@@ -80,6 +88,7 @@ const Layout = ({ children }: LayoutProps) => {
             </div>
           )}
         </div>
+
         {/* Page content */}
         <div className="p-6 flex-1">
           {children}
