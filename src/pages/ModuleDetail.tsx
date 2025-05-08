@@ -7,7 +7,6 @@ import { ArrowLeft, ArrowRight, BookText, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { toast } from '@/components/ui/toast';
 import { Module } from '../types/learning';
 import { useToast } from '@/hooks/use-toast';
 

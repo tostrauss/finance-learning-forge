@@ -4,11 +4,14 @@ import Layout from '../components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProgressStats from '../components/learning/ProgressStats';
 import CourseCard from '../components/learning/CourseCard';
+import LearningDashboard from '../components/learning/LearningDashboard';
+import FinanceLearningPath from '../components/learning/FinanceLearningPath';
 import { userProgress, courses } from '../data/learningData';
 import { School } from 'lucide-react';
 
 const Learning = () => {
   const [activeTab, setActiveTab] = useState('all');
+  const [activeDashboardView, setActiveDashboardView] = useState('dashboard');
   
   const filteredCourses = activeTab === 'all' 
     ? courses 
@@ -38,47 +41,66 @@ const Learning = () => {
           </div>
           <ProgressStats userProgress={userProgress} />
           <div className="flex space-x-4">
-            <button className="px-4 py-2 bg-white border rounded hover:bg-gray-50">
+            <button 
+              onClick={() => setActiveDashboardView('dashboard')}
+              className={`px-4 py-2 rounded transition-colors ${
+                activeDashboardView === 'dashboard' ? 'bg-app-purple text-white' : 'bg-white border hover:bg-gray-50'
+              }`}
+            >
               Dashboard
             </button>
-            <button className="px-4 py-2 bg-white border rounded hover:bg-gray-50">
+            <button 
+              onClick={() => setActiveDashboardView('paths')}
+              className={`px-4 py-2 rounded transition-colors ${
+                activeDashboardView === 'paths' ? 'bg-app-purple text-white' : 'bg-white border hover:bg-gray-50'
+              }`}
+            >
               Learning Paths
             </button>
-            <button className="px-4 py-2 bg-white border rounded hover:bg-gray-50">
-              Quizzes
+            <button 
+              onClick={() => setActiveDashboardView('courses')}
+              className={`px-4 py-2 rounded transition-colors ${
+                activeDashboardView === 'courses' ? 'bg-app-purple text-white' : 'bg-white border hover:bg-gray-50'
+              }`}
+            >
+              Courses
             </button>
           </div>
         </div>
 
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Learning Analytics</h2>
-          <div className="bg-white p-6 rounded-lg">
-            <p className="text-gray-600 mb-4">Track your progress across all finance topics</p>
-            <div className="h-64 flex items-center justify-center bg-gray-100 rounded-md">
-              <p className="text-gray-500">Learning analytics visualization will appear here</p>
+        {activeDashboardView === 'dashboard' && (
+          <div className="mb-8">
+            <LearningDashboard userProgress={userProgress} />
+          </div>
+        )}
+
+        {activeDashboardView === 'paths' && (
+          <div className="mb-8">
+            <FinanceLearningPath />
+          </div>
+        )}
+
+        {activeDashboardView === 'courses' && (
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold">Available Courses</h2>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
+                <TabsList>
+                  <TabsTrigger value="all">All</TabsTrigger>
+                  <TabsTrigger value="beginner">Beginner</TabsTrigger>
+                  <TabsTrigger value="intermediate">Intermediate</TabsTrigger>
+                  <TabsTrigger value="advanced">Advanced</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCourses.map(course => (
+                <CourseCard key={course.id} course={course} />
+              ))}
             </div>
           </div>
-        </div>
-
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">Available Courses</h2>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
-              <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="beginner">Beginner</TabsTrigger>
-                <TabsTrigger value="intermediate">Intermediate</TabsTrigger>
-                <TabsTrigger value="advanced">Advanced</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCourses.map(course => (
-              <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
-        </div>
+        )}
       </div>
     </Layout>
   );
