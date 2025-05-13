@@ -7,7 +7,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { School, BookOpen, Award, Star, Clock, ArrowRight } from 'lucide-react';
+import { School, BookOpen, Award, Star, Clock, ArrowRight, Check } from 'lucide-react';
 import { financeProgram, concentrations, programRequirements } from '@/data/financeProgram';
 
 interface ProgramDashboardProps {
