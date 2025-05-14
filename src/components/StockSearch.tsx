@@ -1,37 +1,33 @@
-import React from 'react';
-import { useStockSearch } from '../hooks/useStockSearch';
+// src/components/StockSearch.tsx
+import React, { Dispatch, SetStateAction } from 'react';
 
-const StockSearch: React.FC = () => {
-  const {
-    query,
-    setQuery,
-    results,
-    loading,
-    search,
-  } = useStockSearch();
+export interface StockSearchProps {
+  query: string;
+  setQuery: Dispatch<SetStateAction<string>>;
+  results: { symbol: string; name: string }[];
+  loading: boolean;
+  onSelect: (symbol: string) => void;
+}
 
+const StockSearch: React.FC<StockSearchProps> = ({ query, setQuery, results, loading, onSelect }) => {
   return (
-    <div className="p-4 bg-white shadow-md rounded-lg">
+    <div>
       <input
         type="text"
-        placeholder="Search stock (e.g., Tesla)"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="border p-2 rounded mr-2"
+        placeholder="Search for stocks..."
+        className="border p-2 rounded w-full mb-2"
       />
-      <button
-        onClick={search}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
-        Search
-      </button>
-
-      {loading && <p className="mt-2">Loading...</p>}
-
-      <ul className="mt-4">
-        {results.map((item, index) => (
-          <li key={index}>
-            <strong>{item.symbol}</strong> — {item.shortname}
+      {loading && <p>Loading...</p>}
+      <ul className="max-h-48 overflow-y-auto">
+        {results.map((result) => (
+          <li
+            key={result.symbol}
+            className="p-2 hover:bg-gray-100 cursor-pointer"
+            onClick={() => onSelect(result.symbol)}
+          >
+            {result.symbol} - {result.name}
           </li>
         ))}
       </ul>

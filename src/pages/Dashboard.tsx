@@ -1,6 +1,17 @@
-import React from 'react';
-import Layout from '../components/Layout';
-import StockSearch from '../components/StockSearch'; // ✅ FIXED: now using default import
+// src/pages/Dashboard.tsx
+import React, { useState } from 'react';
+import Layout from '@/components/Layout';
+import StockSearch from '@/components/StockSearch';
+import { useStockSearch } from '@/hooks/useStockSearch';
+import { useStockTimeSeries } from '@/hooks/useStockTimeSeries';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts';
 
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -23,7 +34,17 @@ const initialLayout = [
   { i: 'search', x: 0, y: 3, w: 3, h: 2 },
 ];
 
-const Dashboard = () => {
+const Dashboard: React.FC = () => {
+  // Autocomplete hook
+  const { query, setQuery, results, loading } = useStockSearch();
+  // Selected symbol state
+  const [symbol, setSymbol] = useState<string>('AAPL');
+  // Time series hook for chart
+  const { series, loading: tsLoading, error: tsError } = useStockTimeSeries(symbol);
+
+  // Prepare data for chart
+  const chartData = series.map(item => ({ date: item.date, close: +item.close }));
+
   return (
     <Layout>
       <div className="max-w-7xl mx-auto py-6">
@@ -43,19 +64,32 @@ const Dashboard = () => {
           draggableHandle=".card-handle"
           isResizable={false}
         >
-          {/* Market Overview */}
+          {/* Market Overview with chart */}
           <div key="market">
             <Card>
               <CardHeader className="card-handle cursor-move">
                 <CardTitle>Market Overview</CardTitle>
               </CardHeader>
-              <CardContent className="h-full flex items-center justify-center bg-gray-50">
-                <p className="text-gray-500">Overview Widget</p>
+              <CardContent className="h-full bg-gray-50 p-4">
+                {tsLoading ? (
+                  <p>Loading chart...</p>
+                ) : tsError ? (
+                  <p className="text-red-500">Error: {tsError}</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData}>
+                      <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                      <YAxis domain={["auto", "auto"]} tick={{ fontSize: 12 }} />
+                      <Tooltip formatter={(v: number) => v.toFixed(2)} />
+                      <Line type="monotone" dataKey="close" dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Top Movers */}
+          {/* Other widgets unchanged... */}
           <div key="top">
             <Card>
               <CardHeader className="card-handle cursor-move">
@@ -67,7 +101,6 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          {/* Your Watchlist */}
           <div key="watch">
             <Card>
               <CardHeader className="card-handle cursor-move">
@@ -79,7 +112,6 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          {/* Market News */}
           <div key="news">
             <Card>
               <CardHeader className="card-handle cursor-move">
@@ -98,7 +130,13 @@ const Dashboard = () => {
                 <CardTitle>Search Securities</CardTitle>
               </CardHeader>
               <CardContent className="h-full bg-gray-50 overflow-y-auto">
-                <StockSearch />
+                <StockSearch
+                  query={query}
+                  setQuery={setQuery}
+                  results={results}
+                  loading={loading}
+                  onSelect={(sym: string) => setSymbol(sym)}
+                />
               </CardContent>
             </Card>
           </div>
