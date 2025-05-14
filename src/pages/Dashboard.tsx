@@ -1,142 +1,118 @@
-// src/pages/Dashboard.tsx
 import React, { useState } from 'react';
-import Layout from '@/components/Layout';
-import StockSearch from '@/components/StockSearch';
-import { useStockSearch } from '@/hooks/useStockSearch';
-import { useStockTimeSeries } from '@/hooks/useStockTimeSeries';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer
-} from 'recharts';
-
-import { Responsive, WidthProvider } from 'react-grid-layout';
+import Layout from '../components/Layout';
+import GridLayout from 'react-grid-layout';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Grip } from 'lucide-react';
+import SearchSecurities from '../components/trading/SearchSecurities'; // ✅ fixed import
+import MarketWidget from '../components/trading/MarketWidget';
+import WatchlistWidget from '../components/trading/WatchlistWidget';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from '@/components/ui/card';
-
-const ResponsiveGridLayout = WidthProvider(Responsive);
+const ResponsiveGridLayout = GridLayout.WidthProvider(GridLayout);
 
 const initialLayout = [
-  { i: 'market', x: 0, y: 0, w: 2, h: 2 },
+  { i: 'search', x: 0, y: 0, w: 2, h: 2 },
+  { i: 'market', x: 0, y: 2, w: 2, h: 2 },
   { i: 'top',    x: 2, y: 0, w: 1, h: 1 },
   { i: 'watch',  x: 2, y: 1, w: 1, h: 1 },
-  { i: 'news',   x: 0, y: 2, w: 3, h: 1 },
-  { i: 'search', x: 0, y: 3, w: 3, h: 2 },
+  { i: 'news',   x: 0, y: 4, w: 3, h: 1 }
 ];
 
-const Dashboard: React.FC = () => {
-  // Autocomplete hook
-  const { query, setQuery, results, loading } = useStockSearch();
-  // Selected symbol state
-  const [symbol, setSymbol] = useState<string>('AAPL');
-  // Time series hook for chart
-  const { series, loading: tsLoading, error: tsError } = useStockTimeSeries(symbol);
-
-  // Prepare data for chart
-  const chartData = series.map(item => ({ date: item.date, close: +item.close }));
+const Dashboard = () => {
+  const [layout, setLayout] = useState(initialLayout);
+  const [isGroupingMode, setIsGroupingMode] = useState(false);
+  const [selectedWidgets, setSelectedWidgets] = useState<string[]>([]);
+  const [groups, setGroups] = useState<Record<string, string[]>>({});
+  const [selectedSymbol, setSelectedSymbol] = useState('AAPL'); // ✅ shared state
 
   return (
     <Layout>
       <div className="max-w-7xl mx-auto py-6">
-        <h1 className="text-3xl font-bold text-app-purple mb-4">
-          Market Dashboard
-        </h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-3xl font-bold text-app-purple">Market Dashboard</h1>
+        </div>
 
         <ResponsiveGridLayout
           className="layout"
-          layouts={{ lg: initialLayout }}
-          breakpoints={{ lg: 1200 }}
-          cols={{ lg: 3 }}
-          rowHeight={160}
-          margin={[16, 16]}
-          containerPadding={[8, 8]}
-          useCSSTransforms={true}
+          layout={layout}
+          cols={3}
+          rowHeight={150}
+          onLayoutChange={setLayout}
+          isDraggable={!isGroupingMode}
           draggableHandle=".card-handle"
-          isResizable={false}
+          margin={[16, 16]}
         >
-          {/* Market Overview with chart */}
-          <div key="market">
-            <Card>
-              <CardHeader className="card-handle cursor-move">
-                <CardTitle>Market Overview</CardTitle>
+          <div key="search">
+            <Card className="h-full">
+              <CardHeader className="card-handle cursor-move flex justify-between items-center p-3">
+                <CardTitle className="text-base">Search Securities</CardTitle>
+                <Grip className="h-4 w-4 text-gray-400" />
               </CardHeader>
-              <CardContent className="h-full bg-gray-50 p-4">
-                {tsLoading ? (
-                  <p>Loading chart...</p>
-                ) : tsError ? (
-                  <p className="text-red-500">Error: {tsError}</p>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData}>
-                      <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                      <YAxis domain={["auto", "auto"]} tick={{ fontSize: 12 }} />
-                      <Tooltip formatter={(v: number) => v.toFixed(2)} />
-                      <Line type="monotone" dataKey="close" dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
+              <CardContent className="p-0 h-[calc(100%-48px)] overflow-hidden">
+                <SearchSecurities onSelectSymbol={setSelectedSymbol} /> {/* ✅ pass down setter */}
               </CardContent>
             </Card>
           </div>
 
-          {/* Other widgets unchanged... */}
-          <div key="top">
-            <Card>
-              <CardHeader className="card-handle cursor-move">
-                <CardTitle>Top Movers</CardTitle>
+          <div key="market">
+            <Card className="h-full">
+              <CardHeader className="card-handle cursor-move flex justify-between items-center p-3">
+                <CardTitle className="text-base">Market Overview</CardTitle>
+                <Grip className="h-4 w-4 text-gray-400" />
               </CardHeader>
-              <CardContent className="h-full flex items-center justify-center bg-gray-50">
-                <p className="text-gray-500">Top Movers Widget</p>
+              <CardContent className="p-0 h-[calc(100%-48px)] overflow-hidden">
+                <MarketWidget selectedSymbol={selectedSymbol} /> {/* ✅ pass down symbol */}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div key="top">
+            <Card className="h-full">
+              <CardHeader className="card-handle cursor-move flex justify-between items-center p-3">
+                <CardTitle className="text-base">Top Movers</CardTitle>
+                <Grip className="h-4 w-4 text-gray-400" />
+              </CardHeader>
+              <CardContent className="p-0 h-[calc(100%-48px)] overflow-hidden">
+                <div className="h-full p-4">
+                  <div className="space-y-2">
+                    {[{ symbol: 'NVDA', change: 3.09 }, { symbol: 'AAPL', change: 1.56 }, { symbol: 'TSLA', change: 1.14 }].map(stock => (
+                      <div key={stock.symbol} className="flex justify-between">
+                        <span>{stock.symbol}</span>
+                        <span className="text-green-500">+{stock.change}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
 
           <div key="watch">
-            <Card>
-              <CardHeader className="card-handle cursor-move">
-                <CardTitle>Your Watchlist</CardTitle>
+            <Card className="h-full">
+              <CardHeader className="card-handle cursor-move flex justify-between items-center p-3">
+                <CardTitle className="text-base">Your Portfolio</CardTitle>
+                <Grip className="h-4 w-4 text-gray-400" />
               </CardHeader>
-              <CardContent className="h-full flex items-center justify-center bg-gray-50">
-                <p className="text-gray-500">Watchlist Widget</p>
+              <CardContent className="p-0 h-[calc(100%-48px)] overflow-hidden">
+                <WatchlistWidget />
               </CardContent>
             </Card>
           </div>
 
           <div key="news">
-            <Card>
-              <CardHeader className="card-handle cursor-move">
-                <CardTitle>Market News</CardTitle>
+            <Card className="h-full">
+              <CardHeader className="card-handle cursor-move flex justify-between items-center p-3">
+                <CardTitle className="text-base">Market News</CardTitle>
+                <Grip className="h-4 w-4 text-gray-400" />
               </CardHeader>
-              <CardContent className="h-full flex items-center justify-center bg-gray-50">
-                <p className="text-gray-500">News Widget</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Stock Autocomplete Search */}
-          <div key="search">
-            <Card>
-              <CardHeader className="card-handle cursor-move">
-                <CardTitle>Search Securities</CardTitle>
-              </CardHeader>
-              <CardContent className="h-full bg-gray-50 overflow-y-auto">
-                <StockSearch
-                  query={query}
-                  setQuery={setQuery}
-                  results={results}
-                  loading={loading}
-                  onSelect={(sym: string) => setSymbol(sym)}
-                />
+              <CardContent className="p-0 h-[calc(100%-48px)] overflow-hidden">
+                <div className="h-full p-4 text-gray-500">
+                  <p>• Fed hints at rate cuts later this year</p>
+                  <p>• Tech stocks gain on AI growth</p>
+                  <p>• Q2 earnings season starts strong</p>
+                </div>
               </CardContent>
             </Card>
           </div>
