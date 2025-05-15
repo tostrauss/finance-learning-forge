@@ -2,7 +2,14 @@
 import { useState, useEffect } from 'react';
 import { getHistoricalPrices } from '@/services/yahooFinanceService';
 
-type TimeSeriesPoint = { date: string; close: string };
+type TimeSeriesPoint = { 
+  date: string; 
+  open?: number;
+  high?: number;
+  low?: number;
+  close: number;
+  volume?: number;
+};
 
 export function useStockTimeSeries(symbol: string) {
   const [series, setSeries] = useState<TimeSeriesPoint[]>([]);
@@ -12,6 +19,8 @@ export function useStockTimeSeries(symbol: string) {
   useEffect(() => {
     if (!symbol) return;
     setLoading(true);
+    setError(null);
+    
     getHistoricalPrices(symbol)
       .then((data) => setSeries(data))
       .catch((err) => setError(err.message))

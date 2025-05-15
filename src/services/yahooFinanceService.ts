@@ -24,20 +24,48 @@ export async function fetchYahooAutocomplete(query: string): Promise<SearchRespo
   return response.data;
 }
 
-/**
- * Fetch 1-month historical closing prices for a symbol via Vite proxy
- */
+// Modified getHistoricalPrices function in yahooFinanceService.ts
+// Update in yahooFinanceService.ts
 export async function getHistoricalPrices(
   symbol: string
-): Promise<{ date: string; close: string }[]> {
-  const url = `/api/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1mo`;
-  const response = await axios.get<HistoricalResponse>(url);
-  const result = response.data.chart.result[0];
-  const timestamps = result.timestamp;
-  const closes = result.indicators.quote[0].close;
-
-  return timestamps.map((ts, i) => ({
-    date: new Date(ts * 1000).toISOString().slice(0, 10),
-    close: closes[i]?.toString() ?? '0',
-  }));
+): Promise<{ date: string; open?: number; high?: number; low?: number; close: number; volume?: number }[]> {
+  try {
+    const url = `/api/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1mo`;
+    const response = await axios.get<HistoricalResponse>(url);
+    
+    // Check if we have valid data
+    if (!response.data?.chart?.result?.[0]) {
+      throw new Error("Invalid data structure in API response");
+    }
+    
+    const result = response.data.chart.result[0];
+    
+    // Check if required properties exist
+    if (!result.timestamp || !result.indicators?.quote?.[0]?.close) {
+      throw new Error("Missing required data from API");
+    }
+    
+    const timestamps = result.timestamp;
+    const quotes = result.indicators.quote[0];
+    
+    // Filter out invalid data points
+    return timestamps
+      .map((ts, i) => {
+        const close = quotes.close[i];
+        if (close === undefined || close === null) return null;
+        
+        return {
+          date: new Date(ts * 1000).toISOString().slice(0, 10),
+          open: quotes.open?.[i],
+          high: quotes.high?.[i],
+          low: quotes.low?.[i],
+          close,
+          volume: quotes.volume?.[i]
+        };
+      })
+      .filter(Boolean);
+  } catch (error) {
+    console.error(`Error fetching historical prices for ${symbol}:`, error);
+    throw error;
+  }
 }

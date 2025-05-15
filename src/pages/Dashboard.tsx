@@ -1,120 +1,203 @@
-import React, { useState } from 'react';
-import Layout from '../components/Layout';
-import GridLayout from 'react-grid-layout';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Grip } from 'lucide-react';
-import SearchSecurities from '../components/trading/SearchSecurities'; // ✅ fixed import
-import MarketWidget from '../components/trading/MarketWidget';
-import WatchlistWidget from '../components/trading/WatchlistWidget';
+// src/pages/Dashboard.tsx
+import React, { useState, useEffect } from 'react';
+import Layout from '@/components/Layout';
+import StockSearch from '@/components/StockSearch';
+import { useStockSearch } from '@/hooks/useStockSearch';
+import { useStockTimeSeries } from '@/hooks/useStockTimeSeries';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import MarketWidget from '@/components/trading/MarketWidget';
+import PortfolioWidget from '@/components/trading/PortfolioWidget';
+import FinancialCalculators from '@/components/trading/FinancialCalculators';
+import TradingJournal from '@/components/trading/TradingJournal';
+import { useToast } from '@/hooks/use-toast';
 
-const ResponsiveGridLayout = GridLayout.WidthProvider(GridLayout);
+const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const initialLayout = [
-  { i: 'search', x: 0, y: 0, w: 2, h: 2 },
-  { i: 'market', x: 0, y: 2, w: 2, h: 2 },
-  { i: 'top',    x: 2, y: 0, w: 1, h: 1 },
-  { i: 'watch',  x: 2, y: 1, w: 1, h: 1 },
-  { i: 'news',   x: 0, y: 4, w: 3, h: 1 }
+  { i: 'market', x: 0, y: 0, w: 2, h: 2 },
+  { i: 'portfolio', x: 2, y: 0, w: 1, h: 2 },
+  { i: 'search', x: 0, y: 2, w: 1, h: 1 },
+  { i: 'calc', x: 1, y: 2, w: 1, h: 1 },
+  { i: 'journal', x: 2, y: 2, w: 1, h: 1 },
 ];
 
-const Dashboard = () => {
-  const [layout, setLayout] = useState(initialLayout);
-  const [isGroupingMode, setIsGroupingMode] = useState(false);
-  const [selectedWidgets, setSelectedWidgets] = useState<string[]>([]);
-  const [groups, setGroups] = useState<Record<string, string[]>>({});
-  const [selectedSymbol, setSelectedSymbol] = useState('AAPL'); // ✅ shared state
+const Dashboard: React.FC = () => {
+  const { toast } = useToast();
+  
+  // State for selected stock
+  const [symbol, setSymbol] = useState<string>('AAPL');
+  const [stockName, setStockName] = useState<string>('Apple Inc.');
+  const [currentPrice, setCurrentPrice] = useState<number>(0);
+  
+  // Stock search hook
+  const { query, setQuery, results, loading } = useStockSearch();
+  
+  // Time series data hook for the chart
+  const { series, loading: tsLoading, error: tsError } = useStockTimeSeries(symbol);
+  
+  // Format chart data
+  const chartData = React.useMemo(() => {
+    return series.map(item => ({ date: item.date, close: parseFloat(item.close) }));
+  }, [series]);
+  
+  // Update current price when chart data changes
+  useEffect(() => {
+    if (chartData.length > 0) {
+      setCurrentPrice(chartData[chartData.length - 1].close);
+    }
+  }, [chartData]);
+  
+  // Handle stock selection
+  const handleSelectStock = (selectedSymbol: string) => {
+    // Find the full stock info from results
+    const stockInfo = results.find(item => item.symbol === selectedSymbol);
+    setSymbol(selectedSymbol);
+    
+    // Update stock name if available
+    if (stockInfo && stockInfo.shortname) {
+      setStockName(stockInfo.shortname);
+    } else if (stockInfo && stockInfo.longname) {
+      setStockName(stockInfo.longname);
+    } else {
+      setStockName(selectedSymbol);
+    }
+    
+    toast({
+      title: "Stock Selected",
+      description: `Now viewing ${selectedSymbol}`
+    });
+  };
 
   return (
     <Layout>
       <div className="max-w-7xl mx-auto py-6">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-bold text-app-purple">Market Dashboard</h1>
-        </div>
+        <h1 className="text-3xl font-bold text-app-purple mb-4">
+          Market Dashboard
+        </h1>
 
         <ResponsiveGridLayout
           className="layout"
-          layout={layout}
-          cols={3}
-          rowHeight={150}
-          onLayoutChange={setLayout}
-          isDraggable={!isGroupingMode}
-          draggableHandle=".card-handle"
+          layouts={{ lg: initialLayout }}
+          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+          cols={{ lg: 3, md: 3, sm: 2, xs: 1, xxs: 1 }}
+          rowHeight={160}
           margin={[16, 16]}
+          containerPadding={[8, 8]}
+          useCSSTransforms={true}
+          draggableHandle=".card-handle"
         >
-          <div key="search">
-            <Card className="h-full">
-              <CardHeader className="card-handle cursor-move flex justify-between items-center p-3">
-                <CardTitle className="text-base">Search Securities</CardTitle>
-                <Grip className="h-4 w-4 text-gray-400" />
-              </CardHeader>
-              <CardContent className="p-0 h-[calc(100%-48px)] overflow-hidden">
-                <SearchSecurities onSelectSymbol={setSelectedSymbol} /> {/* ✅ pass down setter */}
-              </CardContent>
-            </Card>
-          </div>
-
+          {/* Market Overview with chart */}
           <div key="market">
             <Card className="h-full">
-              <CardHeader className="card-handle cursor-move flex justify-between items-center p-3">
-                <CardTitle className="text-base">Market Overview</CardTitle>
-                <Grip className="h-4 w-4 text-gray-400" />
+              <CardHeader className="card-handle cursor-move px-4 py-3">
+                <CardTitle className="text-lg font-bold">Market Overview</CardTitle>
               </CardHeader>
-              <CardContent className="p-0 h-[calc(100%-48px)] overflow-hidden">
-                <MarketWidget selectedSymbol={selectedSymbol} /> {/* ✅ pass down symbol */}
-              </CardContent>
-            </Card>
-          </div>
-
-          <div key="top">
-            <Card className="h-full">
-              <CardHeader className="card-handle cursor-move flex justify-between items-center p-3">
-                <CardTitle className="text-base">Top Movers</CardTitle>
-                <Grip className="h-4 w-4 text-gray-400" />
-              </CardHeader>
-              <CardContent className="p-0 h-[calc(100%-48px)] overflow-hidden">
-                <div className="h-full p-4">
-                  <div className="space-y-2">
-                    {[{ symbol: 'NVDA', change: 3.09 }, { symbol: 'AAPL', change: 1.56 }, { symbol: 'TSLA', change: 1.14 }].map(stock => (
-                      <div key={stock.symbol} className="flex justify-between">
-                        <span>{stock.symbol}</span>
-                        <span className="text-green-500">+{stock.change}%</span>
-                      </div>
-                    ))}
+              <CardContent className="p-4 h-[calc(100%-60px)]">
+                {tsLoading ? (
+                  <div className="h-full flex items-center justify-center">
+                    <p>Loading chart data...</p>
                   </div>
+                ) : tsError ? (
+                  <div className="h-full flex items-center justify-center">
+                    <p className="text-red-500">Error loading chart: {tsError}</p>
+                  </div>
+                ) : chartData.length === 0 ? (
+                  <div className="h-full flex items-center justify-center">
+                    <p>No data available for {symbol}</p>
+                  </div>
+                ) : (
+                  <div className="h-full">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-baseline">
+                        <h3 className="text-xl font-bold">{symbol}</h3>
+                        <span className="text-sm text-gray-500 ml-2">{stockName}</span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold">${currentPrice.toFixed(2)}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="h-[calc(100%-40px)]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartData}>
+                          <XAxis 
+                            dataKey="date" 
+                            tick={{ fontSize: 12 }}
+                            tickLine={false}
+                            axisLine={false}
+                          />
+                          <YAxis 
+                            domain={["auto", "auto"]} 
+                            tick={{ fontSize: 12 }} 
+                            tickLine={false}
+                            axisLine={false}
+                            tickFormatter={(value) => `$${value}`}
+                          />
+                          <Tooltip 
+                            formatter={(value: number) => [`$${value.toFixed(2)}`, 'Price']}
+                            labelFormatter={(label) => `Date: ${label}`}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="close" 
+                            stroke="#6b3fa0" 
+                            dot={false} 
+                            strokeWidth={2}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Portfolio Widget */}
+          <div key="portfolio">
+            <PortfolioWidget 
+              symbol={symbol} 
+              price={currentPrice}
+              name={stockName}
+            />
+          </div>
+
+          {/* Stock Search */}
+          <div key="search">
+            <Card className="h-full">
+              <CardHeader className="card-handle cursor-move px-4 py-3">
+                <CardTitle className="text-lg font-bold">Search Securities</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 h-[calc(100%-60px)] overflow-auto">
+                <StockSearch
+                  query={query}
+                  setQuery={setQuery}
+                  results={results}
+                  loading={loading}
+                  onSelect={handleSelectStock}
+                />
+                <div className="mt-4 text-sm text-gray-500">
+                  {results.length > 0 ? 
+                    `Found ${results.length} results` : 
+                    query.length > 0 ? "No results found" : "Enter a symbol or company name"
+                  }
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <div key="watch">
-            <Card className="h-full">
-              <CardHeader className="card-handle cursor-move flex justify-between items-center p-3">
-                <CardTitle className="text-base">Your Portfolio</CardTitle>
-                <Grip className="h-4 w-4 text-gray-400" />
-              </CardHeader>
-              <CardContent className="p-0 h-[calc(100%-48px)] overflow-hidden">
-                <WatchlistWidget />
-              </CardContent>
-            </Card>
+          {/* Financial Calculator */}
+          <div key="calc">
+            <FinancialCalculators />
           </div>
 
-          <div key="news">
-            <Card className="h-full">
-              <CardHeader className="card-handle cursor-move flex justify-between items-center p-3">
-                <CardTitle className="text-base">Market News</CardTitle>
-                <Grip className="h-4 w-4 text-gray-400" />
-              </CardHeader>
-              <CardContent className="p-0 h-[calc(100%-48px)] overflow-hidden">
-                <div className="h-full p-4 text-gray-500">
-                  <p>• Fed hints at rate cuts later this year</p>
-                  <p>• Tech stocks gain on AI growth</p>
-                  <p>• Q2 earnings season starts strong</p>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Trading Journal */}
+          <div key="journal">
+            <TradingJournal />
           </div>
         </ResponsiveGridLayout>
       </div>
