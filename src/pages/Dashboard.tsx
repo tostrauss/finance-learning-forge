@@ -4,7 +4,6 @@ import Layout from '@/components/Layout';
 import StockSearch from '@/components/StockSearch';
 import { useStockSearch } from '@/hooks/useStockSearch';
 import { useStockTimeSeries } from '@/hooks/useStockTimeSeries';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -41,7 +40,14 @@ const Dashboard: React.FC = () => {
   
   // Format chart data
   const chartData = React.useMemo(() => {
-    return series.map(item => ({ date: item.date, close: parseFloat(item.close) }));
+    return series.map(item => ({
+      date: item.date,
+      open: item.open,
+      high: item.high,
+      low: item.low,
+      close: item.close,
+      volume: item.volume
+    }));
   }, [series]);
   
   // Update current price when chart data changes
@@ -90,71 +96,15 @@ const Dashboard: React.FC = () => {
           useCSSTransforms={true}
           draggableHandle=".card-handle"
         >
-          {/* Market Overview with chart */}
+          {/* Market Widget */}
           <div key="market">
-            <Card className="h-full">
-              <CardHeader className="card-handle cursor-move px-4 py-3">
-                <CardTitle className="text-lg font-bold">Market Overview</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 h-[calc(100%-60px)]">
-                {tsLoading ? (
-                  <div className="h-full flex items-center justify-center">
-                    <p>Loading chart data...</p>
-                  </div>
-                ) : tsError ? (
-                  <div className="h-full flex items-center justify-center">
-                    <p className="text-red-500">Error loading chart: {tsError}</p>
-                  </div>
-                ) : chartData.length === 0 ? (
-                  <div className="h-full flex items-center justify-center">
-                    <p>No data available for {symbol}</p>
-                  </div>
-                ) : (
-                  <div className="h-full">
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="flex items-baseline">
-                        <h3 className="text-xl font-bold">{symbol}</h3>
-                        <span className="text-sm text-gray-500 ml-2">{stockName}</span>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold">${currentPrice.toFixed(2)}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="h-[calc(100%-40px)]">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData}>
-                          <XAxis 
-                            dataKey="date" 
-                            tick={{ fontSize: 12 }}
-                            tickLine={false}
-                            axisLine={false}
-                          />
-                          <YAxis 
-                            domain={["auto", "auto"]} 
-                            tick={{ fontSize: 12 }} 
-                            tickLine={false}
-                            axisLine={false}
-                            tickFormatter={(value) => `$${value}`}
-                          />
-                          <Tooltip 
-                            formatter={(value: number) => [`$${value.toFixed(2)}`, 'Price']}
-                            labelFormatter={(label) => `Date: ${label}`}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="close" 
-                            stroke="#6b3fa0" 
-                            dot={false} 
-                            strokeWidth={2}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <MarketWidget
+              symbol={symbol}
+              chartData={chartData}
+              loading={tsLoading}
+              error={tsError ? tsError.toString() : undefined}
+              onSelectSymbol={handleSelectStock}
+            />
           </div>
 
           {/* Portfolio Widget */}
