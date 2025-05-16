@@ -1,8 +1,9 @@
-// src/components/trading/ImprovedCandlestickChart.tsx
-import React from 'react';
+// src/components/trading/InteractiveCandlestickChart.tsx
+import React, { useCallback } from 'react';
 import {
   ComposedChart, XAxis, YAxis, Tooltip, 
-  CartesianGrid, ResponsiveContainer, Area
+  CartesianGrid, ResponsiveContainer, Area, Line,
+  ReferenceLine
 } from 'recharts';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,7 @@ interface CandlestickChartProps {
   data: MarketDataPoint[];
   height?: number | string;
   width?: number | string;
+  chartType?: 'line' | 'candlestick' | 'area';
 }
 
 // Custom tooltip component
@@ -42,59 +44,85 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-// Custom candlestick renderer component
-const CandlestickBar = (props: any) => {
-  const { x, y, width, height, open, close, low, high } = props;
-  
-  if (!open || !close || !high || !low) return null;
-  
-  // Colors for bullish (up) and bearish (down) candles
-  const fill = open > close ? '#ef4444' : '#22c55e';
-  const stroke = open > close ? '#dc2626' : '#16a34a';
-  
-  // Calculate dimensions
-  const candleHeight = Math.abs(open - close);
-  const highLowHeight = Math.abs(high - low);
-  const yStart = Math.min(open, close);
-  
-  return (
-    <g>
-      {/* Draw the high-low line */}
-      <line
-        x1={x + width / 2}
-        y1={y + highLowHeight}
-        x2={x + width / 2}
-        y2={y}
-        stroke={stroke}
-        strokeWidth={1}
-      />
-      
-      {/* Draw the candle body */}
-      <rect
-        x={x}
-        y={yStart}
-        width={width}
-        height={candleHeight}
-        fill={fill}
-        stroke={stroke}
-        strokeWidth={1}
-      />
-    </g>
-  );
-};
-
 const ImprovedCandlestickChart: React.FC<CandlestickChartProps> = ({ 
   data, 
   height = "100%", 
-  width = "100%" 
+  width = "100%",
+  chartType = 'line'
 }) => {
   // Calculate min/max values for axis scaling
-  const minValue = Math.min(...data.map(d => Math.min(d.open || d.close, d.low || d.close, d.close)));
-  const maxValue = Math.max(...data.map(d => Math.max(d.open || d.close, d.high || d.close, d.close)));
+  const minValue = Math.min(...data.map(d => Math.min(
+    d.open !== undefined ? d.open : d.close, 
+    d.low !== undefined ? d.low : d.close, 
+    d.close
+  )));
+  const maxValue = Math.max(...data.map(d => Math.max(
+    d.open !== undefined ? d.open : d.close, 
+    d.high !== undefined ? d.high : d.close, 
+    d.close
+  )));
   const padding = (maxValue - minValue) * 0.1;
 
   // Calculate max volume for the second y-axis
-  const maxVolume = Math.max(...data.map(d => d.volume || 0));
+  const maxVolume = Math.max(...data.filter(d => d.volume !== undefined).map(d => d.volume || 0));
+
+  // Custom candlestick renderer - using Rectangle SVG elements for each candlestick
+  const renderCandlesticks = useCallback(() => {
+    if (chartType !== 'candlestick' || !data.length) return null;
+    
+    return (
+      <g className="recharts-candlestick-bars">
+        {data.map((entry, index) => {
+          if (entry.open === undefined || entry.close === undefined || 
+              entry.high === undefined || entry.low === undefined) {
+            return null;
+          }
+
+          const isPositive = entry.close >= entry.open;
+          const color = isPositive ? '#22c55e' : '#ef4444';
+          const strokeColor = isPositive ? '#16a34a' : '#dc2626';
+          
+          // Calculate position percentages relative to domain
+          const valueRange = maxValue - minValue + padding * 2;
+          const xSize = 1 / data.length * 0.8; // 80% of the space allocated per data point
+          const xPosition = index / data.length + (1 / data.length) * 0.1; // Centered with 10% padding
+          
+          // Calculate wickY positions
+          const wickTop = 1 - (entry.high - minValue + padding) / valueRange;
+          const wickBottom = 1 - (entry.low - minValue + padding) / valueRange;
+          
+          // Calculate candleY positions
+          const candleTop = 1 - (Math.max(entry.open, entry.close) - minValue + padding) / valueRange;
+          const candleBottom = 1 - (Math.min(entry.open, entry.close) - minValue + padding) / valueRange;
+          
+          return (
+            <g key={`candle-${index}`}>
+              {/* Wick line */}
+              <line
+                x1={`${xPosition * 100 + xSize * 50}%`}
+                y1={`${wickTop * 100}%`}
+                x2={`${xPosition * 100 + xSize * 50}%`}
+                y2={`${wickBottom * 100}%`}
+                stroke={strokeColor}
+                strokeWidth={1}
+              />
+              
+              {/* Candle body */}
+              <rect
+                x={`${xPosition * 100}%`}
+                y={`${candleTop * 100}%`}
+                width={`${xSize * 100}%`}
+                height={`${(candleBottom - candleTop) * 100}%`}
+                fill={color}
+                stroke={strokeColor}
+                strokeWidth={1}
+              />
+            </g>
+          );
+        })}
+      </g>
+    );
+  }, [data, chartType, minValue, maxValue, padding]);
 
   return (
     <ResponsiveContainer width={width} height={height}>
@@ -102,13 +130,22 @@ const ImprovedCandlestickChart: React.FC<CandlestickChartProps> = ({
         data={data} 
         margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
       >
+        <defs>
+          <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="#8884d8" stopOpacity={0.3}/>
+            <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+          </linearGradient>
+        </defs>
+        
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+        
         <XAxis 
           dataKey="date" 
           tickLine={false}
           axisLine={false}
           tick={{ fontSize: 12 }}
         />
+        
         <YAxis 
           yAxisId="price"
           domain={[minValue - padding, maxValue + padding]}
@@ -117,6 +154,7 @@ const ImprovedCandlestickChart: React.FC<CandlestickChartProps> = ({
           tick={{ fontSize: 12 }}
           tickFormatter={(value) => `$${value.toFixed(2)}`}
         />
+        
         {data.some(d => d.volume !== undefined) && (
           <YAxis 
             yAxisId="volume"
@@ -128,30 +166,63 @@ const ImprovedCandlestickChart: React.FC<CandlestickChartProps> = ({
             tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
           />
         )}
+        
         <Tooltip content={<CustomTooltip />} />
         
         {data.some(d => d.volume !== undefined) && (
           <Area
             type="monotone"
             dataKey="volume"
-            fill="rgba(107, 63, 160, 0.1)"
+            fill="url(#colorVolume)"
             stroke="none"
             yAxisId="volume"
           />
         )}
         
-        {/* Render candlesticks */}
-        {data.map((entry, index) => (
-          <CandlestickBar
-            key={`candle-${index}`}
-            x={index * (width as number) / data.length}
-            width={Math.max(1, (width as number) / data.length * 0.8)}
-            open={entry.open}
-            close={entry.close}
-            high={entry.high}
-            low={entry.low}
+        {/* Render different chart types based on chartType prop */}
+        {chartType === 'line' && (
+          <Line
+            type="monotone"
+            dataKey="close"
+            stroke="#6b3fa0"
+            strokeWidth={2}
+            dot={false}
+            yAxisId="price"
           />
-        ))}
+        )}
+        
+        {chartType === 'area' && (
+          <Area
+            type="monotone"
+            dataKey="close"
+            stroke="#6b3fa0"
+            fill="#6b3fa0"
+            fillOpacity={0.1}
+            yAxisId="price"
+          />
+        )}
+        
+        {/* Use custom renderer for candlestick chart */}
+        {chartType === 'candlestick' && renderCandlesticks()}
+        
+        {/* Add reference lines for daily high and low if available */}
+        {chartType !== 'candlestick' && data.length > 0 && data[0].high !== undefined && (
+          <ReferenceLine 
+            y={Math.max(...data.map(d => d.high || 0))} 
+            stroke="#16a34a" 
+            strokeDasharray="3 3" 
+            yAxisId="price" 
+          />
+        )}
+        
+        {chartType !== 'candlestick' && data.length > 0 && data[0].low !== undefined && (
+          <ReferenceLine 
+            y={Math.min(...data.map(d => d.low || 0))} 
+            stroke="#dc2626" 
+            strokeDasharray="3 3" 
+            yAxisId="price" 
+          />
+        )}
       </ComposedChart>
     </ResponsiveContainer>
   );

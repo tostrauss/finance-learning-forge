@@ -1,5 +1,5 @@
 // src/components/trading/MarketWidget.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ChartControls from '../ChartControls';
 import ImprovedCandlestickChart from './InteractiveCandlestickChart';
@@ -29,7 +29,49 @@ const MarketWidget: React.FC<MarketWidgetProps> = ({
   onSelectSymbol 
 }) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState('1D');
-  const [chartType, setChartType] = useState<'line' | 'candlestick'>('line');
+  const [chartType, setChartType] = useState<'line' | 'candlestick' | 'area'>('line');
+  const [interval, setInterval] = useState('hourly');
+  
+  // Filter data based on selected timeframe
+  const filteredData = React.useMemo(() => {
+    if (!chartData.length) return [];
+
+    // Calculate cutoff date based on timeframe
+    const now = new Date();
+    let cutoffDate = new Date();
+    
+    switch (selectedTimeframe) {
+      case '1D':
+        cutoffDate.setDate(now.getDate() - 1);
+        break;
+      case '5D':
+        cutoffDate.setDate(now.getDate() - 5);
+        break;
+      case '1M':
+        cutoffDate.setMonth(now.getMonth() - 1);
+        break;
+      case '3M':
+        cutoffDate.setMonth(now.getMonth() - 3);
+        break;
+      case '6M':
+        cutoffDate.setMonth(now.getMonth() - 6);
+        break;
+      case '1Y':
+        cutoffDate.setFullYear(now.getFullYear() - 1);
+        break;
+      case '5Y':
+        cutoffDate.setFullYear(now.getFullYear() - 5);
+        break;
+      default:
+        return chartData;
+    }
+    
+    // Filter data by date
+    return chartData.filter(item => {
+      const itemDate = new Date(item.date);
+      return itemDate >= cutoffDate;
+    });
+  }, [chartData, selectedTimeframe]);
 
   return (
     <Card className="h-full flex flex-col overflow-hidden">
@@ -41,14 +83,14 @@ const MarketWidget: React.FC<MarketWidgetProps> = ({
         <ChartControls 
           timeframe={selectedTimeframe}
           chartType={chartType}
-          interval="1d"
+          interval={interval}
           onTimeframeChange={setSelectedTimeframe}
           onChartTypeChange={(value) => {
-            if (value === 'line' || value === 'candlestick') {
+            if (value === 'line' || value === 'candlestick' || value === 'area') {
               setChartType(value);
             }
           }}
-          onIntervalChange={() => {}}
+          onIntervalChange={setInterval}
         />
       </CardHeader>
       
@@ -64,9 +106,10 @@ const MarketWidget: React.FC<MarketWidgetProps> = ({
         ) : (
           <div className="h-full w-full">
             <ImprovedCandlestickChart 
-              data={chartData} 
+              data={filteredData.length > 0 ? filteredData : chartData} 
               height="100%" 
               width="100%" 
+              chartType={chartType}
             />
           </div>
         )}
