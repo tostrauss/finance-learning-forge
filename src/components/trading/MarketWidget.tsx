@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer, BarChart, Bar, ReferenceLine,
-  ComposedChart, Legend
+  Tooltip, ResponsiveContainer
 } from 'recharts';
 import { Search, Clock, Menu, CandlestickChart as CandlestickIcon, LineChart as LineChartIcon } from 'lucide-react';
+import InteractiveCandlestickChart from './InteractiveCandlestickChart';
 
 interface MarketDataPoint {
   date: string;
@@ -27,88 +27,6 @@ interface MarketWidgetProps {
   error?: string;
   onSelectSymbol?: (symbol: string) => void;
 }
-
-// Custom candlestick chart component using Recharts
-const CandlestickChart = ({ data }: { data: MarketDataPoint[] }) => {
-  if (!data || data.length === 0) return null;
-  
-  // For each data point, create separate bars for up and down movements
-  const processedData = data.map(d => {
-    // If we only have close data, use it for all OHLC values
-    const open = d.open ?? d.close;
-    const high = d.high ?? Math.max(open, d.close);
-    const low = d.low ?? Math.min(open, d.close);
-    
-    const isIncreasing = (d.close >= open);
-    
-    return {
-      ...d,
-      open,
-      high,
-      low,
-      isIncreasing
-    };
-  });
-
-  return (
-    <ResponsiveContainer width="100%" height="100%">
-      <ComposedChart data={processedData}>
-        <XAxis 
-          dataKey="date" 
-          tick={{ fontSize: 12 }}
-          tickLine={false}
-          axisLine={false}
-        />
-        <YAxis 
-          domain={["auto", "auto"]} 
-          tick={{ fontSize: 12 }} 
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={(value) => `$${value}`}
-        />
-        <Tooltip 
-          formatter={(value: number) => [`$${value.toFixed(2)}`, '']}
-          labelFormatter={(label) => `Date: ${label}`}
-        />
-        <Legend />
-        
-        {/* High-Low lines */}
-        {processedData.map((entry, index) => (
-          <ReferenceLine 
-            key={`hl-${index}`}
-            segment={[
-              { x: index, y: entry.low },
-              { x: index, y: entry.high }
-            ]}
-            stroke="#8884d8"
-            strokeWidth={1}
-            isFront={false}
-          />
-        ))}
-        
-        {/* Up candles */}
-        <Bar 
-          dataKey="open" 
-          fill="#4caf50" 
-          stroke="#4caf50"
-          name="Increasing"
-          barSize={8}
-          isAnimationActive={false}
-        />
-        
-        {/* Down candles */}
-        <Bar 
-          dataKey="close" 
-          fill="#f44336" 
-          stroke="#f44336"
-          name="Decreasing"
-          barSize={8}
-          isAnimationActive={false}
-        />
-      </ComposedChart>
-    </ResponsiveContainer>
-  );
-};
 
 const MarketWidget: React.FC<MarketWidgetProps> = ({ 
   symbol = 'AAPL', 
@@ -224,7 +142,7 @@ const MarketWidget: React.FC<MarketWidgetProps> = ({
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <CandlestickChart data={chartData} />
+                <InteractiveCandlestickChart data={chartData} />
               )}
             </div>
           </>
