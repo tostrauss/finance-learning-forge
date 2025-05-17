@@ -29,7 +29,7 @@ const Index = () => {
               </h2>
               <p className="text-xl text-gray-600 mb-6">
                 Comprehensive trading platform with real-time market data, in-depth analysis tools,
-                and educational resources to enhance your investment journey.
+                and educational resources from your syllabus to ease your investment journey.
               </p>
 
               <div className="flex space-x-4 mt-6">
