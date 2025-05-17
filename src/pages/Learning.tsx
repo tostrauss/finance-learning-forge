@@ -35,7 +35,7 @@ const quizData = [
 // Sample finance topic categories
 const financeTopics = [
   { id: 'corporate-finance', name: 'Corporate Finance', progress: 35, color: '#5C2D91' },
-  { id: 'planning', name: 'Financial Planning & Analysis', progress: 20, color: '#0078D4' },
+  { id: 'fpa', name: 'Financial Planning & Analysis', progress: 20, color: '#0078D4' },
   { id: 'banking', name: 'Financial Services & Banking', progress: 15, color: '#217346' },
   { id: 'general', name: 'General Finance', progress: 65, color: '#B7472A' },
   { id: 'international', name: 'International Finance', progress: 10, color: '#8764B8' },
@@ -124,7 +124,7 @@ const Learning = () => {
                 <div className="mt-2 text-right">                <Button 
                   variant="link" 
                   className="text-sm px-0" 
-                  style={{color: topic.color}}                  onClick={() => navigate(`/learning/path/${topic.id}`)}
+                  style={{color: topic.color}}                  onClick={() => navigate(`/learning/${topic.id}`)}
                 >
                   Continue Learning →
                 </Button>
@@ -224,59 +224,48 @@ const Learning = () => {
 };
 
 const LearningDashboardSection = () => {
-  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('paths');
   
-  const handleTopicClick = (topicId: string) => {
-    // Get courses for this path
-    const pathCourses = courses.filter(course => course.pathId === topicId);
-    
-    if (pathCourses.length > 0) {
-      // If there are courses, show the first one
-      navigate(`/learning/course/${pathCourses[0].id}`);
-    } else {
-      // Show the learning path overview
-      navigate(`/learning/path/${topicId}`);
-    }
-  };
-
   return (
-    <div className="mb-8">
-      <h2 className="text-xl font-medium mb-6">Finance Topics</h2>
-      <div className="space-y-5">
-        {financeTopics.map(topic => (
-          <div key={topic.id}>
-            <div className="flex justify-between mb-2">
-              <span className="font-medium">{topic.name}</span>
-              <span>{topic.progress}%</span>
-            </div>
-            <Progress 
-              value={topic.progress} 
-              className="h-2" 
-              style={{backgroundColor: `${topic.color}20`}}
-            />
-            <div className="mt-2 text-right">
-              <Button 
-                variant="link" 
-                className="text-sm px-0" 
-                style={{color: topic.color}}
-                onClick={() => handleTopicClick(topic.id)}
-              >
-                Continue Learning →
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <Card className="mb-8">
+      <CardHeader className="pb-2">
+        <div className="flex items-center">
+          <BarChart2 className="h-5 w-5 text-app-purple mr-2" />
+          <h2 className="text-xl font-medium">Learning Dashboard</h2>
+        </div>
+        <p className="text-gray-600">Track your progress in Post University's finance curriculum</p>
+      </CardHeader>
+      <CardContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="paths">Learning Paths</TabsTrigger>
+            <TabsTrigger value="weekly">Weekly Progress</TabsTrigger>
+            <TabsTrigger value="quiz">Quiz Performance</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="paths">
+            <PathsTabContent />
+          </TabsContent>
+          
+          <TabsContent value="weekly">
+            <WeeklyProgressTabContent />
+          </TabsContent>
+          
+          <TabsContent value="quiz">
+            <QuizPerformanceTabContent />
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
   );
 };
 
 // Learning Paths tab content
 const PathsTabContent = () => {
   const navigate = useNavigate();  const learningPaths = [
-    { id: 'corporate-finance', name: 'Corporate Finance', level: 3, progress: 35, nextModule: 'Capital Structure Optimization' },
-    { id: 'planning', name: 'Financial Planning & Analysis', level: 2, progress: 20, nextModule: 'Budgeting and Forecasting' },
-    { id: 'investments', name: 'Investment Management', level: 4, progress: 60, nextModule: 'Portfolio Construction' },
+    { id: 'corporate-finance', name: 'Corporate Finance', level: 1, progress: 1, nextModule: 'Capital Structure Optimization' },
+    { id: 'fpa', name: 'Financial Planning & Analysis', level: 1, progress: 1, nextModule: 'Budgeting and Forecasting' },
+    { id: 'investments', name: 'Investment Management', level: 1, progress: 1, nextModule: 'Portfolio Construction' },
   ];
   
   return (    <div className="space-y-6 py-2">
@@ -469,4 +458,30 @@ const QuizPerformanceTabContent = () => {
                     quiz.score >= 60 ? 'bg-yellow-100 text-yellow-800' : 
                     'bg-red-100 text-red-800'
                   }`}>
-                    {quiz.score}%
+                    {quiz.score}<span>%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3 className="font-medium mb-3">Average Score</h3>
+          <div className="flex items-center justify-between">
+            <p className="text-2xl font-bold text-app-purple">{averageScore.toFixed(2)}<span>%</span></p>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="text-app-purple border-app-purple"
+              onClick={() => navigate('/learning/quiz')}
+            >
+              Take a Quiz
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Learning;
