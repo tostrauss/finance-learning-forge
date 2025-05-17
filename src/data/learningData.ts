@@ -4,7 +4,8 @@ import { Course, UserProgress, Quiz } from '../types/learning';
 export const financeTopics = [
   { id: 'corporate-finance', name: 'Corporate Finance', progress: 35, color: '#5C2D91' },
   { id: 'planning', name: 'Financial Planning & Analysis', progress: 20, color: '#0078D4' },
-  { id: 'banking', name: 'Financial Services & Banking', progress: 15, color: '#217346' },
+  { id: 'investments', name: 'Investment Management', progress: 30, color: '#217346' },
+  { id: 'banking', name: 'Financial Services & Banking', progress: 15, color: '#4A154B' },
   { id: 'general', name: 'General Finance', progress: 65, color: '#B7472A' },
   { id: 'international', name: 'International Finance', progress: 10, color: '#8764B8' },
   { id: 'personal', name: 'Personal Financial Planning', progress: 45, color: '#C74634' },
@@ -543,6 +544,7 @@ Developed by Harry Markowitz, MPT suggests that by combining assets with differe
     description: 'Understand how corporations make financial decisions, manage capital structure, and evaluate investments.',
     level: 'intermediate',
     progress: 35,
+    pathId: 'corporate-finance',
     modules: [
       {
         id: 'corporate-finance-1',
@@ -588,6 +590,7 @@ Developed by Harry Markowitz, MPT suggests that by combining assets with differe
     description: 'Learn how to analyze securities, construct portfolios, and manage investment risk.',
     level: 'intermediate',
     progress: 0,
+    pathId: 'investments',
     modules: [
       {
         id: 'investments-1',

@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 
-const FinanceLearningPath = () => {
-  const [selectedPath, setSelectedPath] = useState('corporate');
+const FinanceLearningPath = () => {  const [selectedPath, setSelectedPath] = useState('corporate-finance');
   
   const paths = [
     {
-      id: 'corporate',
+      id: 'corporate-finance',
       name: 'Corporate Finance',
       description: 'Develop skills in financial management for corporations, including capital structure optimization, investment analysis, and corporate valuation.',
       icon: (
