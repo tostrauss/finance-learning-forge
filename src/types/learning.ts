@@ -42,4 +42,7 @@ export type UserProgress = {
     totalQuestions: number;
     dateTaken: string;
   }>;
+  enrolledCourses: string[];
+  completedCourses: string[];
+  selectedConcentration?: string;
 };

@@ -34,7 +34,7 @@ const quizData = [
 
 // Sample finance topic categories
 const financeTopics = [
-  { id: 'corporate', name: 'Corporate Finance', progress: 35, color: '#5C2D91' },
+  { id: 'corporate-finance', name: 'Corporate Finance', progress: 35, color: '#5C2D91' },
   { id: 'planning', name: 'Financial Planning & Analysis', progress: 20, color: '#0078D4' },
   { id: 'banking', name: 'Financial Services & Banking', progress: 15, color: '#217346' },
   { id: 'general', name: 'General Finance', progress: 65, color: '#B7472A' },
@@ -121,15 +121,14 @@ const Learning = () => {
                   className="h-2" 
                   style={{backgroundColor: `${topic.color}20`}}
                 />
-                <div className="mt-2 text-right">
-                  <Button 
-                    variant="link" 
-                    className="text-sm px-0" 
-                    style={{color: topic.color}}
-                    onClick={() => navigate(`/learning?category=${topic.id}`)}
-                  >
-                    Continue Learning →
-                  </Button>
+                <div className="mt-2 text-right">                <Button 
+                  variant="link" 
+                  className="text-sm px-0" 
+                  style={{color: topic.color}}
+                  onClick={() => navigate(`/learning/${topic.id}`)}
+                >
+                  Continue Learning →
+                </Button>
                 </div>
               </div>
             ))}
@@ -265,28 +264,13 @@ const LearningDashboardSection = () => {
 
 // Learning Paths tab content
 const PathsTabContent = () => {
-  const navigate = useNavigate();
-  const learningPaths = [
-    { id: 'corp-finance', name: 'Corporate Finance', level: 3, progress: 35, nextModule: 'Capital Structure Optimization' },
+  const navigate = useNavigate();  const learningPaths = [
+    { id: 'corporate-finance', name: 'Corporate Finance', level: 3, progress: 35, nextModule: 'Capital Structure Optimization' },
     { id: 'fpa', name: 'Financial Planning & Analysis', level: 2, progress: 20, nextModule: 'Budgeting and Forecasting' },
     { id: 'investments', name: 'Investment Management', level: 4, progress: 60, nextModule: 'Portfolio Construction' },
   ];
   
-  return (
-    <div className="space-y-6 py-2">
-      <div className="bg-app-light-purple/10 p-4 rounded-lg mb-4">
-        <h3 className="font-medium text-app-purple mb-2">Recommended Path</h3>
-        <p className="text-sm text-gray-600 mb-3">Based on your progress and career goals</p>
-        
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-medium">Corporate Finance Specialist</p>
-            <div className="text-sm text-gray-600 mt-1">5-day learning streak</div>
-          </div>
-          <Button className="bg-app-purple hover:bg-app-dark-purple">Continue Path</Button>
-        </div>
-      </div>
-      
+  return (    <div className="space-y-6 py-2">
       <div className="space-y-4">
         {learningPaths.map(path => (
           <div key={path.id} className="border rounded-lg p-4">
@@ -306,19 +290,23 @@ const PathsTabContent = () => {
             <div className="flex justify-between items-center mt-4">
               <div className="text-sm">
                 <span className="text-gray-600">Next:</span> {path.nextModule}
-              </div>
-              <Button size="sm" variant="outline" className="text-app-purple border-app-purple">
+              </div>              <Button 
+                size="sm" 
+                variant="outline" 
+                className="text-app-purple border-app-purple"
+                onClick={() => navigate(`/learning/${path.id}`)}
+              >
                 Continue
               </Button>
             </div>
           </div>
         ))}
-      </div>
-      
-      <div className="mt-4 text-center">
-        <Button variant="link" className="text-app-purple">
-          View All Learning Paths
-        </Button>
+
+        <div className="mt-4 text-center">
+          <Button variant="link" className="text-app-purple">
+            View All Learning Paths
+          </Button>
+        </div>
       </div>
     </div>
   );

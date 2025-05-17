@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 
 const FinanceLearningPath = () => {
@@ -16,11 +15,10 @@ const FinanceLearningPath = () => {
       ),
       color: '#5C2D91',
       modules: [
-        { id: 'corp-1', name: 'Capital Structure Optimization', level: 1, locked: false, completed: true },
-        { id: 'corp-2', name: 'Capital Budgeting Techniques', level: 2, locked: false, completed: true },
-        { id: 'corp-3', name: 'Corporate Valuation Methods', level: 3, locked: false, completed: false },
-        { id: 'corp-4', name: 'Financial Risk Management', level: 4, locked: true, completed: false },
-        { id: 'corp-5', name: 'Mergers & Acquisitions', level: 5, locked: true, completed: false }
+        { id: 'corp-1', name: 'Capital Structure and Financing Decisions', level: 1, locked: false, completed: true },
+        { id: 'corp-2', name: 'Capital Budgeting', level: 2, locked: false, completed: false },
+        { id: 'corp-3', name: 'Working Capital Management', level: 3, locked: false, completed: false },
+        { id: 'corp-4', name: 'Dividend Policy', level: 4, locked: true, completed: false }
       ]
     },
     {

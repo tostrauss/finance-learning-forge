@@ -25,7 +25,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
             <div>
               <h2 className="text-4xl font-bold text-app-purple mb-4">
-                Master Stock Trading & Financial Analysis
+                FLF
               </h2>
               <p className="text-xl text-gray-600 mb-6">
                 Comprehensive trading platform with real-time market data, in-depth analysis tools,

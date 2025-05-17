@@ -6,6 +6,9 @@ export const userProgress: UserProgress = {
   quizAverage: 82,
   progress: 33,
   completedModules: ['finance-101-1', 'finance-101-2'],
+  enrolledCourses: ['corp-finance', 'financial-markets'],
+  completedCourses: ['finance-101', 'accounting-principles'],
+  selectedConcentration: 'general',
   quizResults: {
     'finance-101-quiz-1': {
       score: 9,
@@ -529,7 +532,7 @@ Developed by Harry Markowitz, MPT suggests that by combining assets with differe
     title: 'Corporate Finance Essentials',
     description: 'Understand how corporations make financial decisions, manage capital structure, and evaluate investments.',
     level: 'intermediate',
-    progress: 0,
+    progress: 35,
     modules: [
       {
         id: 'corporate-finance-1',
