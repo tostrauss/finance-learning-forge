@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -84,7 +83,7 @@ const Quiz = () => {
   
   // Complete quiz and go back to course
   const finishQuiz = () => {
-    navigate(`/learning/${courseId}`);
+    navigate(`/learning/course/${courseId}`);
   };
   
   // Show results view
@@ -95,7 +94,7 @@ const Quiz = () => {
       <Layout>
         <div className="max-w-3xl mx-auto">
           <Link 
-            to={`/learning/${courseId}`}
+            to={`/learning/course/${courseId}`}
             className="flex items-center text-app-purple hover:underline mb-6"
           >
             <ArrowLeft size={16} className="mr-1" />
@@ -191,7 +190,7 @@ const Quiz = () => {
     <Layout>
       <div className="max-w-3xl mx-auto">
         <Link 
-          to={`/learning/${courseId}/${moduleId}`}
+          to={`/learning/course/${courseId}/${moduleId}`}
           className="flex items-center text-app-purple hover:underline mb-6"
         >
           <ArrowLeft size={16} className="mr-1" />

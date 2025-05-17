@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
@@ -43,13 +42,13 @@ const ModuleDetail = () => {
     
     // Check if there's a quiz for this module
     if (module?.quizId) {
-      navigate(`/learning/${courseId}/${moduleId}/quiz/${module.quizId}`);
+      navigate(`/learning/course/${courseId}/${moduleId}/quiz/${module.quizId}`);
     } else if (course && moduleIndex < course.modules.length - 1) {
       // Navigate to next module
-      navigate(`/learning/${courseId}/${course.modules[moduleIndex + 1].id}`);
+      navigate(`/learning/course/${courseId}/${course.modules[moduleIndex + 1].id}`);
     } else {
       // Navigate back to course
-      navigate(`/learning/${courseId}`);
+      navigate(`/learning/course/${courseId}`);
     }
   };
   
@@ -76,7 +75,7 @@ const ModuleDetail = () => {
       <div className="max-w-3xl mx-auto">
         <div className="mb-6 flex items-center justify-between">
           <Link 
-            to={`/learning/${courseId}`}
+            to={`/learning/course/${courseId}`}
             className="flex items-center text-app-purple hover:underline"
           >
             <ArrowLeft size={16} className="mr-1" />
@@ -123,7 +122,7 @@ const ModuleDetail = () => {
               <div className="flex gap-4">
                 {prevModule && (
                   <Link 
-                    to={`/learning/${courseId}/${prevModule.id}`}
+                    to={`/learning/course/${courseId}/${prevModule.id}`}
                     className="flex items-center text-gray-600 hover:text-app-purple"
                   >
                     <ArrowLeft size={16} className="mr-1" />
@@ -135,7 +134,7 @@ const ModuleDetail = () => {
               <div className="flex gap-4 items-center">
                 {nextModule && (
                   <Link 
-                    to={`/learning/${courseId}/${nextModule.id}`}
+                    to={`/learning/course/${courseId}/${nextModule.id}`}
                     className="flex items-center text-gray-600 hover:text-app-purple"
                   >
                     Next

@@ -95,7 +95,7 @@ const Learning = () => {
                 <Progress value={lastCourse.progress} className="mb-3" />
                 <Button 
                   className="bg-app-purple hover:bg-app-dark-purple"
-                  onClick={() => navigate(`/learning/${lastCourse.id}`)}
+                  onClick={() => navigate(`/learning/course/${lastCourse.id}`)}
                 >
                   Continue Learning
                 </Button>
@@ -122,10 +122,12 @@ const Learning = () => {
                   className="h-2" 
                   style={{backgroundColor: `${topic.color}20`}}
                 />
-                <div className="mt-2 text-right">                <Button 
+                <div className="mt-2 text-right">
+                <Button 
                   variant="link" 
                   className="text-sm px-0" 
-                  style={{color: topic.color}}                  onClick={() => navigate(`/learning/${topic.id}`)}
+                  style={{color: topic.color}}
+                  onClick={() => navigate(`/learning/path/${topic.id}`)}
                 >
                   Continue Learning →
                 </Button>
@@ -160,7 +162,7 @@ const Learning = () => {
                 <Button 
                   size="sm" 
                   className="ml-4 bg-app-purple hover:bg-app-dark-purple"
-                  onClick={() => navigate(`/learning/${course.id}`)}
+                  onClick={() => navigate(`/learning/course/${course.id}`)}
                 >
                   Continue
                 </Button>
@@ -172,7 +174,7 @@ const Learning = () => {
                 <p className="text-gray-500">No courses enrolled yet.</p>
                 <Button 
                   className="mt-4 bg-app-purple hover:bg-app-dark-purple"
-                  onClick={() => navigate('/learning?view=all')}
+                  onClick={() => navigate('/learning')}
                 >
                   Browse Courses
                 </Button>
