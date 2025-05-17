@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { courses, quizzes, userProgress } from '../data/learningData';
+import { courses, quizzes, userProgress, financeTopics } from '../data/learningData';
 import { ArrowLeft, BookOpen, Clock } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import ModuleCard from '../components/learning/ModuleCard';
@@ -11,8 +10,47 @@ import { Button } from '@/components/ui/button';
 
 const CourseDetail = () => {
   const { courseId } = useParams<{ courseId: string }>();
-  const course = courses.find(c => c.id === courseId);
   
+  // Check if this is a learning path ID from financeTopics
+  const learningPath = financeTopics.find(topic => topic.id === courseId);
+  if (learningPath) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto p-6">
+          <Link to="/learning" className="flex items-center text-app-purple hover:underline mb-4">
+            <ArrowLeft size={16} className="mr-1" />
+            Back to Learning Hub
+          </Link>
+          
+          <div className="bg-white rounded-lg p-6">
+            <h1 className="text-2xl font-bold mb-4">{learningPath.name}</h1>
+            <p className="text-gray-600 mb-6">This learning path helps you master the essential skills needed for financial planning and analysis.</p>
+            
+            <div className="mb-4">
+              <div className="flex justify-between mb-2">
+                <span className="font-medium">Progress</span>
+                <span>{learningPath.progress}%</span>
+              </div>
+              <Progress value={learningPath.progress} />
+            </div>
+            
+            <div className="mt-6">
+              <Button 
+                onClick={() => window.location.href = `/learning?path=${learningPath.id}`} 
+                className="bg-app-purple hover:bg-app-dark-purple"
+              >
+                View Available Courses
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  // If not a learning path, handle as a regular course
+  const course = courses.find(c => c.id === courseId);
+
   if (!course) {
     return (
       <Layout>
@@ -26,7 +64,8 @@ const CourseDetail = () => {
       </Layout>
     );
   }
-
+  
+  // Regular course handling
   const totalDuration = course.modules.reduce((total, module) => total + module.duration, 0);
   const completedModules = course.modules.filter(module => module.completed).length;
   

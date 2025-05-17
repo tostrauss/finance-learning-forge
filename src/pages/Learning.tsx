@@ -124,8 +124,7 @@ const Learning = () => {
                 <div className="mt-2 text-right">                <Button 
                   variant="link" 
                   className="text-sm px-0" 
-                  style={{color: topic.color}}
-                  onClick={() => navigate(`/learning/${topic.id}`)}
+                  style={{color: topic.color}}                  onClick={() => navigate(`/learning/path/${topic.id}`)}
                 >
                   Continue Learning →
                 </Button>
@@ -224,41 +223,51 @@ const Learning = () => {
   );
 };
 
-// Learning Dashboard Section Component
 const LearningDashboardSection = () => {
-  const [activeTab, setActiveTab] = useState('paths');
+  const navigate = useNavigate();
   
+  const handleTopicClick = (topicId: string) => {
+    // Get courses for this path
+    const pathCourses = courses.filter(course => course.pathId === topicId);
+    
+    if (pathCourses.length > 0) {
+      // If there are courses, show the first one
+      navigate(`/learning/course/${pathCourses[0].id}`);
+    } else {
+      // Show the learning path overview
+      navigate(`/learning/path/${topicId}`);
+    }
+  };
+
   return (
-    <Card className="mb-8">
-      <CardHeader className="pb-2">
-        <div className="flex items-center">
-          <BarChart2 className="h-5 w-5 text-app-purple mr-2" />
-          <h2 className="text-xl font-medium">Learning Dashboard</h2>
-        </div>
-        <p className="text-gray-600">Track your progress in Post University's finance curriculum</p>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="paths">Learning Paths</TabsTrigger>
-            <TabsTrigger value="weekly">Weekly Progress</TabsTrigger>
-            <TabsTrigger value="quiz">Quiz Performance</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="paths">
-            <PathsTabContent />
-          </TabsContent>
-          
-          <TabsContent value="weekly">
-            <WeeklyProgressTabContent />
-          </TabsContent>
-          
-          <TabsContent value="quiz">
-            <QuizPerformanceTabContent />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+    <div className="mb-8">
+      <h2 className="text-xl font-medium mb-6">Finance Topics</h2>
+      <div className="space-y-5">
+        {financeTopics.map(topic => (
+          <div key={topic.id}>
+            <div className="flex justify-between mb-2">
+              <span className="font-medium">{topic.name}</span>
+              <span>{topic.progress}%</span>
+            </div>
+            <Progress 
+              value={topic.progress} 
+              className="h-2" 
+              style={{backgroundColor: `${topic.color}20`}}
+            />
+            <div className="mt-2 text-right">
+              <Button 
+                variant="link" 
+                className="text-sm px-0" 
+                style={{color: topic.color}}
+                onClick={() => handleTopicClick(topic.id)}
+              >
+                Continue Learning →
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
@@ -266,7 +275,7 @@ const LearningDashboardSection = () => {
 const PathsTabContent = () => {
   const navigate = useNavigate();  const learningPaths = [
     { id: 'corporate-finance', name: 'Corporate Finance', level: 3, progress: 35, nextModule: 'Capital Structure Optimization' },
-    { id: 'fpa', name: 'Financial Planning & Analysis', level: 2, progress: 20, nextModule: 'Budgeting and Forecasting' },
+    { id: 'planning', name: 'Financial Planning & Analysis', level: 2, progress: 20, nextModule: 'Budgeting and Forecasting' },
     { id: 'investments', name: 'Investment Management', level: 4, progress: 60, nextModule: 'Portfolio Construction' },
   ];
   
@@ -461,72 +470,3 @@ const QuizPerformanceTabContent = () => {
                     'bg-red-100 text-red-800'
                   }`}>
                     {quiz.score}%
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex flex-col">
-          <div className="text-center mb-6">
-            <div className="text-5xl font-bold text-app-purple">{Math.round(averageScore)}%</div>
-            <div className="text-gray-600 mt-2">Average Quiz Score</div>
-            <div className="mt-6">
-              <div className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                Top 15% of Students
-              </div>
-            </div>
-          </div>
-          
-          <Card className="flex-1">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Performance by Area</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm">Financial Markets</span>
-                    <span className="text-sm font-medium">75%</span>
-                  </div>
-                  <Progress value={75} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm">Investment Analysis</span>
-                    <span className="text-sm font-medium">85%</span>
-                  </div>
-                  <Progress value={85} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm">Corporate Finance</span>
-                    <span className="text-sm font-medium">65%</span>
-                  </div>
-                  <Progress value={65} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm">Risk Management</span>
-                    <span className="text-sm font-medium">90%</span>
-                  </div>
-                  <Progress value={90} className="h-2" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Button 
-            className="mt-4 bg-app-purple hover:bg-app-dark-purple"
-            onClick={() => navigate('/learning/quiz')}
-          >
-            Take Practice Quiz
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default Learning;

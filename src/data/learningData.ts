@@ -1,5 +1,15 @@
 import { Course, UserProgress, Quiz } from '../types/learning';
 
+// Export finance topics
+export const financeTopics = [
+  { id: 'corporate-finance', name: 'Corporate Finance', progress: 35, color: '#5C2D91' },
+  { id: 'planning', name: 'Financial Planning & Analysis', progress: 20, color: '#0078D4' },
+  { id: 'banking', name: 'Financial Services & Banking', progress: 15, color: '#217346' },
+  { id: 'general', name: 'General Finance', progress: 65, color: '#B7472A' },
+  { id: 'international', name: 'International Finance', progress: 10, color: '#8764B8' },
+  { id: 'personal', name: 'Personal Financial Planning', progress: 45, color: '#C74634' },
+];
+
 export const userProgress: UserProgress = {
   streak: 5,
   xpEarned: 325,
@@ -742,6 +752,7 @@ Developed by Harry Markowitz, MPT suggests that by combining assets with differe
     description: 'Build sophisticated financial models for valuation, forecasting, and decision support.',
     level: 'advanced',
     progress: 0,
+    pathId: 'planning',
     modules: [
       {
         id: 'modeling-1',
@@ -760,131 +771,31 @@ Developed by Harry Markowitz, MPT suggests that by combining assets with differe
         duration: 50,
         quizId: '',
         completed: false
-      },
-      {
-        id: 'modeling-3',
-        title: 'DCF Valuation Modeling',
-        description: 'Construct detailed discounted cash flow models for company valuation.',
-        content: '<h1>DCF Valuation Modeling</h1><p>DCF modeling estimates a company\'s intrinsic value based on projected future cash flows.</p><h2>Model Sections</h2><ul><li>Free cash flow projections</li><li>Terminal value calculation</li><li>Discount rate determination</li><li>Sensitivity analysis</li></ul>',
-        duration: 45,
-        quizId: '',
-        completed: false
-      },
-      {
-        id: 'modeling-4',
-        title: 'M&A and LBO Modeling',
-        description: 'Model mergers, acquisitions, and leveraged buyout transactions.',
-        content: '<h1>M&A and LBO Modeling</h1><p>These specialized models analyze the financial impact of corporate transactions.</p><h2>Analysis Types</h2><ul><li>Accretion/dilution analysis</li><li>Synergy valuation</li><li>LBO returns modeling</li><li>Debt schedule creation</li></ul>',
-        duration: 55,
-        quizId: '',
-        completed: false
       }
     ]
   },
-  
-  // Specialized Courses
   {
-    id: 'behavioral-finance',
-    title: 'Behavioral Finance',
-    description: 'Explore the psychological factors that influence financial decisions and market behavior.',
+    id: 'planning-analytics',
+    title: 'Financial Planning & Analytics',
+    description: 'Master financial planning and analysis techniques for business decision support.',
     level: 'intermediate',
-    progress: 0,
+    progress: 20,
+    pathId: 'planning',
     modules: [
       {
-        id: 'behavioral-1',
-        title: 'Cognitive Biases in Finance',
-        description: 'Understand how mental shortcuts affect financial decision-making.',
-        content: '<h1>Cognitive Biases in Finance</h1><p>Cognitive biases are systematic patterns of deviation from norm or rationality in judgment.</p><h2>Common Biases</h2><ul><li>Confirmation bias</li><li>Anchoring effect</li><li>Loss aversion</li><li>Overconfidence bias</li></ul>',
-        duration: 30,
-        quizId: '',
-        completed: false
-      },
-      {
-        id: 'behavioral-2',
-        title: 'Market Anomalies',
-        description: 'Learn about persistent patterns that seem to contradict market efficiency.',
-        content: '<h1>Market Anomalies</h1><p>Market anomalies are patterns of price behavior that contradict the efficient market hypothesis.</p><h2>Major Anomalies</h2><ul><li>Value effect</li><li>Momentum effect</li><li>Size effect</li><li>Calendar anomalies</li></ul>',
-        duration: 35,
-        quizId: '',
-        completed: false
-      },
-      {
-        id: 'behavioral-3',
-        title: 'Behavioral Portfolio Theory',
-        description: 'Explore how investor psychology affects portfolio construction.',
-        content: '<h1>Behavioral Portfolio Theory</h1><p>Behavioral portfolio theory explains how psychological factors influence investment portfolio decisions.</p><h2>Key Elements</h2><ul><li>Mental accounting</li><li>Prospect theory applications</li><li>Goals-based investing</li><li>Behavioral asset allocation</li></ul>',
+        id: 'plan-1',
+        title: 'Financial Modeling Fundamentals',
+        description: 'Build foundational skills in financial modeling and analysis.',
+        content: '<h1>Financial Modeling Fundamentals</h1><p>Learn to build structured and flexible financial models.</p>',
         duration: 40,
         quizId: '',
-        completed: false
-      }
-    ]
-  },
-  {
-    id: 'fintech',
-    title: 'Financial Technology and Innovation',
-    description: 'Explore how technology is transforming finance through blockchain, AI, and digital banking.',
-    level: 'intermediate',
-    progress: 0,
-    modules: [
-      {
-        id: 'fintech-1',
-        title: 'Blockchain and Cryptocurrencies',
-        description: 'Understand distributed ledger technology and digital assets.',
-        content: '<h1>Blockchain and Cryptocurrencies</h1><p>Blockchain technology enables secure, decentralized record-keeping that powers cryptocurrencies.</p><h2>Key Concepts</h2><ul><li>Blockchain architecture</li><li>Consensus mechanisms</li><li>Smart contracts</li><li>Cryptocurrency fundamentals</li></ul>',
-        duration: 40,
-        quizId: '',
-        completed: false
+        completed: true
       },
       {
-        id: 'fintech-2',
-        title: 'AI and Machine Learning in Finance',
-        description: 'Learn how artificial intelligence is revolutionizing financial analysis.',
-        content: '<h1>AI and Machine Learning in Finance</h1><p>AI and machine learning algorithms are transforming financial analysis, risk assessment, and decision-making.</p><h2>Applications</h2><ul><li>Algorithmic trading</li><li>Credit scoring</li><li>Fraud detection</li><li>Robo-advisory services</li></ul>',
-        duration: 35,
-        quizId: '',
-        completed: false
-      },
-      {
-        id: 'fintech-3',
-        title: 'Digital Banking and Payment Systems',
-        description: 'Explore innovations in banking and payment technologies.',
-        content: '<h1>Digital Banking and Payment Systems</h1><p>Digital technologies are transforming how financial services are delivered and how payments are processed.</p><h2>Innovations</h2><ul><li>Mobile banking platforms</li><li>Peer-to-peer payment systems</li><li>Open banking APIs</li><li>Central bank digital currencies</li></ul>',
-        duration: 30,
-        quizId: '',
-        completed: false
-      }
-    ]
-  },
-  {
-    id: 'sustainable-finance',
-    title: 'Sustainable and ESG Investing',
-    description: 'Learn how environmental, social, and governance factors are integrated into investment decisions.',
-    level: 'intermediate',
-    progress: 0,
-    modules: [
-      {
-        id: 'esg-1',
-        title: 'ESG Integration',
-        description: 'Understand how ESG factors are incorporated into investment analysis.',
-        content: '<h1>ESG Integration</h1><p>ESG integration involves incorporating environmental, social, and governance factors into investment decisions.</p><h2>Integration Methods</h2><ul><li>ESG data sources and metrics</li><li>Materiality assessment</li><li>ESG scoring methodologies</li><li>Portfolio construction with ESG factors</li></ul>',
-        duration: 35,
-        quizId: '',
-        completed: false
-      },
-      {
-        id: 'esg-2',
-        title: 'Impact Investing',
-        description: 'Explore investments made with the intention to generate positive social and environmental impact.',
-        content: '<h1>Impact Investing</h1><p>Impact investing aims to generate specific beneficial social or environmental effects in addition to financial returns.</p><h2>Key Elements</h2><ul><li>Impact measurement frameworks</li><li>Social return on investment</li><li>Impact investment vehicles</li><li>Case studies of successful impact investments</li></ul>',
-        duration: 30,
-        quizId: '',
-        completed: false
-      },
-      {
-        id: 'esg-3',
-        title: 'Sustainable Finance Regulation',
-        description: 'Learn about evolving regulations and standards in sustainable finance.',
-        content: '<h1>Sustainable Finance Regulation</h1><p>Regulatory frameworks are developing to standardize sustainable finance practices and prevent greenwashing.</p><h2>Regulatory Initiatives</h2><ul><li>EU Sustainable Finance Disclosure Regulation</li><li>Task Force on Climate-related Financial Disclosures</li><li>Green bond standards</li><li>Corporate sustainability reporting requirements</li></ul>',
+        id: 'plan-2',
+        title: 'Budgeting and Forecasting',
+        description: 'Develop comprehensive budgets and financial forecasts.',
+        content: '<h1>Budgeting and Forecasting</h1><p>Master techniques for creating accurate budgets and forecasts.</p>',
         duration: 35,
         quizId: '',
         completed: false

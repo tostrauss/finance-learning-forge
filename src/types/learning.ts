@@ -29,6 +29,7 @@ export type Course = {
   level: 'beginner' | 'intermediate' | 'advanced';
   modules: Module[];
   progress: number; // 0-100
+  pathId?: string; // Optional ID of the learning path this course belongs to
 };
 
 export type UserProgress = {
