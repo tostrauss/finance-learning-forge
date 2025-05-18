@@ -12,6 +12,7 @@ import CourseDetail from "./pages/CourseDetail";
 import ModuleDetail from "./pages/ModuleDetail";
 import Quiz from "./pages/Quiz";
 import Dashboard from "./pages/Dashboard";
+import Watchlist from "./pages/watchlist";
 import Signup from "./pages/Signup";
 import Signin from "./pages/Signin";
 
@@ -29,7 +30,9 @@ const App = () => (
             <Route path="/signin" element={<Signin />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />            <Route path="/learning" element={<Learning />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/watchlist" element={<Watchlist />} />
+            <Route path="/learning" element={<Learning />} />
             <Route path="/learning/path/:pathId" element={<CourseDetail />} />
             <Route path="/learning/course/:courseId" element={<CourseDetail />} />
             <Route path="/learning/course/:courseId/:moduleId" element={<ModuleDetail />} />
