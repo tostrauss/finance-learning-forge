@@ -43,7 +43,7 @@ const WatchlistWidget: React.FC<WatchlistWidgetProps> = ({
     setDraftTitle(title);
   }, [title]);
 
-  const handleSave = () => {
+  const saveTitle = () => {
     setIsEditing(false);
     const trimmed = draftTitle.trim();
     if (onTitleChange && trimmed && trimmed !== title) {
@@ -51,7 +51,7 @@ const WatchlistWidget: React.FC<WatchlistWidgetProps> = ({
     }
   };
 
-  const handleCancel = () => {
+  const cancelEdit = () => {
     setIsEditing(false);
     setDraftTitle(title);
   };
@@ -73,19 +73,19 @@ const WatchlistWidget: React.FC<WatchlistWidgetProps> = ({
             />
             <button
               type="button"
-              onClick={handleSave}
+              onClick={saveTitle}
               aria-label="Save title"
-              className="p-1 hover:bg-gray-100 rounded"
               title="Save title"
+              className="p-1 hover:bg-gray-100 rounded"
             >
               <Check size={16} />
             </button>
             <button
               type="button"
-              onClick={handleCancel}
-              aria-label="Cancel title edit"
-              className="p-1 hover:bg-gray-100 rounded"
+              onClick={cancelEdit}
+              aria-label="Cancel edit"
               title="Cancel"
+              className="p-1 hover:bg-gray-100 rounded"
             >
               <X size={16} />
             </button>
@@ -98,8 +98,8 @@ const WatchlistWidget: React.FC<WatchlistWidgetProps> = ({
                 type="button"
                 onClick={() => setIsEditing(true)}
                 aria-label="Edit title"
-                className="p-1 hover:bg-gray-100 rounded"
                 title="Edit title"
+                className="p-1 hover:bg-gray-100 rounded"
               >
                 <Pencil size={16} />
               </button>
@@ -107,18 +107,17 @@ const WatchlistWidget: React.FC<WatchlistWidgetProps> = ({
           </div>
         )}
       </CardHeader>
-
       <CardContent className="p-4 flex-1 overflow-auto">
         {loading ? (
           <div className="h-full flex items-center justify-center">
             <div
-              className="animate-spin rounded-full h-8 w-8 border-b-2 border-app-purple"
               role="status"
               aria-label="Loading"
-            ></div>
+              className="animate-spin rounded-full h-8 w-8 border-b-2 border-app-purple"
+            />
           </div>
         ) : error ? (
-          <div className="text-red-500 text-center" role="alert">
+          <div role="alert" className="text-red-500 text-center">
             {error}
           </div>
         ) : items.length === 0 ? (
@@ -141,16 +140,15 @@ const WatchlistWidget: React.FC<WatchlistWidgetProps> = ({
                 <div className="flex items-center gap-4">
                   <span>${item.price.toFixed(2)}</span>
                   <span className={item.change >= 0 ? 'text-green-500' : 'text-red-500'}>
-                    {item.change >= 0 ? '+' : ''}
-                    {item.changePercent.toFixed(2)}%
+                    {item.change >= 0 ? '+' : ''}{item.changePercent.toFixed(2)}%
                   </span>
                   {onRemove && (
                     <button
                       type="button"
                       onClick={() => onRemove(item.symbol)}
-                      className="text-sm text-gray-500 hover:text-red-600"
                       aria-label={`Remove ${item.symbol}`}
                       title="Remove"
+                      className="text-sm text-gray-500 hover:text-red-600"
                     >
                       Remove
                     </button>
