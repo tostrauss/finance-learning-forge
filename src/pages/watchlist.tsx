@@ -1,7 +1,7 @@
 // src/pages/Watchlist.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import WatchlistWidget, { WatchlistItem } from '@/components/trading/WatchlistWidget';
+import WatchlistWidget, { WatchlistItem, AssetType } from '@/components/trading/WatchlistWidget';
 
 interface WatchlistBoard {
   id: string;
@@ -9,29 +9,24 @@ interface WatchlistBoard {
   items: WatchlistItem[];
 }
 
-// Sample initial boards—replace with real data fetch
-const initialBoards: WatchlistBoard[] = [
-  {
-    id: 'board-1',
-    title: 'Tech Stocks',
-    items: [
-      { symbol: 'AAPL', price: 200.14, change: 1.23, changePercent: 0.62 },
-      { symbol: 'MSFT', price: 305.22, change: -0.45, changePercent: -0.15 },
-    ],
-  },
-  {
-    id: 'board-2',
-    title: 'Crypto',
-    items: [
-      { symbol: 'BTC', price: 58000, change: 300, changePercent: 0.52 },
-      { symbol: 'ETH', price: 3500, change: -20, changePercent: -0.57 },
-    ],
-  },
-];
-
 const Watchlist: React.FC = () => {
-  const [boards, setBoards] = useState<WatchlistBoard[]>(initialBoards);
+  // load from localStorage or start empty
+  const [boards, setBoards] = useState<WatchlistBoard[]>(() => {
+    try {
+      const stored = localStorage.getItem('watchlistBoards');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isAddingBoard, setIsAddingBoard] = useState(false);
+  const [newBoardTitle, setNewBoardTitle] = useState('');
+
+  // persist boards
+  useEffect(() => {
+    localStorage.setItem('watchlistBoards', JSON.stringify(boards));
+  }, [boards]);
 
   const toggleBoard = (id: string) => {
     setSelectedIds(prev =>
@@ -39,25 +34,49 @@ const Watchlist: React.FC = () => {
     );
   };
 
-  const addBoard = () => {
-    const title = prompt('Enter new watchlist name');
-    if (title) {
-      const newBoard: WatchlistBoard = {
-        id: crypto.randomUUID(),
-        title: title.trim(),
-        items: [],
-      };
-      setBoards(prev => [...prev, newBoard]);
-    }
+  const beginAddBoard = () => {
+    setNewBoardTitle('');
+    setIsAddingBoard(true);
+  };
+  const cancelAddBoard = () => {
+    setNewBoardTitle('');
+    setIsAddingBoard(false);
+  };
+  const saveNewBoard = () => {
+    const title = newBoardTitle.trim();
+    if (!title) return;
+    const id = crypto.randomUUID();
+    const newBoard: WatchlistBoard = { id, title, items: [] };
+    setBoards(prev => [...prev, newBoard]);
+    setSelectedIds(prev => [...prev, id]);
+    setIsAddingBoard(false);
   };
 
-  const updateBoardTitle = (id: string, newTitle: string) => {
+  const updateBoardTitle = (boardId: string, title: string) => {
     setBoards(prev =>
-      prev.map(b => (b.id === id ? { ...b, title: newTitle } : b))
+      prev.map(b => (b.id === boardId ? { ...b, title } : b))
     );
   };
 
-  const removeItem = (boardId: string, symbol: string) => {
+  const addItemToBoard = (boardId: string) => (
+    symbol: string,
+    assetType: AssetType
+  ) => {
+    const newItem: WatchlistItem = {
+      symbol,
+      assetType,
+      price: 0,
+      change: 0,
+      changePercent: 0,
+    };
+    setBoards(prev =>
+      prev.map(b =>
+        b.id === boardId ? { ...b, items: [...b.items, newItem] } : b
+      )
+    );
+  };
+
+  const removeItemFromBoard = (boardId: string) => (symbol: string) => {
     setBoards(prev =>
       prev.map(b =>
         b.id === boardId
@@ -69,23 +88,61 @@ const Watchlist: React.FC = () => {
 
   const selectSymbol = (symbol: string) => {
     console.log('Selected:', symbol);
-    // TODO: navigate to detail page
+    // TODO: navigate to symbol detail
   };
 
   return (
     <Layout>
       <div className="max-w-7xl mx-auto py-6 space-y-6">
+        {/* Create New Watchlist */}
+        <div className="bg-white p-4 rounded shadow flex items-center gap-4">
+          {isAddingBoard ? (
+            <>
+              <input
+                type="text"
+                value={newBoardTitle}
+                onChange={e => setNewBoardTitle(e.target.value)}
+                placeholder="New watchlist name"
+                className="border rounded-md px-3 py-2 flex-1 focus:ring-2 focus:ring-app-purple"
+                aria-label="New watchlist name"
+              />
+              <button
+                onClick={saveNewBoard}
+                className="px-4 py-2 bg-app-purple text-white rounded-md"
+                aria-label="Save new watchlist"
+              >
+                Save
+              </button>
+              <button
+                onClick={cancelAddBoard}
+                className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
+                aria-label="Cancel new watchlist"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={beginAddBoard}
+              className="px-4 py-2 border-dashed border rounded-md text-gray-500 hover:bg-gray-50"
+              aria-label="Add watchlist"
+            >
+              + Create New Watchlist
+            </button>
+          )}
+        </div>
+
+        {/* Saved Watchlists Library */}
         <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-xl font-semibold mb-2">Saved Watchlists</h2>
+          <h2 className="text-xl font-semibold mb-3">Saved Watchlists</h2>
           <div className="flex flex-wrap gap-2">
             {boards.map(board => {
               const isSelected = selectedIds.includes(board.id);
               return isSelected ? (
                 <button
                   key={board.id}
-                  type="button"
                   onClick={() => toggleBoard(board.id)}
-                  className="px-3 py-1 rounded bg-app-purple text-white"
+                  className="px-4 py-2 rounded-md bg-app-purple text-white"
                   aria-pressed="true"
                   title="Hide watchlist"
                 >
@@ -94,9 +151,8 @@ const Watchlist: React.FC = () => {
               ) : (
                 <button
                   key={board.id}
-                  type="button"
                   onClick={() => toggleBoard(board.id)}
-                  className="px-3 py-1 rounded bg-gray-100 text-gray-700"
+                  className="px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200"
                   aria-pressed="false"
                   title="Show watchlist"
                 >
@@ -104,33 +160,23 @@ const Watchlist: React.FC = () => {
                 </button>
               );
             })}
-            <button
-              type="button"
-              onClick={addBoard}
-              className="px-3 py-1 rounded border border-dashed text-gray-500 hover:bg-gray-100"
-              title="Add Watchlist"
-            >
-              + Add Watchlist
-            </button>
           </div>
         </div>
 
+        {/* Display Selected Widgets */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {selectedIds.map(id => {
-            const board = boards.find(b => b.id === id);
+            const board = boards.find(b => b.id === id)!;
             return (
-              board && (
-                <WatchlistWidget
-                  key={board.id}
-                  title={board.title}
-                  onTitleChange={newTitle => updateBoardTitle(board.id, newTitle)}
-                  items={board.items}
-                  loading={false}
-                  error={undefined}
-                  onRemove={symbol => removeItem(board.id, symbol)}
-                  onSelectSymbol={selectSymbol}
-                />
-              )
+              <WatchlistWidget
+                key={board.id}
+                title={board.title}
+                onTitleChange={t => updateBoardTitle(board.id, t)}
+                items={board.items}
+                onAdd={addItemToBoard(board.id)}
+                onRemove={removeItemFromBoard(board.id)}
+                onSelectSymbol={selectSymbol}
+              />
             );
           })}
         </div>
