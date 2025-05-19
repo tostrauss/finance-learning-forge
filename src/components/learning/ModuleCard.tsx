@@ -34,7 +34,7 @@ const ModuleCard = ({ module, courseId, isLocked = false }: ModuleCardProps) => 
       </CardContent>
       <CardFooter className="p-4 pt-2">
         <Link 
-          to={`/learning/${courseId}/${module.id}`}
+          to={`/learning/course/${courseId}/${module.id}`}
           className={cn(
             "w-full py-2 px-4 rounded text-center text-sm transition-colors",
             isLocked 

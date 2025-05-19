@@ -248,7 +248,73 @@ export const financeQuizzes: Quiz[] = [
         explanation: 'The CAPM is used to determine a theoretically appropriate required rate of return for an asset, given its risk in relation to the market.'
       }
     ]
-  }
+  },
+  {
+  id: 'corporate-finance-1-quiz',
+  title: 'Capital Structure and Financing Decisions',
+  questions: [
+    {
+      id: 'corp-fin-q1',
+      question: "Which of the following is NOT a characteristic of debt financing?",
+      options: [
+        "Creates a legal obligation to repay the principal amount",
+        "Interest payments are usually tax-deductible",
+        "Provides investors with ownership rights in the company",
+        "Often includes restrictive covenants"
+      ],
+      correctAnswer: 2,
+      explanation: "Debt financing does not provide investors (lenders) with ownership rights in the company. This is a key characteristic of equity financing."
+    },
+    {
+      id: 'corp-fin-q2',
+      question: "A company has a market value of equity of $800 million, market value of debt of $200 million, cost of equity of 14%, cost of debt of 5%, and a tax rate of 30%. What is its WACC?",
+      options: [
+        "7.7%",
+        "9.5%",
+        "11.9%",
+        "12.2%"
+      ],
+      correctAnswer: 2,
+      explanation: "WACC = (E/V × Re) + (D/V × Rd × (1-Tc)). Substituting values: WACC = (800/1000 × 14%) + (200/1000 × 5% × (1-0.3)) = 11.2% + 0.7% = 11.9%"
+    },
+    {
+      id: 'corp-fin-q3',
+      question: "According to the Pecking Order Theory, what is the preferred order of financing sources?",
+      options: [
+        "Equity, debt, internal funds",
+        "Internal funds, equity, debt",
+        "Debt, internal funds, equity",
+        "Internal funds, debt, equity"
+      ],
+      correctAnswer: 3,
+      explanation: "The Pecking Order Theory suggests companies prefer: (1) internal funds (retained earnings), (2) debt financing, and (3) equity financing as a last resort."
+    },
+    {
+      id: 'corp-fin-q4',
+      question: "According to the Trade-Off Theory, what is the primary benefit of increasing debt in the capital structure?",
+      options: [
+        "Lower cost of equity",
+        "Tax shield from interest payments",
+        "Increased ownership control",
+        "Reduced agency costs"
+      ],
+      correctAnswer: 1,
+      explanation: "According to the Trade-Off Theory, the primary benefit of increasing debt is the tax shield created by interest payments."
+    },
+    {
+      id: 'corp-fin-q5',
+      question: "Which industry typically maintains the highest debt-to-equity ratios?",
+      options: [
+        "Software technology",
+        "Pharmaceuticals",
+        "Utilities",
+        "Social media"
+      ],
+      correctAnswer: 2,
+      explanation: "Utilities typically maintain higher debt-to-equity ratios due to their stable, predictable cash flows and capital-intensive operations."
+    }
+  ]
+}
 ];
 
 export const financeModules: { [key: string]: Module[] } = {
@@ -1704,10 +1770,169 @@ A US manufacturer is considering building a plant in Mexico:
       duration: 60,
       quizId: 'fin-302-quiz-6',
       completed: false
-    }
-  ],
+    },
   
-  // ... other courses ...
+  // Find where the module is defined - likely in "corporate-finance" course
+{
+  id: 'corporate-finance-1',
+  title: 'Capital Structure and Financing Decisions',
+  description: 'Learn how companies choose between debt and equity financing.',
+  content: `# Capital Structure and Financing Decisions
+
+## What is Capital Structure?
+
+Capital structure refers to the specific mix of debt and equity a company uses to finance its operations and growth. It represents how a firm's assets are financed through a combination of:
+- Long-term debt
+- Preferred stock
+- Common equity
+
+Every business must decide on the optimal balance between debt and equity to maximize firm value while managing risk.
+
+## Debt vs. Equity Financing
+
+### Debt Financing
+
+Debt financing involves borrowing money that must be repaid over time with interest.
+
+#### Key Characteristics
+- Creates a legal obligation to repay
+- Interest payments are generally tax-deductible
+- Lenders have no ownership stake
+- Fixed payment schedule
+
+#### Advantages
+- **Tax Shield**: Interest payments reduce taxable income
+- **Retained Control**: No dilution of ownership
+- **Lower Cost**: Usually cheaper than equity
+- **Predictable Expense**: Fixed payments aid financial planning
+
+#### Disadvantages
+- **Financial Risk**: Required payments increase chance of financial distress
+- **Restrictive Covenants**: Loan agreements may limit business flexibility
+- **Limited Growth**: Too much debt can constrain future borrowing
+- **Cash Flow Burden**: Regular payments regardless of performance
+
+### Equity Financing
+
+Equity financing raises funds by selling ownership interests in the company.
+
+#### Key Characteristics
+- No legal obligation to repay
+- Investors gain partial ownership
+- May involve dividend payments (not mandatory)
+- No fixed payment schedule
+
+#### Advantages
+- **No Repayment Obligation**: Lower financial distress risk
+- **No Fixed Burden**: Payments to shareholders are discretionary
+- **Additional Resources**: Investors may bring expertise and connections
+- **Increased Borrowing Capacity**: Improves debt-to-equity ratio
+
+#### Disadvantages
+- **Ownership Dilution**: Reduces control and earnings per share
+- **Higher Cost**: Typically more expensive than debt
+- **Dividend Expectations**: Shareholders expect returns
+- **Reporting Requirements**: Especially for publicly traded companies
+
+## Capital Structure Theories
+
+### Modigliani-Miller Propositions
+
+The foundational theory in capital structure was developed by Franco Modigliani and Merton Miller.
+
+#### Proposition I (Without Taxes)
+- In perfect markets, a firm's value is unaffected by how it is financed
+- The total pie doesn't change, just how it's sliced
+
+#### Proposition I (With Taxes)
+- When corporate taxes exist, firm value increases with debt due to interest tax shields
+- More debt = More tax savings = Higher firm value
+
+### Trade-Off Theory
+
+The Trade-Off Theory suggests that companies balance the benefits of debt against its costs.
+
+#### Key Concepts
+- **Benefits of Debt**: Tax shields from interest deductions
+- **Costs of Debt**: Financial distress and bankruptcy costs
+- **Optimal Point**: Where marginal benefit equals marginal cost
+
+### Pecking Order Theory
+
+The Pecking Order Theory suggests that companies have a hierarchy of preferred financing sources.
+
+#### Financing Preference Hierarchy
+1. **Internal Financing** (Retained earnings)
+2. **Debt Financing**
+3. **Equity Financing** (Last resort)
+
+#### Rationale
+- Information asymmetry between managers and investors
+- Issuing new equity signals overvaluation
+- Debt issuance has less negative signaling effect
+
+## Calculating the Weighted Average Cost of Capital (WACC)
+
+The WACC represents the average rate a company pays to finance its assets.
+
+### WACC Formula
+
+WACC = (E/V × Re) + (D/V × Rd × (1-Tc))
+
+Where:
+- E = Market value of equity
+- D = Market value of debt
+- V = Total market value (E + D)
+- Re = Cost of equity
+- Rd = Cost of debt
+- Tc = Corporate tax rate
+
+### Example Calculation
+
+Consider a company with:
+- Market value of equity = $600 million
+- Market value of debt = $400 million
+- Cost of equity = 12%
+- Cost of debt = 6%
+- Corporate tax rate = 25%
+
+WACC = ($600M/$1000M × 12%) + ($400M/$1000M × 6% × (1-0.25))
+WACC = (0.6 × 12%) + (0.4 × 6% × 0.75)
+WACC = 7.2% + 1.8% = 9%
+
+## Industry Patterns
+
+### Capital-Intensive Industries
+- Utilities
+- Telecommunications
+- Manufacturing
+- Transportation
+- **Example:** Duke Energy (D/E ratio ~1.3)
+
+### Knowledge-Based Industries
+- Technology
+- Pharmaceuticals
+- Software
+- **Example:** Microsoft (D/E ratio ~0.4)
+
+### Cyclical Industries
+- Retail
+- Hospitality
+- Entertainment
+- **Example:** Marriott (Moderate leverage, flexible terms)
+
+## Key Takeaways
+
+- Capital structure is the mix of debt and equity used to finance a company
+- The optimal structure balances cost, risk, control, and flexibility
+- Different theories explain why companies choose particular structures
+- Industry patterns provide useful benchmarks
+- WACC calculation helps quantify financing costs`,
+  duration: 40,
+  quizId: 'corporate-finance-1-quiz',
+  completed: false
+}
+  ],
 }
 
 // Continuing with other course content...
