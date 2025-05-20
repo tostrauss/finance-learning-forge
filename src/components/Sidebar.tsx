@@ -11,7 +11,8 @@ import {
   Home,
   School,
   Settings,
-  Star
+  Star,
+  Edit3,
 } from 'lucide-react';
 
 type NavItemProps = {
@@ -43,15 +44,16 @@ const Sidebar = () => {
   const pathname = location.pathname;
   
   const navItems = [
-    { to: "/dashboard", icon: <Home size={18} />, label: "Dashboard" },
-    { to: "/watchlist", icon: <Star size={18} />, label: "Watchlist" },
-    { to: "/stock-analysis", icon: <BarChart2 size={18} />, label: "Stock Analysis" },
+    { to: "/dashboard",       icon: <Home size={18} />,           label: "Dashboard" },
+    { to: "/watchlist",       icon: <Star size={18} />,           label: "Watchlist" },
+    { to: "/stock-analysis",  icon: <BarChart2 size={18} />,      label: "Stock Analysis" },
     { to: "/options-trading", icon: <FileSpreadsheet size={18} />, label: "Options Trading" },
-    { to: "/backtesting", icon: <Clock size={18} />, label: "Backtesting" },
-    { to: "/learning", icon: <School size={18} />, label: "Learning Hub" },
-    { to: "/risk-calculator", icon: <CreditCard size={18} />, label: "Risk Calculator" },
-    { to: "/crypto", icon: <BookOpen size={18} />, label: "Crypto & Bonds" },
-    { to: "/settings", icon: <Settings size={18} />, label: "Settings" },
+    { to: "/backtesting",     icon: <Clock size={18} />,          label: "Backtesting" },
+    { to: "/learning",        icon: <School size={18} />,         label: "Learning Hub" },
+    { to: "/practice",        icon: <Edit3 size={18} />,          label: "Practice" },
+    { to: "/risk-calculator", icon: <CreditCard size={18} />,     label: "Risk Calculator" },
+    { to: "/crypto",          icon: <BookOpen size={18} />,        label: "Crypto & Bonds" },
+    { to: "/settings",        icon: <Settings size={18} />,        label: "Settings" },
   ];
 
   return (
@@ -86,7 +88,7 @@ const Sidebar = () => {
         <p>Lars Dukart</p>
       </div>
     </div>
-  );
-};
+);
+}
 
 export default Sidebar;
