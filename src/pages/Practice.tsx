@@ -6,35 +6,33 @@ import type { AssetType } from '@/components/trading/WatchlistWidget';
 import SearchSecurities from '@/components/trading/SearchSecurities';
 import { X as XIcon, Plus as PlusIcon } from 'lucide-react';
 import Sidebar from '@/components/Sidebar'; // Added import for Sidebar
+import { usePaperTrading } from '@/hooks/usePaperTrading'; // Added import for usePaperTrading
 
 // Keys for storing displayed boards in localStorage
 const COLUMN3_DISPLAYED_BOARDS_LS_KEY = 'practicePageColumn3Boards';
 
-// Mock portfolio holdings type & sample data
-interface SecurityHolding {
-  id: string;
-  name: string;
-  ticker: string;
-  quantity: number;
-  currentValue: number;
-}
-
 const PracticePage: React.FC = () => {
-  const [portfolioHoldings, setPortfolioHoldings] = useState<SecurityHolding[]>([]);
   const { boards, addItemToBoard, removeItemFromBoard } = useWatchlistManager();
   const [displayedBoardIds, setDisplayedBoardIds] = useState<string[]>([]);
   const [isManaging, setIsManaging] = useState(false);
   const [addingToBoard, setAddingToBoard] = useState<string | null>(null);
 
+  // Paper Trading State
+  const [tradeSymbol, setTradeSymbol] = useState('');
+  const [tradeQuantity, setTradeQuantity] = useState('');
+  const [tradePrice, setTradePrice] = useState('');
+  const [tradeError, setTradeError] = useState<string | null>(null);
+
+  // Initialize paper trading hook
+  const {
+    positions: paperPositions,
+    metrics: paperMetrics,
+    executeBuy,
+    executeSell,
+  } = usePaperTrading();
+
   // Initialize mock holdings and displayed boards
   useEffect(() => {
-    setPortfolioHoldings([
-      { id: '1', name: 'Apple Inc.', ticker: 'AAPL', quantity: 10, currentValue: 1700 },
-      { id: '2', name: 'Microsoft Corp.', ticker: 'MSFT', quantity: 5, currentValue: 1500 },
-      { id: '3', name: 'Tesla Inc.', ticker: 'TSLA', quantity: 12, currentValue: 2400 },
-      { id: '4', name: 'Amazon.com Inc.', ticker: 'AMZN', quantity: 7, currentValue: 1050 },
-    ]);
-
     // Load or default to all boards
     const stored = localStorage.getItem(COLUMN3_DISPLAYED_BOARDS_LS_KEY);
     if (stored) {
@@ -64,6 +62,33 @@ const PracticePage: React.FC = () => {
     // Cast to AssetType because import is type-only
     addItemToBoard(addingToBoard, symbol, 'Stock' as AssetType);
     setAddingToBoard(null);
+  };
+
+  const handleExecuteTrade = async (action: 'buy' | 'sell') => {
+    setTradeError(null);
+    const quantityNum = parseInt(tradeQuantity, 10);
+    const priceNum = parseFloat(tradePrice);
+
+    if (!tradeSymbol || isNaN(quantityNum) || quantityNum <= 0 || isNaN(priceNum) || priceNum <= 0) {
+      setTradeError('Please enter valid symbol, quantity, and price.');
+      return;
+    }
+
+    try {
+      if (action === 'buy') {
+        // For simplicity, we'll use the symbol as the name for now.
+        // In a real app, you'd fetch the name based on the symbol.
+        executeBuy(tradeSymbol.toUpperCase(), tradeSymbol.toUpperCase(), priceNum, quantityNum);
+      } else {
+        executeSell(tradeSymbol.toUpperCase(), priceNum, quantityNum);
+      }
+      // Clear fields on successful trade
+      setTradeSymbol('');
+      setTradeQuantity('');
+      setTradePrice('');
+    } catch (error: any) {
+      setTradeError(error.message || 'Trade execution failed.');
+    }
   };
 
   const boardsToShow = boards.filter(b => displayedBoardIds.includes(b.id));
@@ -109,13 +134,69 @@ const PracticePage: React.FC = () => {
 
           {/* Holdings Column - Adjusted width */}
           <div className="w-[20.25%] border-r border-black h-full overflow-y-auto p-2"> {/* MODIFIED width from 22.5% */}
+            {/* Buy/Sell Section */}
+            <div className="mb-4 p-2 border-b">
+              <h3 className="text-md font-semibold mb-2">Trade</h3>
+              <div className="space-y-2">
+                <div>
+                  <label htmlFor="trade-symbol" className="block text-sm font-medium text-gray-700">Symbol</label>
+                  <input
+                    type="text"
+                    id="trade-symbol"
+                    value={tradeSymbol}
+                    onChange={(e) => setTradeSymbol(e.target.value.toUpperCase())}
+                    className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="e.g., AAPL"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="trade-quantity" className="block text-sm font-medium text-gray-700">Quantity</label>
+                  <input
+                    type="number"
+                    id="trade-quantity"
+                    value={tradeQuantity}
+                    onChange={(e) => setTradeQuantity(e.target.value)}
+                    className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="e.g., 10"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="trade-price" className="block text-sm font-medium text-gray-700">Price</label>
+                  <input
+                    type="number"
+                    id="trade-price"
+                    value={tradePrice}
+                    onChange={(e) => setTradePrice(e.target.value)}
+                    className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="e.g., 150.00"
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleExecuteTrade('buy')}
+                    className="w-full px-3 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+                  >
+                    Buy
+                  </button>
+                  <button
+                    onClick={() => handleExecuteTrade('sell')}
+                    className="w-full px-3 py-1.5 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                  >
+                    Sell
+                  </button>
+                </div>
+                {tradeError && <p className="text-xs text-red-600 mt-1">{tradeError}</p>}
+              </div>
+            </div>
+
             <h2 className="text-lg font-semibold mb-2">Portfolio Holdings</h2>
-            {portfolioHoldings.length > 0 ? (
+            {paperPositions.length > 0 ? (
               <ul>
-                {portfolioHoldings.map(h => (
-                  <li key={h.id} className="border-b py-2">
-                    <div className="font-medium">{h.name} ({h.ticker})</div>
-                    <div className="text-sm text-gray-600">Qty: {h.quantity} - Value: ${h.currentValue.toLocaleString()}</div>
+                {paperPositions.map(h => (
+                  <li key={h.symbol} className="border-b py-2">
+                    <div className="font-medium">{h.name} ({h.symbol})</div>
+                    <div className="text-sm text-gray-600">Qty: {h.shares} - Value: ${h.value.toLocaleString()}</div>
+                    <div className="text-sm text-gray-600">Avg Cost: ${h.avgCost.toFixed(2)} - Gain: ${h.gain.toFixed(2)} ({h.gainPercent.toFixed(2)}%)</div>
                   </li>
                 ))}
               </ul>
