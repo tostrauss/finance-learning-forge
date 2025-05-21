@@ -14,6 +14,7 @@ import FinancialCalculators from '@/components/trading/FinancialCalculators';
 import TradingJournal from '@/components/trading/TradingJournal';
 import { useToast } from '@/hooks/use-toast';
 
+// Reverted ResponsiveGridLayout definition
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const initialLayout = [
@@ -27,18 +28,13 @@ const initialLayout = [
 const Dashboard: React.FC = () => {
   const { toast } = useToast();
   
-  // State for selected stock
   const [symbol, setSymbol] = useState<string>('AAPL');
   const [stockName, setStockName] = useState<string>('Apple Inc.');
   const [currentPrice, setCurrentPrice] = useState<number>(0);
   
-  // Stock search hook
   const { query, setQuery, results, loading } = useStockSearch();
-  
-  // Time series data hook for the chart
   const { series, loading: tsLoading, error: tsError } = useStockTimeSeries(symbol);
   
-  // Format chart data
   const chartData = React.useMemo(() => {
     return series.map(item => ({
       date: item.date,
@@ -50,20 +46,16 @@ const Dashboard: React.FC = () => {
     }));
   }, [series]);
   
-  // Update current price when chart data changes
   useEffect(() => {
     if (chartData.length > 0) {
       setCurrentPrice(chartData[chartData.length - 1].close);
     }
   }, [chartData]);
   
-  // Handle stock selection
   const handleSelectStock = (selectedSymbol: string) => {
-    // Find the full stock info from results
     const stockInfo = results.find(item => item.symbol === selectedSymbol);
     setSymbol(selectedSymbol);
     
-    // Update stock name if available
     if (stockInfo && stockInfo.shortname) {
       setStockName(stockInfo.shortname);
     } else if (stockInfo && stockInfo.longname) {
@@ -80,11 +72,11 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto py-6">
+      {/* Reverted to the old structure without the extra w-full div, and assuming py-6 was present */}
+      <div className="max-w-7xl mx-auto py-6"> 
         <h1 className="text-3xl font-bold text-app-purple mb-4">
           Market Dashboard
         </h1>
-
         <ResponsiveGridLayout
           className="layout"
           layouts={{ lg: initialLayout }}

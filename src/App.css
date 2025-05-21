@@ -40,3 +40,8 @@
 .read-the-docs {
   color: #888;
 }
+
+.sparkline-container {
+  width: 80px;
+  height: 30px;
+}

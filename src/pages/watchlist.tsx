@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import WatchlistWidget, { WatchlistItem, AssetType } from '@/components/trading/WatchlistWidget';
+import { useWatchlistManager } from '@/hooks/useWatchlistManager'; // IMPORT THE HOOK
 
 interface WatchlistBoard {
   id: string;
@@ -10,23 +11,26 @@ interface WatchlistBoard {
 }
 
 const Watchlist: React.FC = () => {
-  // load from localStorage or start empty
-  const [boards, setBoards] = useState<WatchlistBoard[]>(() => {
-    try {
-      const stored = localStorage.getItem('watchlistBoards');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const {
+    boards,
+    addBoard: addBoardLogic, // Use the hook's addBoard
+    updateBoardTitle,
+    addItemToBoard,
+    removeItemFromBoard,
+    // removeBoard, // if you add UI to delete boards directly on this page
+  } = useWatchlistManager();
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]); // Keep this for UI display logic
   const [isAddingBoard, setIsAddingBoard] = useState(false);
   const [newBoardTitle, setNewBoardTitle] = useState('');
 
-  // persist boards
-  useEffect(() => {
-    localStorage.setItem('watchlistBoards', JSON.stringify(boards));
-  }, [boards]);
+  // Initialize selectedIds, e.g., select all or first, or load from localStorage if you persist this UI state
+   useEffect(() => {
+    if (boards.length > 0 && selectedIds.length === 0) {
+      // setSelectedIds(boards.map(b => b.id)); // Optionally select all by default
+    }
+  }, [boards, selectedIds.length]);
+
 
   const toggleBoard = (id: string) => {
     setSelectedIds(prev =>
@@ -42,59 +46,30 @@ const Watchlist: React.FC = () => {
     setNewBoardTitle('');
     setIsAddingBoard(false);
   };
-  const saveNewBoard = () => {
-    const title = newBoardTitle.trim();
-    if (!title) return;
-    const id = crypto.randomUUID();
-    const newBoard: WatchlistBoard = { id, title, items: [] };
-    setBoards(prev => [...prev, newBoard]);
-    setSelectedIds(prev => [...prev, id]);
-    setIsAddingBoard(false);
+
+  const saveNewBoard = () => { // This function now uses the hook's logic
+    const newBoardId = addBoardLogic(newBoardTitle);
+    if (newBoardId) { // Check if board was actually added (title wasn't empty)
+      setSelectedIds(prev => [...prev, newBoardId]); // Optionally auto-select new board
+      setIsAddingBoard(false);
+      setNewBoardTitle('');
+    } else {
+      // Handle case where title was empty, e.g., show an error
+      console.warn("New board title was empty.");
+    }
   };
 
-  const updateBoardTitle = (boardId: string, title: string) => {
-    setBoards(prev =>
-      prev.map(b => (b.id === boardId ? { ...b, title } : b))
-    );
-  };
-
-  const addItemToBoard = (boardId: string) => (
-    symbol: string,
-    assetType: AssetType
-  ) => {
-    const newItem: WatchlistItem = {
-      symbol,
-      assetType,
-      price: 0,
-      change: 0,
-      changePercent: 0,
-    };
-    setBoards(prev =>
-      prev.map(b =>
-        b.id === boardId ? { ...b, items: [...b.items, newItem] } : b
-      )
-    );
-  };
-
-  const removeItemFromBoard = (boardId: string) => (symbol: string) => {
-    setBoards(prev =>
-      prev.map(b =>
-        b.id === boardId
-          ? { ...b, items: b.items.filter(i => i.symbol !== symbol) }
-          : b
-      )
-    );
-  };
+  // updateBoardTitle, addItemToBoard, removeItemFromBoard are directly from the hook
 
   const selectSymbol = (symbol: string) => {
-    console.log('Selected:', symbol);
+    console.log('Selected from Watchlist Page:', symbol);
     // TODO: navigate to symbol detail
   };
 
   return (
     <Layout>
       <div className="max-w-7xl mx-auto py-6 space-y-6">
-        {/* Create New Watchlist */}
+        {/* Create New Watchlist UI (uses saveNewBoard which calls hook's addBoardLogic) */}
         <div className="bg-white p-4 rounded shadow flex items-center gap-4">
           {isAddingBoard ? (
             <>
@@ -107,7 +82,7 @@ const Watchlist: React.FC = () => {
                 aria-label="New watchlist name"
               />
               <button
-                onClick={saveNewBoard}
+                onClick={saveNewBoard} // This now calls the local saveNewBoard which uses the hook
                 className="px-4 py-2 bg-app-purple text-white rounded-md"
                 aria-label="Save new watchlist"
               >
@@ -132,7 +107,7 @@ const Watchlist: React.FC = () => {
           )}
         </div>
 
-        {/* Saved Watchlists Library */}
+        {/* Saved Watchlists Library (uses boards from hook) */}
         <div className="bg-white p-4 rounded shadow">
           <h2 className="text-xl font-semibold mb-3">Saved Watchlists</h2>
           <div className="flex flex-wrap gap-2">
@@ -163,22 +138,22 @@ const Watchlist: React.FC = () => {
           </div>
         </div>
 
-        {/* Display Selected Widgets */}
+        {/* Display Selected Widgets (uses boards from hook and handlers from hook) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {selectedIds.map(id => {
-            const board = boards.find(b => b.id === id)!;
-            return (
+          {selectedIds
+            .map(id => boards.find(b => b.id === id))
+            .filter(board => board !== undefined)
+            .map(board => (
               <WatchlistWidget
-                key={board.id}
-                title={board.title}
-                onTitleChange={t => updateBoardTitle(board.id, t)}
-                items={board.items}
-                onAdd={addItemToBoard(board.id)}
-                onRemove={removeItemFromBoard(board.id)}
+                key={board!.id}
+                title={board!.title}
+                onTitleChange={t => updateBoardTitle(board!.id, t)}
+                items={board!.items}
+                onAdd={(symbol, assetType) => addItemToBoard(board!.id, symbol, assetType)}
+                onRemove={symbol => removeItemFromBoard(board!.id, symbol)}
                 onSelectSymbol={selectSymbol}
               />
-            );
-          })}
+            ))}
         </div>
       </div>
     </Layout>

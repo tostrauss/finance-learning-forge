@@ -1,7 +1,8 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { Button } from '@/components/ui/button';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 type LayoutProps = {
@@ -9,12 +10,12 @@ type LayoutProps = {
 };
 
 const Layout = ({ children }: LayoutProps) => {
-  const { user, logout, loading } = useAuth(); // ✅ includes loading state
+  const { user, logout, loading } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const location = useLocation(); // Keep useLocation if other parts of the "old" file used it
 
-  // ✅ Delay rendering until Firebase auth state is fully known
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen text-xl">
@@ -37,7 +38,7 @@ const Layout = ({ children }: LayoutProps) => {
     <div className="flex h-screen overflow-hidden bg-app-light-gray">
       <Sidebar />
       <main className="flex-1 overflow-y-auto flex flex-col">
-        {/* Top header */}
+        {/* Header (assuming this was part of your old Layout structure) */}
         <div className="flex justify-end items-center p-4 bg-white border-b relative" ref={dropdownRef}>
           {user ? (
             <>
@@ -89,8 +90,8 @@ const Layout = ({ children }: LayoutProps) => {
           )}
         </div>
 
-        {/* Page content */}
-        <div className="p-6 flex-1">
+        {/* Page content - Reverted to consistent padding */}
+        <div className="p-6 flex-1"> {/* Assuming p-6 was the old default padding */}
           {children}
         </div>
       </main>
