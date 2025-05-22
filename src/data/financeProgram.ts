@@ -369,6 +369,7 @@ export const financeCourses: FinanceCourse[] = [
     academicLevel: 200,
     prerequisites: [],
     concentrations: ['general', 'corporate', 'investments', 'banking', 'planning'],
+    pathId: 'general',
     modules: [
       {
         id: 'fin-201-1',
@@ -386,6 +387,41 @@ export const financeCourses: FinanceCourse[] = [
         content: '# Time Value of Money\n\nThe time value of money is a fundamental concept...',
         duration: 45,
         quizId: 'fin-201-quiz-2',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fin-280',
+    courseCode: 'FIN 280',
+    title: 'Introduction to Banking and Financial Services',
+    credits: 3,
+    description: 'Introduction to banking operations, financial services industry structure, and regulatory frameworks.',
+    academicLevel: 200,
+    prerequisites: ['FIN 201'],
+    concentrations: ['banking'],
+    pathId: 'banking',
+    modules: [
+      {
+        id: 'fin-280-1',
+        title: 'Banking System Overview',
+        description: 'Understanding the role and structure of banks in the financial system',
+        content: `# Banking System Overview
+
+## The Role of Banks in the Economy
+- Financial intermediation
+- Payment systems
+- Money creation through fractional reserve banking
+- Credit allocation and economic growth
+
+## Types of Financial Institutions
+- Commercial banks
+- Investment banks
+- Credit unions
+- Savings institutions
+- Non-bank financial institutions`,
+        duration: 45,
+        quizId: 'fin-280-quiz-1',
         completed: false
       }
     ]
@@ -428,6 +464,301 @@ export const financeCourses: FinanceCourse[] = [
         content: '# Portfolio Theory\n\nModern Portfolio Theory (MPT) is a framework...',
         duration: 45,
         quizId: 'fin-403-quiz-1',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fin-380',
+    courseCode: 'FIN 380',
+    title: 'Bank Management',
+    credits: 3,
+    description: 'Analysis of bank performance, risk management, and regulatory compliance.',
+    academicLevel: 300,
+    prerequisites: ['FIN 280'],
+    concentrations: ['banking'],
+    pathId: 'banking',
+    modules: [
+      {
+        id: 'fin-380-1',
+        title: 'Bank Performance Analysis',
+        description: 'Learn to evaluate bank financial statements and key performance metrics',
+        content: `# Bank Performance Analysis
+
+## Key Performance Indicators
+- Net interest margin
+- Return on assets
+- Return on equity
+- Efficiency ratio
+- Capital adequacy ratios
+
+## Risk Management
+- Credit risk assessment
+- Interest rate risk
+- Liquidity risk
+- Operational risk
+- Market risk`,
+        duration: 45,
+        quizId: 'fin-380-quiz-1',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fin-480',
+    courseCode: 'FIN 480',
+    title: 'Advanced Banking and Financial Services',
+    credits: 3,
+    description: 'Advanced topics in banking including risk management, financial products, and emerging trends.',
+    academicLevel: 400,
+    prerequisites: ['FIN 380'],
+    concentrations: ['banking'],
+    pathId: 'banking',
+    modules: [
+      {
+        id: 'fin-480-1',
+        title: 'Modern Banking Challenges',
+        description: 'Explore contemporary issues and trends in banking',
+        content: `# Modern Banking Challenges
+
+## Digital Transformation
+- Online and mobile banking
+- Financial technology (FinTech)
+- Digital payments and cryptocurrencies
+- AI and machine learning applications
+
+## Regulatory Compliance
+- Basel Accords
+- Anti-money laundering
+- Consumer protection
+- Capital requirements`,
+        duration: 45,
+        quizId: 'fin-480-quiz-1',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fin-411',
+    courseCode: 'FIN 411',
+    title: 'International Finance',
+    credits: 3,
+    description: 'Study of international financial markets, exchange rates, and cross-border financial management.',
+    academicLevel: 400,
+    prerequisites: ['FIN 201'],
+    concentrations: ['international'],
+    pathId: 'international',
+    modules: [
+      {
+        id: 'fin-411-1',
+        title: 'International Financial Markets',
+        description: 'Overview of global financial markets and instruments',
+        content: `# International Financial Markets
+
+## Global Financial System
+- Components: central banks, commercial banks, investment banks, insurance companies, pension funds, hedge funds, private equity
+- Functions: monetary policy implementation, financial intermediation, risk management, price discovery, liquidity provision
+
+## International Capital Markets
+- Market for securities (stocks and bonds) issued outside the home country
+- Involves foreign investments and cross-border capital flows
+- Influenced by interest rates, exchange rates, and economic conditions
+
+## Foreign Exchange Market
+- Market for trading currencies
+- Determines exchange rates
+- Influenced by interest rates, inflation, political stability, and economic performance
+
+## International Money Market
+- Market for short-term borrowing and lending in foreign currencies
+- Involves certificates of deposit, Eurocurrency deposits, and foreign commercial paper
+
+## International Bond Market
+- Market for debt securities issued in foreign currencies
+- Includes Eurobonds and foreign bonds
+- Influenced by interest rates, exchange rates, and credit risk
+
+## International Equity Market
+- Market for buying and selling shares of foreign companies
+- Involves cross-listing and global depositary receipts (GDRs)
+- Influenced by company performance, economic conditions, and political stability
+
+## Derivatives Market
+- Market for financial contracts whose value is derived from underlying assets
+- Includes options, futures, and swaps
+- Used for hedging and speculation
+
+## Key Concepts
+- **Exchange Rate**: Price of one currency in terms of another
+- **Appreciation/Depreciation**: Increase/Decrease in currency value
+- **Foreign Exchange Reserves**: Holdings of foreign currencies by a central bank
+- **Balance of Payments**: Record of all economic transactions between residents and the rest of the world
+- **Capital Account**: Record of all financial transactions that affect a country's assets and liabilities
+- **Current Account**: Record of all economic transactions that affect a country's income and expenditure
+
+## Conclusion
+Understanding international financial markets is crucial for making informed investment and business decisions in an increasingly globalized economy.`,
+        duration: 40,
+        quizId: 'fin-411-quiz-1',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fin-422',
+    courseCode: 'FIN 422',
+    title: 'International Banking',
+    credits: 3,
+    description: 'Focus on multinational banking operations, global markets, and cross-border regulations.',
+    academicLevel: 400,
+    prerequisites: ['FIN 280', 'FIN 411'],
+    concentrations: ['international', 'banking'],
+    pathId: 'international',
+    modules: [
+      {
+        id: 'fin-422-1',
+        title: 'Global Banking Environment',
+        description: 'Understand the international banking landscape and regulatory framework',
+        content: `# Global Banking Environment
+
+## Introduction
+The global banking environment encompasses the various factors and conditions that influence the operations and activities of banks and financial institutions worldwide. It is essential for finance professionals to understand this environment to navigate the complexities of international finance and banking.
+
+## 1. International Financial Markets
+- **Foreign Exchange Market**: The market where currencies are traded. It determines the exchange rate between different currencies.
+- **International Money Market**: The market for short-term borrowing and lending in foreign currencies.
+- **International Bond Market**: The market for debt securities issued in foreign currencies.
+- **International Equity Market**: The market for buying and selling shares of foreign companies.
+
+## 2. Key Players in International Banking
+- **Multinational Banks**: Banks that operate in multiple countries, offering a wide range of financial services.
+- **Central Banks**: National banks that provide financial and banking services for a country's government and commercial banking system, also responsible for monetary policy.
+- **International Organizations**: Such as the International Monetary Fund (IMF) and World Bank, which provide financial assistance and advice to countries.
+
+## 3. Regulatory Environment
+- **Basel Accords**: International banking regulations (Basel I, II, and III) that set out the requirements for capital risk, market risk, and operational risk.
+- **Dodd-Frank Act**: A US federal law that places regulations on financial institutions to protect consumers and reduce the risk of financial crises.
+- **Anti-Money Laundering (AML) Regulations**: Laws and regulations aimed at preventing money laundering activities.
+
+## 4. Risks in International Banking
+- **Credit Risk**: The risk of default on a debt that may arise from a borrower failing to make required payments.
+- **Market Risk**: The risk of losses in positions arising from movements in market prices.
+- **Operational Risk**: The risk of loss from inadequate or failed internal processes, people, and systems, or from external events.
+- **Liquidity Risk**: The risk that a bank will not be able to meet its financial obligations as they come due.
+
+## 5. Trends and Challenges
+- **Digital Transformation**: The adoption of digital technologies to improve customer experience and operational efficiency.
+- **Fintech Disruption**: The rise of financial technology companies that offer innovative solutions and compete with traditional banks.
+- **Regulatory Changes**: Ongoing changes in regulations that impact how banks operate internationally.
+- **Geopolitical Risks**: Political instability or changes in government policy in countries where the bank operates.
+
+## Conclusion
+The global banking environment is complex and constantly evolving. Finance professionals must stay informed about the various factors that can impact banking operations and be prepared to adapt to changes in the regulatory, economic, and technological landscape.`,
+        duration: 40,
+        quizId: 'fin-422-quiz-1',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fin-306',
+    courseCode: 'FIN 306',
+    title: 'Personal Financial Planning',
+    credits: 3,
+    description: 'Comprehensive financial planning for individuals, including retirement, tax, and estate planning.',
+    academicLevel: 300,
+    prerequisites: ['FIN 201'],
+    concentrations: ['planning', 'personal'],
+    pathId: 'personal',
+    modules: [
+      {
+        id: 'fin-306-1',
+        title: 'Introduction to Personal Financial Planning',
+        description: 'Understand the basics of personal financial planning and wealth management',
+        content: `# Introduction to Personal Financial Planning
+
+## What is Personal Financial Planning?
+Personal financial planning is the process of managing your finances to achieve personal economic satisfaction. It involves creating a plan to accumulate, preserve, and distribute your wealth over your lifetime.
+
+## Importance of Personal Financial Planning
+- Helps you set and achieve financial goals
+- Provides a sense of financial security and independence
+- Prepares you for unexpected expenses or emergencies
+- Aids in retirement planning and ensuring a comfortable retirement
+- Assists in effective tax planning and minimizing tax liabilities
+- Facilitates estate planning and wealth transfer to heirs
+
+## Key Components of Personal Financial Planning
+1. **Goal Setting**: Defining short-term and long-term financial goals.
+2. **Budgeting**: Creating a plan for income allocation and expenditure control.
+3. **Saving and Investing**: Building wealth through savings accounts, stocks, bonds, mutual funds, etc.
+4. **Risk Management**: Protecting assets and income through insurance and other risk management strategies.
+5. **Tax Planning**: Minimizing tax liabilities through strategic planning and use of tax-advantaged accounts.
+6. **Retirement Planning**: Ensuring sufficient savings and income for a comfortable retirement.
+7. **Estate Planning**: Planning for the transfer of assets and wealth to heirs.
+
+## The Financial Planning Process
+1. **Establishing and Defining the Client-Planner Relationship**: Understanding the client's needs and expectations.
+2. **Gathering Client Data and Financial History**: Collecting relevant financial information from the client.
+3. **Analyzing and Evaluating the Client's Financial Status**: Assessing the client's financial situation and identifying gaps or issues.
+4. **Developing and Presenting Financial Planning Recommendations**: Creating a comprehensive financial plan with recommendations.
+5. **Implementing the Financial Plan**: Putting the recommended actions into effect.
+6. **Monitoring and Reviewing the Financial Plan**: Regularly reviewing the plan's performance and making adjustments as needed.
+
+## Conclusion
+Personal financial planning is essential for achieving financial security and reaching your financial goals. It is a lifelong process that requires regular review and adjustment to adapt to changing circumstances and objectives.`,
+        duration: 40,
+        quizId: 'fin-306-quiz-1',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fin-402',
+    courseCode: 'FIN 402',
+    title: 'Retirement and Estate Planning',
+    credits: 3,
+    description: 'Advanced retirement planning strategies and estate planning techniques.',
+    academicLevel: 400,
+    prerequisites: ['FIN 306'],
+    concentrations: ['planning', 'personal'],
+    pathId: 'personal',
+    modules: [
+      {
+        id: 'fin-402-1',
+        title: 'Retirement Planning Strategies',
+        description: 'Explore various strategies for effective retirement planning',
+        content: `# Retirement Planning Strategies
+
+## Introduction
+Retirement planning is the process of preparing for life after paid work, ensuring you have the necessary income and resources to maintain your desired lifestyle. It involves setting retirement goals, estimating expenses, and creating a plan to accumulate the required funds.
+
+## Importance of Retirement Planning
+- Ensures financial independence and security in retirement
+- Helps maintain your desired standard of living
+- Prepares you for healthcare and long-term care expenses
+- Provides a sense of purpose and fulfillment in retirement
+
+## Key Components of Retirement Planning
+1. **Setting Retirement Goals**: Determining the lifestyle you want and the associated costs.
+2. **Estimating Retirement Expenses**: Projecting future expenses, including housing, healthcare, and leisure activities.
+3. **Calculating Retirement Income Needs**: Determining how much income you'll need to cover expenses.
+4. **Social Security Benefits**: Understanding and optimizing your Social Security benefits.
+5. **Pension Plans**: Evaluating and maximizing pension benefits, if available.
+6. **Personal Savings and Investments**: Building a retirement nest egg through savings accounts, IRAs, 401(k)s, and other investment vehicles.
+7. **Asset Allocation and Investment Strategies**: Developing an investment strategy that aligns with your retirement goals and risk tolerance.
+8. **Withdrawal Strategies**: Planning how and when to withdraw funds from retirement accounts.
+
+## Retirement Accounts and Plans
+- **401(k) Plan**: Employer-sponsored retirement savings plan allowing employees to save and invest for retirement on a tax-deferred basis.
+- **Traditional IRA**: Individual retirement account allowing individuals to direct pre-tax income towards investments that can grow tax-deferred until retirement withdrawals.
+- **Roth IRA**: Individual retirement account allowing individuals to invest after-tax income, with tax-free withdrawals in retirement.
+- **Pension Plan**: Employer-sponsored retirement plan that provides a fixed monthly benefit based on salary and years of service.
+
+## Conclusion
+Effective retirement planning is crucial for ensuring a secure and fulfilling retirement. It requires careful consideration of your goals, resources, and potential challenges. Regularly reviewing and updating your retirement plan is essential to stay on track and make necessary adjustments as circumstances change.`,
+        duration: 40,
+        quizId: 'fin-402-quiz-1',
         completed: false
       }
     ]
