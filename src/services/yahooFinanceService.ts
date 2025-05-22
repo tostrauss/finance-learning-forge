@@ -51,58 +51,69 @@ export async function getHistoricalPrices(
   symbol: string
 ): Promise<{ date: string; open: number; high: number; low: number; close: number; volume?: number }[]> {
   try {
-    const url = `/api/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1mo`; // Common parameters
+    const url = `/api/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1mo`;
     const response = await axios.get<HistoricalResponse>(url);
-    
+
+    // DEBUGGING: Log the entire response data
+    console.log(`Yahoo Finance API response for ${symbol}:`, JSON.stringify(response.data, null, 2));
+
     if (response.data?.chart?.error) {
       console.error(`Error from Yahoo Finance API for ${symbol}:`, response.data.chart.error);
       throw new Error(`API error for ${symbol}: ${JSON.stringify(response.data.chart.error)}`);
     }
     
+    // This is where your error is likely originating (around original line 63)
     if (!response.data?.chart?.result?.[0]) {
+      console.error(`Invalid data structure for ${symbol}. Full response logged above.`);
       throw new Error(`Invalid data structure in API response for ${symbol}`);
     }
     
     const result = response.data.chart.result[0];
     
     if (!result.timestamp || !result.indicators?.quote?.[0]) {
+      // Add more specific logging if this condition is met
+      console.error(`Missing timestamp or indicators.quote for ${symbol}:`, result);
       throw new Error(`Missing required data from API for ${symbol}`);
     }
     
     const timestamps = result.timestamp;
-    const quotes = result.indicators.quote[0]; // This will now be of type IndicatorQuote
+    const quotes = result.indicators.quote[0];
     
-    // Filter out invalid data points and ensure all OHLC values exist
     return timestamps
       .map((ts, i) => {
         const close = quotes.close?.[i];
-        // Ensure close is a valid number before proceeding
-        if (close === undefined || close === null || isNaN(close)) return null; 
+        if (close === undefined || close === null || isNaN(close)) {
+          // console.warn(`Skipping data point for ${symbol} at timestamp ${ts} due to invalid close price.`);
+          return null;
+        }
         
-        // Provide defaults if open, high, low are missing, using close as a fallback
         const open = quotes.open?.[i] ?? close;
-        const high = quotes.high?.[i] ?? Math.max(open, close); // Ensure high is at least open or close
-        const low = quotes.low?.[i] ?? Math.min(open, close);   // Ensure low is at most open or close
+        const high = quotes.high?.[i] ?? Math.max(open, close);
+        const low = quotes.low?.[i] ?? Math.min(open, close);
         const volume = quotes.volume?.[i];
         
-        // Final check for NaN on all critical values if they were potentially null from API
-        if (isNaN(open) || isNaN(high) || isNaN(low)) return null;
+        if (isNaN(open) || isNaN(high) || isNaN(low)) {
+          // console.warn(`Skipping data point for ${symbol} at timestamp ${ts} due to NaN in OHLC.`);
+          return null;
+        }
 
         return {
           date: new Date(ts * 1000).toISOString().slice(0, 10),
           open,
           high,
           low,
-          close, // close is already validated
+          close,
           volume: volume === undefined || volume === null || isNaN(volume) ? undefined : volume
         };
       })
-      .filter((point): point is Exclude<typeof point, null> => point !== null); // Type guard for filter
+      .filter((point): point is Exclude<typeof point, null> => point !== null);
   } catch (error) {
-    // Log the error if it's not already an API error stringified above
     if (!(error instanceof Error && error.message.startsWith('API error for'))) {
-        console.error(`Error fetching historical prices for ${symbol}:`, error);
+        console.error(`General error in getHistoricalPrices for ${symbol}:`, error);
     }
-    throw error; // Re-throw the error to be handled by the caller
+    // It's often better to let the calling code decide how to handle the error,
+    // e.g., by showing a message to the user or retrying.
+    // For now, re-throwing is fine.
+    throw error;
   }
 }

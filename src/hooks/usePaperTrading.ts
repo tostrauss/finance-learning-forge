@@ -5,8 +5,8 @@ export interface Position {
   symbol: string;
   name: string;
   shares: number;
-  avgCost: number;
-  currentPrice: number; // This would ideally be updated by a market data feed
+  avgCost: number; // Changed from averagePrice to avgCost to match usage
+  currentPrice: number;
   value: number;
   gain: number;
   gainPercent: number;
@@ -15,17 +15,34 @@ export interface Position {
 export interface PortfolioMetrics {
   totalValue: number;
   cashBalance: number;
-  totalGain: number; // Overall gain/loss from trades
-  // dayGain and dayGainPercent would require tracking initial daily values or price changes
-  dayGain: number; 
+  totalGain: number;
+  dayGain: number;
   dayGainPercent: number;
+}
+
+// Define an interface for Trade History
+export interface TradeHistoryEntry {
+  id: string;
+  type: 'BUY' | 'SELL';
+  symbol: string;
+  shares: number;
+  price: number;
+  date: string; // ISO string date
+  total: number;
+}
+
+// Define an interface for portfolio history data points (for the chart)
+interface PortfolioHistoryPoint {
+  timestamp: number;
+  totalValue: number;
 }
 
 interface PortfolioData {
   positions: Position[];
   metrics: PortfolioMetrics;
-  initialCash: number; // Store the initial cash for this specific portfolio
-  // name?: string; // Optional: if you want to store the simulation name here too
+  initialCash: number;
+  tradeHistory?: TradeHistoryEntry[]; // Renamed from history for clarity
+  portfolioValueHistory?: PortfolioHistoryPoint[]; // For chart data
 }
 
 interface AllPortfolios {
@@ -45,14 +62,15 @@ const defaultMetrics = (cash: number): PortfolioMetrics => ({
 
 const emptyPositions: Position[] = [];
 const emptyMetrics: PortfolioMetrics = defaultMetrics(0);
+const emptyHistory: TradeHistoryEntry[] = []; // Define empty history
+const emptyPortfolioValueHistory: PortfolioHistoryPoint[] = []; // For chart data
 
 
-export const usePaperTrading = (
-  portfolioId: string | null,
-  initialCashForNewPortfolio?: number
-) => {
-  const [positions, setPositions] = useState<Position[]>(emptyPositions);
+export const usePaperTrading = (portfolioId: string | null, initialCash?: number) => {
+  const [positions, setPositions] = useState<Position[]>(emptyPositions); // Initialized as []
   const [metrics, setMetrics] = useState<PortfolioMetrics>(emptyMetrics);
+  const [tradeHistory, setTradeHistory] = useState<TradeHistoryEntry[]>(emptyHistory); // Renamed from history
+  const [portfolioValueHistory, setPortfolioValueHistory] = useState<PortfolioHistoryPoint[]>(emptyPortfolioValueHistory); // New state for chart
 
   const loadAllPortfolios = useCallback((): AllPortfolios => {
     try {
@@ -67,7 +85,7 @@ export const usePaperTrading = (
   const savePortfolioData = useCallback((id: string, data: PortfolioData) => {
     try {
       const allPortfolios = loadAllPortfolios();
-      allPortfolios[id] = data;
+      allPortfolios[id] = data; // data now includes tradeHistory and portfolioValueHistory
       localStorage.setItem(ALL_PORTFOLIOS_LS_KEY, JSON.stringify(allPortfolios));
     } catch (error) {
       console.error(`Error saving portfolio data for ${id}:`, error);
@@ -79,6 +97,8 @@ export const usePaperTrading = (
     if (!portfolioId) {
       setPositions(emptyPositions);
       setMetrics(emptyMetrics);
+      setTradeHistory(emptyHistory);
+      setPortfolioValueHistory(emptyPortfolioValueHistory); // Reset portfolio value history
       return;
     }
 
@@ -88,45 +108,80 @@ export const usePaperTrading = (
     if (currentPortfolioData) {
       setPositions(currentPortfolioData.positions);
       setMetrics(currentPortfolioData.metrics);
+      setTradeHistory(currentPortfolioData.tradeHistory || emptyHistory);
+      setPortfolioValueHistory(currentPortfolioData.portfolioValueHistory || emptyPortfolioValueHistory); // Load portfolio value history
     } else {
-      // New portfolio for this ID, initialize it
-      const startingCash = initialCashForNewPortfolio !== undefined ? initialCashForNewPortfolio : DEFAULT_CASH;
+      const startingCash = initialCash !== undefined ? initialCash : DEFAULT_CASH;
+      const initialPortfolioValuePoint: PortfolioHistoryPoint = { timestamp: Date.now(), totalValue: startingCash };
       const newPortfolioData: PortfolioData = {
         positions: [],
         metrics: defaultMetrics(startingCash),
         initialCash: startingCash,
+        tradeHistory: [],
+        portfolioValueHistory: [initialPortfolioValuePoint], // Initialize with current value
       };
       setPositions(newPortfolioData.positions);
       setMetrics(newPortfolioData.metrics);
-      // Save this new portfolio structure immediately
+      setTradeHistory(newPortfolioData.tradeHistory);
+      setPortfolioValueHistory(newPortfolioData.portfolioValueHistory); // Set initial portfolio value history
       savePortfolioData(portfolioId, newPortfolioData);
     }
-  }, [portfolioId, initialCashForNewPortfolio, loadAllPortfolios, savePortfolioData]);
+  }, [portfolioId, initialCash, loadAllPortfolios, savePortfolioData]);
 
   // Effect to save the active portfolio's data when it changes
   useEffect(() => {
-    if (portfolioId && (positions !== emptyPositions || metrics !== emptyMetrics)) {
-      // Avoid saving if it's still the initial empty state before loading
+    if (portfolioId && (positions !== emptyPositions || metrics !== emptyMetrics || tradeHistory !== emptyHistory || portfolioValueHistory !== emptyPortfolioValueHistory)) {
       const allPortfolios = loadAllPortfolios();
       const currentPortfolioData = allPortfolios[portfolioId];
-      const initialCash = currentPortfolioData?.initialCash || 
-                          (initialCashForNewPortfolio !== undefined ? initialCashForNewPortfolio : DEFAULT_CASH);
+      
+      const resolvedPortfolioInitialCash = currentPortfolioData?.initialCash || 
+                                      (initialCash !== undefined ? initialCash : DEFAULT_CASH);
 
-      savePortfolioData(portfolioId, { positions, metrics, initialCash });
+      savePortfolioData(portfolioId, { positions, metrics, initialCash: resolvedPortfolioInitialCash, tradeHistory, portfolioValueHistory });
     }
-  }, [portfolioId, positions, metrics, initialCashForNewPortfolio, savePortfolioData, loadAllPortfolios]);
+  }, [portfolioId, positions, metrics, tradeHistory, portfolioValueHistory, initialCash, savePortfolioData, loadAllPortfolios]);
+
+  // Effect to update portfolioValueHistory when metrics.totalValue changes
+  useEffect(() => {
+    // Ensure portfolioId is active, metrics are populated (not empty/initial), and totalValue is a number.
+    if (portfolioId && metrics !== emptyMetrics && typeof metrics.totalValue === 'number') {
+      setPortfolioValueHistory(prevValueHistory => {
+        const newPoint: PortfolioHistoryPoint = { timestamp: Date.now(), totalValue: metrics.totalValue };
+
+        if (prevValueHistory.length === 0) {
+          // This case handles if initial history was empty and metrics just got populated.
+          return [newPoint];
+        }
+
+        const lastPoint = prevValueHistory[prevValueHistory.length - 1];
+        // Add new point only if total value has actually changed.
+        if (lastPoint.totalValue !== newPoint.totalValue) {
+          // Optional: Limit history size
+          // const MAX_HISTORY_POINTS = 1000;
+          // const updatedHistory = [...prevValueHistory, newPoint];
+          // if (updatedHistory.length > MAX_HISTORY_POINTS) {
+          //   return updatedHistory.slice(updatedHistory.length - MAX_HISTORY_POINTS);
+          // }
+          // return updatedHistory;
+          return [...prevValueHistory, newPoint];
+        }
+        
+        // If value is the same, do not add a new point to prevent clutter,
+        // unless specific logic for time-based points is added (e.g., daily snapshot).
+        return prevValueHistory; // No change to history
+      });
+    }
+  }, [portfolioId, metrics]); // Rely on `metrics` object changing.
 
 
   const recalculateMetrics = useCallback((updatedPositions: Position[], currentCashBalance: number): PortfolioMetrics => {
-    const positionsValue = updatedPositions.reduce((sum, pos) => sum + pos.value, 0); // pos.value is currentPrice * shares
+    const positionsValue = updatedPositions.reduce((sum, pos) => sum + pos.value, 0);
     const newTotalValue = currentCashBalance + positionsValue;
     
     const allPortfolios = loadAllPortfolios();
     const activePortfolioInitialCash = portfolioId ? (allPortfolios[portfolioId]?.initialCash || DEFAULT_CASH) : DEFAULT_CASH;
     const newTotalGain = newTotalValue - activePortfolioInitialCash;
 
-    // Note: dayGain and dayGainPercent would require more complex tracking of start-of-day prices.
-    // Preserving previous values or using placeholders for now.
     const currentDayGain = metrics.dayGain; 
     const currentDayGainPercent = metrics.dayGainPercent;
 
@@ -140,89 +195,147 @@ export const usePaperTrading = (
   }, [portfolioId, loadAllPortfolios, metrics.dayGain, metrics.dayGainPercent]);
 
 
-  const executeBuy = useCallback((symbol: string, name: string, price: number, shares: number) => {
-    if (!portfolioId) throw new Error("No active portfolio to execute buy.");
-
-    const orderValue = price * shares;
-    if (orderValue > metrics.cashBalance) {
-      throw new Error('Insufficient funds for this trade');
+  const executeBuy = async (marketSymbol: string, name: string, price: number, shares: number): Promise<void> => {
+    if (!portfolioId) {
+      console.error("No active portfolio to execute buy order.");
+      return;
     }
-
-    let updatedPositions;
-    const existingPosition = positions.find(p => p.symbol === symbol);
-
-    if (existingPosition) {
-      const newShares = existingPosition.shares + shares;
-      const newAvgCost = ((existingPosition.avgCost * existingPosition.shares) + orderValue) / newShares;
-      updatedPositions = positions.map(p =>
-        p.symbol === symbol
-          ? {
-            ...p,
-            shares: newShares,
-            avgCost: newAvgCost,
-            currentPrice: price, // Trade price becomes current price
-            value: newShares * price,
-            gain: (price - newAvgCost) * newShares,
-            gainPercent: newAvgCost > 0 ? ((price / newAvgCost) - 1) * 100 : 0,
-          }
-          : p
-      );
-    } else {
-      updatedPositions = [
-        ...positions,
-        {
-          symbol,
-          name,
-          shares,
-          avgCost: price,
-          currentPrice: price, // Trade price becomes current price
-          value: shares * price,
-          gain: 0,
-          gainPercent: 0,
-        },
-      ];
-    }
+    const cost = price * shares;
     
-    setPositions(updatedPositions);
-    const newCashBalance = metrics.cashBalance - orderValue;
-    setMetrics(recalculateMetrics(updatedPositions, newCashBalance));
+    let buySuccessful = false;
+    setMetrics(prevMetrics => {
+      const currentCash = prevMetrics?.cashBalance ?? initialCash ?? 0;
+      if (cost > currentCash) {
+        console.error("Insufficient funds to buy.");
+        return prevMetrics || defaultMetrics(initialCash ?? 0);
+      }
+      buySuccessful = true; // Mark as successful if cash check passes
 
-  }, [portfolioId, positions, metrics, recalculateMetrics]);
+      // Update positions (can be done outside if preferred, but needs access to prevPositions)
+      setPositions(prevPositions => {
+        const existingPosition = prevPositions.find(p => p.symbol === marketSymbol);
+        let newPositions;
+        if (existingPosition) {
+          const totalShares = existingPosition.shares + shares;
+          const totalValue = existingPosition.value + cost;
+          newPositions = prevPositions.map(p =>
+            p.symbol === marketSymbol
+              ? {
+                  ...p,
+                  shares: totalShares,
+                  avgCost: totalValue / totalShares, // Corrected avgCost calculation
+                  value: totalValue, // Value is shares * currentPrice, but here it's cost basis
+                  currentPrice: price, // Assuming price is current market price
+                }
+              : p
+          );
+        } else {
+          newPositions = [
+            ...prevPositions,
+            {
+              symbol: marketSymbol,
+              name: name || marketSymbol,
+              shares: shares,
+              avgCost: price,
+              currentPrice: price,
+              value: cost,
+              gain: 0,
+              gainPercent: 0,
+            },
+          ];
+        }
+        // localStorage.setItem(`paperTradingPortfolio_${portfolioId}`, JSON.stringify(newPositions)); // Handled by savePortfolioData effect
+        return newPositions;
+      });
 
-  const executeSell = useCallback((symbol: string, price: number, sharesToSell: number) => {
-    if (!portfolioId) throw new Error("No active portfolio to execute sell.");
+      const newCashBalance = currentCash - cost;
+      // Recalculate total portfolio value based on new positions and cash
+      // This needs to be done after positions state is updated, or pass newPositions to recalculateMetrics
+      // For now, simplifying:
+      const updatedMetrics = recalculateMetrics(positions, newCashBalance); // Pass current positions state
+      return updatedMetrics;
+    });
 
-    const position = positions.find(p => p.symbol === symbol);
-    if (!position) throw new Error(`You don't own ${symbol}`);
-    if (position.shares < sharesToSell) {
-      throw new Error(`You only have ${position.shares} shares of ${symbol} to sell.`);
+    if (buySuccessful) { // Only add to history if buy was successful
+      setTradeHistory(prevTradeHistory => {
+        const newEntry: TradeHistoryEntry = { // Explicitly type newEntry
+          id: `trade_${Date.now()}_${marketSymbol}`,
+          type: 'BUY' as 'BUY',
+          symbol: marketSymbol,
+          shares,
+          price,
+          date: new Date().toISOString(),
+          total: cost,
+        };
+        // const updatedHistory = [newEntry, ...prevHistory];
+        // localStorage.setItem(`paperTradingHistory_${portfolioId}`, JSON.stringify(updatedHistory)); // Handled by savePortfolioData effect
+        return [newEntry, ...prevTradeHistory];
+      });
+    }
+  };
+
+  const executeSell = async (marketSymbol: string, price: number, sharesToSell: number): Promise<void> => {
+    if (!portfolioId) {
+      console.error("No active portfolio to execute sell order.");
+      return;
     }
 
-    const saleValue = price * sharesToSell;
-    let updatedPositions;
+    let sellSuccessful = false;
+    let proceeds = 0;
 
-    if (position.shares === sharesToSell) {
-      updatedPositions = positions.filter(p => p.symbol !== symbol);
-    } else {
-      const remainingShares = position.shares - sharesToSell;
-      updatedPositions = positions.map(p =>
-        p.symbol === symbol
-          ? {
-            ...p,
-            shares: remainingShares,
-            currentPrice: price, // Trade price becomes current price
-            value: remainingShares * price,
-            gain: (price - p.avgCost) * remainingShares,
-            gainPercent: p.avgCost > 0 ? ((price / p.avgCost) - 1) * 100 : 0,
-          }
-          : p
-      );
+    setPositions(prevPositions => {
+      const positionToSell = prevPositions.find(p => p.symbol === marketSymbol);
+      if (!positionToSell || positionToSell.shares < sharesToSell) {
+        console.error("Not enough shares to sell or position not found.");
+        return prevPositions;
+      }
+      
+      sellSuccessful = true;
+      proceeds = price * sharesToSell;
+      let newPositions;
+      if (positionToSell.shares === sharesToSell) {
+        newPositions = prevPositions.filter(p => p.symbol !== marketSymbol);
+      } else {
+        newPositions = prevPositions.map(p =>
+          p.symbol === marketSymbol
+            ? {
+                ...p,
+                shares: p.shares - sharesToSell,
+                // Value should be updated based on currentPrice * new shares
+                value: (p.shares - sharesToSell) * p.currentPrice, 
+                // avgCost remains the same
+              }
+            : p
+        );
+      }
+      // localStorage.setItem(`paperTradingPortfolio_${portfolioId}`, JSON.stringify(newPositions)); // Handled by savePortfolioData effect
+      return newPositions;
+    });
+
+    if (sellSuccessful) {
+      setMetrics(prevMetrics => {
+        const currentCash = prevMetrics?.cashBalance ?? initialCash ?? 0;
+        const newCashBalance = currentCash + proceeds;
+        const updatedMetrics = recalculateMetrics(positions, newCashBalance); // Pass current positions state
+        return updatedMetrics;
+      });
+      
+      setTradeHistory(prevTradeHistory => {
+          const newEntry: TradeHistoryEntry = { // Explicitly type newEntry
+              id: `trade_${Date.now()}_${marketSymbol}`,
+              type: 'SELL' as 'SELL',
+              symbol: marketSymbol,
+              shares: sharesToSell,
+              price,
+              date: new Date().toISOString(),
+              total: proceeds,
+          };
+          // const updatedHistory = [newEntry, ...prevHistory];
+          // localStorage.setItem(`paperTradingHistory_${portfolioId}`, JSON.stringify(updatedHistory)); // Handled by savePortfolioData effect
+          return [newEntry, ...prevTradeHistory];
+      });
     }
-
-    setPositions(updatedPositions);
-    const newCashBalance = metrics.cashBalance + saleValue;
-    setMetrics(recalculateMetrics(updatedPositions, newCashBalance));
-  }, [portfolioId, positions, metrics, recalculateMetrics]);
+  };
 
   const updatePositionCurrentPrices = useCallback((priceUpdates: Array<{ symbol: string; newPrice: number }>) => {
     if (!positions.length || !priceUpdates.length) return;
@@ -245,7 +358,6 @@ export const usePaperTrading = (
       return pos;
     });
 
-    // Only update state if there were actual changes to prices or derived values
     if (JSON.stringify(updatedPositions) !== JSON.stringify(positions)) {
       setPositions(updatedPositions);
       setMetrics(prevMetrics => recalculateMetrics(updatedPositions, prevMetrics.cashBalance));
@@ -256,6 +368,8 @@ export const usePaperTrading = (
   return {
     positions,
     metrics,
+    tradeHistory, // Renamed from 'history'
+    portfolioHistory: portfolioValueHistory, // This is for the chart
     executeBuy,
     executeSell,
     updatePositionCurrentPrices,

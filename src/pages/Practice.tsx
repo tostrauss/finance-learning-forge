@@ -4,10 +4,10 @@ import { useWatchlistManager } from '@/hooks/useWatchlistManager';
 import PracticeWatchlistItemRow from '../components/PracticeWatchlistItemRow';
 import type { AssetType } from '@/components/trading/WatchlistWidget';
 import SearchSecurities from '@/components/trading/SearchSecurities';
-import { X as XIcon, Plus as PlusIcon, Settings as SettingsIcon, Trash2 as Trash2Icon } from 'lucide-react'; // Added SettingsIcon and Trash2Icon
+import { X as XIcon, Plus as PlusIcon, Settings as SettingsIcon, Trash2 as Trash2Icon } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
-import { usePaperTrading } from '@/hooks/usePaperTrading';
-import { useStockSearch } from '@/hooks/useStockSearch'; // Import useStockSearch
+import { usePaperTrading, type Holding } from '@/hooks/usePaperTrading'; // Modified: Import Holding type
+import { useStockSearch } from '@/hooks/useStockSearch';
 import { getHistoricalPrices } from '@/services/yahooFinanceService';
 
 // Keys for storing displayed boards in localStorage
@@ -44,6 +44,7 @@ const PracticePage: React.FC = () => {
   const [tradePrice, setTradePrice] = useState('');
   const [tradeError, setTradeError] = useState<string | null>(null);
   const [tradeTotalCost, setTradeTotalCost] = useState<number>(0);
+  const [isFetchingTradePrice, setIsFetchingTradePrice] = useState(false);
 
   // Stock Search for Trading
   const {
@@ -62,7 +63,7 @@ const PracticePage: React.FC = () => {
   // State for "Simulate Portfolio" Modal
   const [isSimulateModalOpen, setIsSimulateModalOpen] = useState(false);
   const [simulationNameInput, setSimulationNameInput] = useState('');
-  const [simulationCashInput, setSimulationCashInput] = useState('10000'); // Default to 10000
+  const [simulationCashInput, setSimulationCashInput] = useState('10000');
 
   // State for Portfolio Settings Dropdown
   const [isSettingsDropdownOpen, setIsSettingsDropdownOpen] = useState(false);
@@ -76,8 +77,15 @@ const PracticePage: React.FC = () => {
     metrics: paperMetrics,
     executeBuy,
     executeSell,
-    updatePositionCurrentPrices, // Get the new function
-  } = usePaperTrading(activePortfolioId, currentInitialCashForHook); // Pass ID and initial cash
+    updatePositionCurrentPrices,
+  } = usePaperTrading(activePortfolioId, currentInitialCashForHook);
+
+  // State for Holding Trade Modal
+  const [selectedHoldingForTrade, setSelectedHoldingForTrade] = useState<Holding | null>(null);
+  const [holdingTradeQuantityInput, setHoldingTradeQuantityInput] = useState('');
+  const [holdingTradePriceInput, setHoldingTradePriceInput] = useState('');
+  const [holdingTradeError, setHoldingTradeError] = useState<string | null>(null);
+  const [isHoldingTradeModalOpen, setIsHoldingTradeModalOpen] = useState(false);
 
   // Load simulations from localStorage on mount
   useEffect(() => {
@@ -174,6 +182,42 @@ const PracticePage: React.FC = () => {
   }, [activePortfolioId, updatePositionCurrentPrices, paperPositions.map(p => p.symbol).join(',')]); // Re-run if active portfolio or its symbols change
 
 
+  // Effect to fetch live price for the tradeSymbol when it changes or search is dismissed
+  useEffect(() => {
+    const fetchLivePriceForTrade = async () => {
+      // Only fetch if a symbol is present AND search results are not currently shown
+      if (tradeSymbol && tradeSymbol.trim().length > 0 && !showTradeSearchResults) {
+        setIsFetchingTradePrice(true);
+        // setTradeError(null); // Clear previous errors - let's be more specific
+        try {
+          const history = await getHistoricalPrices(tradeSymbol.trim());
+          if (history && history.length > 0) {
+            const latestPrice = history[history.length - 1].close;
+            setTradePrice(latestPrice.toFixed(2).toString()); // Rounded to 2 decimal places
+            setTradeError(null); // Clear error if price fetch is successful
+          } else {
+            // Don't clear tradePrice, allow manual entry or use stale price from search
+            setTradeError(`Could not fetch a live price for ${tradeSymbol}.`);
+          }
+        } catch (error) {
+          console.error(`Error fetching live price for ${tradeSymbol}:`, error);
+          // Don't clear tradePrice
+          setTradeError(`Failed to fetch live price for ${tradeSymbol}.`);
+        } finally {
+          setIsFetchingTradePrice(false);
+        }
+      }
+    };
+
+    // Debounce to avoid fetching on every keystroke and to allow search results to hide
+    const debounceTimeout = setTimeout(() => {
+      fetchLivePriceForTrade();
+    }, 750);
+
+    return () => clearTimeout(debounceTimeout);
+  }, [tradeSymbol, showTradeSearchResults]); // Re-run when tradeSymbol or showTradeSearchResults changes
+
+
   const toggleBoard = useCallback((id: string) => {
     setDisplayedBoardIds(prev =>
       prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id]
@@ -182,8 +226,8 @@ const PracticePage: React.FC = () => {
 
   const handleAddSecurity = (symbol: string) => {
     if (!addingToBoard) return;
-    // Cast to AssetType because import is type-only
-    addItemToBoard(addingToBoard, symbol, 'Stock' as AssetType);
+    // Cast to AssetType because import is type-only. Use a valid AssetType.
+    addItemToBoard(addingToBoard, symbol, 'security' as AssetType); // Changed 'Stock' to 'security'
     setAddingToBoard(null);
   };
 
@@ -205,21 +249,24 @@ const PracticePage: React.FC = () => {
     setTradeSearchQuery(newSymbol); // Update search query
     if (newSymbol.length > 0) {
       setShowTradeSearchResults(true);
+      // tradePrice will be updated by the useEffect or can be manually entered
     } else {
       setShowTradeSearchResults(false);
+      setTradePrice(''); // Clear price if symbol is cleared
     }
   };
 
   const handleSelectTradeSymbol = (security: StockSearchResult) => {
     console.log('Selected security data:', security); // <-- ADD THIS LINE
     setTradeSymbol(security.symbol);
-    // Use the CORRECT price field name here:
+    // Use the price from search results for immediate UI update.
+    // The useEffect will then fetch a more current "live" price.
     if (security.regularMarketPrice !== undefined) { 
-      setTradePrice(security.regularMarketPrice.toString()); 
+      setTradePrice(security.regularMarketPrice.toFixed(2).toString()); // Rounded to 2 decimal places
     } else {
       setTradePrice(''); 
     }
-    setShowTradeSearchResults(false);
+    setShowTradeSearchResults(false); // This helps trigger the live price fetch in useEffect
     setTradeSearchQuery(''); 
   };
 
@@ -255,6 +302,61 @@ const PracticePage: React.FC = () => {
       setTradeError(error.message || 'Trade execution failed.');
     }
   };
+
+
+  // Handlers for Holding Trade Modal
+  const handleOpenHoldingTradeModal = (holding: Holding) => {
+    setSelectedHoldingForTrade(holding);
+    setHoldingTradeQuantityInput('');
+    setHoldingTradePriceInput(holding.currentPrice ? holding.currentPrice.toFixed(2) : '');
+    setHoldingTradeError(null);
+    setIsHoldingTradeModalOpen(true);
+  };
+
+  const handleCloseHoldingTradeModal = () => {
+    setIsHoldingTradeModalOpen(false);
+    setSelectedHoldingForTrade(null); // Clear selected holding
+    setHoldingTradeQuantityInput('');
+    setHoldingTradePriceInput('');
+    setHoldingTradeError(null);
+  };
+
+  const handleExecuteHoldingTrade = async (action: 'buy' | 'sell') => {
+    if (!selectedHoldingForTrade || !activePortfolioId) {
+      setHoldingTradeError("No holding selected or portfolio inactive.");
+      return;
+    }
+
+    const quantityNum = parseInt(holdingTradeQuantityInput, 10);
+    const priceNum = parseFloat(holdingTradePriceInput);
+
+    if (isNaN(quantityNum) || quantityNum <= 0) {
+      setHoldingTradeError("Please enter a valid quantity.");
+      return;
+    }
+    if (isNaN(priceNum) || priceNum <= 0) {
+      setHoldingTradeError("Please enter a valid price.");
+      return;
+    }
+
+    setHoldingTradeError(null);
+
+    try {
+      if (action === 'buy') {
+        executeBuy(selectedHoldingForTrade.symbol, selectedHoldingForTrade.name, priceNum, quantityNum);
+      } else { // sell
+        if (quantityNum > selectedHoldingForTrade.shares) {
+          setHoldingTradeError(`Cannot sell more shares than you own (${selectedHoldingForTrade.shares}).`);
+          return;
+        }
+        executeSell(selectedHoldingForTrade.symbol, priceNum, quantityNum);
+      }
+      handleCloseHoldingTradeModal(); // Close modal on successful trade
+    } catch (error: any) {
+      setHoldingTradeError(error.message || `${action === 'buy' ? 'Buy' : 'Sell'} execution failed.`);
+    }
+  };
+
 
   const boardsToShow = boards.filter(b => displayedBoardIds.includes(b.id));
 
@@ -440,21 +542,61 @@ const PracticePage: React.FC = () => {
                 )}
               </div>
             </div>
-            {/* Chart Area with defined height */}
-            <div className="bg-gray-200 h-3/5 flex items-center justify-center"> {/* MODIFIED: Changed flex-grow to h-3/5 */}
-              <p className="text-gray-500 text-lg">{chartTitle} Area</p>
+            {/* Chart Area with defined height and new structure */}
+            <div className="bg-gray-200 h-3/5 flex flex-col p-3">
+              {activePortfolioId && paperMetrics && activeSimulation ? (
+                <>
+                  {/* Top: Total Value Display */}
+                  <div className="mb-2">
+                    <span className="text-sm text-gray-600">{activeSimulation.name}</span>
+                    <div className="flex items-baseline">
+                      <span className="text-2xl font-bold text-gray-800">
+                        ${paperMetrics.totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                      </span>
+                      {/* Placeholder for change/percentage if available later */}
+                    </div>
+                    <span className="text-xs text-gray-500">Total Portfolio Value</span>
+                  </div>
+
+                  {/* Middle: Chart Placeholder */}
+                  <div className="flex-grow border border-gray-300 bg-white flex items-center justify-center my-2 rounded">
+                    <p className="text-gray-400 italic">Portfolio Value Over Time Chart Area</p>
+                  </div>
+
+                  {/* Bottom: Time Variables (Placeholder Buttons/Labels) */}
+                  <div className="flex justify-around items-center pt-2 border-t border-gray-300">
+                    {['1D', '5D', '1M', '3M', '6M', 'YTD', '1Y', 'MAX'].map(period => (
+                      <button 
+                        key={period} 
+                        className="text-xs px-2 py-1 rounded hover:bg-gray-300 text-gray-700"
+                        title={`Select ${period} view (feature to be implemented)`}
+                      >
+                        {period}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-500 text-lg text-center px-4">
+                    {chartTitle === "Portfolio Overview" && !activePortfolioId 
+                      ? "Create or select a portfolio to view its performance." 
+                      : `${chartTitle} - Performance data will appear here.`}
+                  </p>
+                </div>
+              )}
             </div>
-            {/* MOVED Portfolio Metrics Display to underneath the chart */}
-            {activePortfolioId && paperMetrics && (
-                 <div className="mt-4 p-2 border-t bg-gray-50 rounded"> {/* MODIFIED: Added mt-4, border-t */}
-                    <h3 className="text-md font-semibold mb-2">
-                        {activeSimulation?.name || 'Portfolio'} Summary
+
+            {/* Portfolio Metrics Display - MOVED to be directly underneath the chart block */}
+            {activePortfolioId && paperMetrics && activeSimulation && (
+                 <div className="mt-3 p-3 border-t bg-gray-50 rounded shadow-sm">
+                    <h3 className="text-md font-semibold mb-2 text-gray-700">
+                        {activeSimulation.name} Summary
                     </h3>
-                    <div className="text-sm space-y-1">
-                        <p><strong>Total Value:</strong> ${paperMetrics.totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                        <p><strong>Cash:</strong> ${paperMetrics.cashBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                        <p><strong>Total Gain:</strong> <span className={paperMetrics.totalGain >= 0 ? 'text-green-600' : 'text-red-600'}>${paperMetrics.totalGain.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></p>
-                        {/* You can add day gain/percent here once calculated in usePaperTrading */}
+                    <div className="text-sm space-y-1 text-gray-600">
+                        <p><strong>Total Value:</strong> <span className="font-medium text-gray-800">${paperMetrics.totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></p>
+                        <p><strong>Available Cash:</strong> <span className="font-medium text-gray-800">${paperMetrics.cashBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></p>
+                        <p><strong>Total Gain / Loss:</strong> <span className={`font-medium ${paperMetrics.totalGain >= 0 ? 'text-green-600' : 'text-red-600'}`}>${paperMetrics.totalGain.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></p>
                     </div>
                 </div>
             )}
@@ -521,8 +663,8 @@ const PracticePage: React.FC = () => {
                     value={tradePrice}
                     onChange={(e) => setTradePrice(e.target.value)}
                     className="mt-1 block w-full px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    placeholder="e.g., 150.00"
-                    disabled={!activePortfolioId || isSettingsDropdownOpen} // Disable if dropdown is open
+                    placeholder={isFetchingTradePrice ? "Fetching price..." : "e.g., 150.00"}
+                    disabled={!activePortfolioId || isSettingsDropdownOpen || isFetchingTradePrice} // Disable if fetching or dropdown open
                   />
                 </div>
                 {/* Display Total Trade Cost */}
@@ -557,10 +699,16 @@ const PracticePage: React.FC = () => {
                 paperPositions.length > 0 ? (
                 <ul>
                     {paperPositions.map(h => (
-                    <li key={h.symbol} className="border-b py-2">
+                    <li 
+                        key={h.symbol} 
+                        className="border-b py-2 cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+                        onClick={() => handleOpenHoldingTradeModal(h)}
+                    >
                         <div className="font-medium">{h.name} ({h.symbol})</div>
                         <div className="text-sm text-gray-600">Qty: {h.shares} - Value: ${h.value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                        <div className="text-sm text-gray-600">Avg Cost: ${h.avgCost.toFixed(2)} - Gain: <span className={h.gain >=0 ? 'text-green-600' : 'text-red-600'}>${h.gain.toFixed(2)} ({h.gainPercent.toFixed(2)}%)</span></div>
+                        <div className="text-sm text-gray-600">
+                            Avg Cost: ${h.avgCost.toFixed(2)} - Current: ${h.currentPrice.toFixed(2)} - Gain: <span className={h.gain >=0 ? 'text-green-600' : 'text-red-600'}>${h.gain.toFixed(2)} ({h.gainPercent.toFixed(2)}%)</span>
+                        </div>
                     </li>
                     ))}
 
@@ -619,7 +767,13 @@ const PracticePage: React.FC = () => {
                   <ul className="p-2">
                     {b.items.length === 0 && <li className="text-sm text-gray-500">Empty list</li>}
                     {b.items.map(item => (
-                      <PracticeWatchlistItemRow key={item.symbol} symbol={item.symbol} assetType={item.assetType as AssetType} onSelect={() => console.log(item.symbol)} onRemove={() => removeItemFromBoard(b.id, item.symbol)} />
+                      <PracticeWatchlistItemRow
+                        key={item.symbol}
+                        item={item} // Pass the whole item object
+                        assetType={item.assetType} // Pass assetType from the item
+                        onSelect={() => console.log(item.symbol)}
+                        onRemove={() => removeItemFromBoard(b.id, item.symbol)}
+                      />
                     ))}
                   </ul>
                 </div>
@@ -645,8 +799,8 @@ const PracticePage: React.FC = () => {
         </div>
       </div>
 
-      {/* "Simulate Portfolio" Modal */
-      isSimulateModalOpen && (
+      {/* "Simulate Portfolio" Modal */}
+      {isSimulateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
             <h3 className="text-xl font-semibold mb-4">Create New Portfolio Simulation</h3>
@@ -688,6 +842,90 @@ const PracticePage: React.FC = () => {
                 className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
               >
                 Create Simulation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Trade Holding Modal */}
+      {isHoldingTradeModalOpen && selectedHoldingForTrade && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex justify-between items-center mb-2">
+                <h3 className="text-xl font-semibold">
+                    Trade: {selectedHoldingForTrade.name} ({selectedHoldingForTrade.symbol})
+                </h3>
+                <button onClick={handleCloseHoldingTradeModal} className="text-gray-500 hover:text-gray-700">
+                    <XIcon size={24} />
+                </button>
+            </div>
+            <p className="text-sm text-gray-600 mb-1">Currently holding: {selectedHoldingForTrade.shares} shares</p>
+            <p className="text-sm text-gray-600 mb-4">Last Price: ${selectedHoldingForTrade.currentPrice ? selectedHoldingForTrade.currentPrice.toFixed(2) : 'N/A'}</p>
+
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="holding-trade-quantity" className="block text-sm font-medium text-gray-700">Quantity</label>
+                <input
+                  type="number"
+                  id="holding-trade-quantity"
+                  value={holdingTradeQuantityInput}
+                  onChange={(e) => setHoldingTradeQuantityInput(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  placeholder="e.g., 10"
+                />
+              </div>
+              <div>
+                <label htmlFor="holding-trade-price" className="block text-sm font-medium text-gray-700">Price per Share</label>
+                <input
+                  type="number"
+                  id="holding-trade-price"
+                  value={holdingTradePriceInput}
+                  onChange={(e) => setHoldingTradePriceInput(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  placeholder="e.g., 150.00"
+                />
+              </div>
+              {
+                parseInt(holdingTradeQuantityInput, 10) > 0 && parseFloat(holdingTradePriceInput) > 0 && (
+                  <div className="text-sm text-gray-600 mt-1">
+                    Estimated Value: ${(parseInt(holdingTradeQuantityInput, 10) * parseFloat(holdingTradePriceInput)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                )
+              }
+            </div>
+
+            {holdingTradeError && <p className="text-xs text-red-600 mt-3 py-1">{holdingTradeError}</p>}
+
+            <div className="mt-6 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+              <button
+                type="button"
+                onClick={() => handleExecuteHoldingTrade('buy')}
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50"
+                disabled={!holdingTradeQuantityInput || !holdingTradePriceInput || parseInt(holdingTradeQuantityInput, 10) <= 0 || parseFloat(holdingTradePriceInput) <= 0}
+              >
+                Buy More
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                    setHoldingTradeQuantityInput(selectedHoldingForTrade.shares.toString());
+                    if (selectedHoldingForTrade.currentPrice) {
+                        setHoldingTradePriceInput(selectedHoldingForTrade.currentPrice.toFixed(2));
+                    }
+                }}
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600 disabled:opacity-50"
+                disabled={selectedHoldingForTrade.shares <= 0}
+              >
+                Sell All ({selectedHoldingForTrade.shares})
+              </button>
+              <button
+                type="button"
+                onClick={() => handleExecuteHoldingTrade('sell')}
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
+                disabled={!holdingTradeQuantityInput || !holdingTradePriceInput || parseInt(holdingTradeQuantityInput, 10) <= 0 || parseFloat(holdingTradePriceInput) <= 0 || parseInt(holdingTradeQuantityInput, 10) > selectedHoldingForTrade.shares}
+              >
+                Sell Selected Qty
               </button>
             </div>
           </div>

@@ -3,13 +3,6 @@ import { AssetType } from '@/components/trading/WatchlistWidget';
 import { Sparklines, SparklinesLine, SparklinesSpots } from 'react-sparklines';
 import { getHistoricalPrices } from '@/services/yahooFinanceService'; // Import your real API service
 
-interface PracticeWatchlistItemRowProps {
-  symbol: string;
-  assetType: AssetType; // assetType might not be used by getHistoricalPrices but good to keep for consistency
-  onSelect: (symbol: string) => void;
-  onRemove: (symbol: string) => void;
-}
-
 // Define the expected structure for our component's data state
 interface DisplayData {
   price: number;
@@ -19,7 +12,21 @@ interface DisplayData {
   historicalData: number[];
 }
 
-const PracticeWatchlistItemRow: React.FC<PracticeWatchlistItemRowProps> = ({ symbol, assetType, onSelect, onRemove }) => {
+export interface WatchlistItemType { // Or import the actual type
+  symbol: string;
+  name?: string;
+  // ... other properties of your item
+}
+
+export interface PracticeWatchlistItemRowProps {
+  item: WatchlistItemType; // Ensure this line exists and WatchlistItemType is correct
+  assetType: AssetType; // assetType might not be used by getHistoricalPrices but good to keep for consistency
+  onSelect: (symbol: string) => void;
+  onRemove: (symbol: string) => void;
+}
+
+const PracticeWatchlistItemRow: React.FC<PracticeWatchlistItemRowProps> = ({ item, assetType, onSelect, onRemove }) => {
+  const { symbol } = item; // Destructure symbol from item
   const [data, setData] = useState<DisplayData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
