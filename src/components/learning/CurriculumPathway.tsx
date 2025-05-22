@@ -213,8 +213,7 @@ const CurriculumPathway: React.FC<CurriculumPathwayProps> = ({
                               onClick={() => {
                                 if (status !== 'locked' && onSelectCourse) {
                                   onSelectCourse(course.id);
-                                } else if (status !== 'locked') {
-                                  navigate(`/learning/courses/${course.id}`);
+                                } else if (status !== 'locked') {                  navigate(`/learning/course/${course.id}`);
                                 }
                               }}
                               className={`p-3 rounded border cursor-pointer hover:shadow-md transition-shadow ${

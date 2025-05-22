@@ -317,6 +317,161 @@ export const financeQuizzes: Quiz[] = [
 }
 ];
 
+export const programRequirements: ProgramRequirement[] = [
+  {
+    id: 'core',
+    name: 'Core Requirements',
+    description: 'Foundational finance courses required for all concentrations',
+    requiredCredits: 30,
+    categories: [
+      {
+        name: 'Required Core Courses',
+        requiredCredits: 30,
+        courses: ['FIN 201', 'FIN 280', 'FIN 302', 'FIN 403']
+      }
+    ]
+  },
+  {
+    id: 'concentration',
+    name: 'Concentration Requirements',
+    description: 'Specialized courses for your chosen concentration',
+    requiredCredits: 18,
+    categories: [
+      {
+        name: 'Required Concentration Courses',
+        requiredCredits: 18,
+        courses: [] // Varies by concentration
+      }
+    ]
+  },
+  {
+    id: 'electives',
+    name: 'Finance Electives',
+    description: 'Additional finance courses of your choice',
+    requiredCredits: 12,
+    categories: [
+      {
+        name: 'Finance Electives',
+        requiredCredits: 12,
+        courses: [] // Any upper-level finance courses
+      }
+    ]
+  }
+];
+
+export const financeCourses: FinanceCourse[] = [
+  {
+    id: 'fin-201',
+    courseCode: 'FIN 201',
+    title: 'Principles of Finance',
+    credits: 3,
+    description: 'Introduction to core financial concepts, including time value of money, risk and return, financial statements, and capital budgeting.',
+    academicLevel: 200,
+    prerequisites: [],
+    concentrations: ['general', 'corporate', 'investments', 'banking', 'planning'],
+    modules: [
+      {
+        id: 'fin-201-1',
+        title: 'Introduction to Financial Concepts',
+        description: 'Learn the fundamental principles and concepts of finance.',
+        content: '# Introduction to Financial Concepts\n\nFinance is the study of money management...',
+        duration: 30,
+        quizId: 'fin-201-quiz-1',
+        completed: false
+      },
+      {
+        id: 'fin-201-2',
+        title: 'Time Value of Money',
+        description: 'Understand present value, future value, and their applications.',
+        content: '# Time Value of Money\n\nThe time value of money is a fundamental concept...',
+        duration: 45,
+        quizId: 'fin-201-quiz-2',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fin-302',
+    courseCode: 'FIN 302',
+    title: 'Corporate Finance',
+    credits: 3,
+    description: 'Advanced study of corporate financial management, including capital structure, dividend policy, and working capital management.',
+    academicLevel: 300,
+    prerequisites: ['FIN 201'],
+    concentrations: ['general', 'corporate'],
+    modules: [
+      {
+        id: 'fin-302-1',
+        title: 'Capital Structure and Cost of Capital',
+        description: 'Understanding how firms choose between debt and equity financing.',
+        content: '# Capital Structure and Cost of Capital\n\nCapital structure refers to the mix of debt and equity...',
+        duration: 60,
+        quizId: 'fin-302-quiz-1',
+        completed: false
+      }
+    ]
+  },
+  {
+    id: 'fin-403',
+    courseCode: 'FIN 403',
+    title: 'Investment Analysis',
+    credits: 3,
+    description: 'Analysis of investment vehicles, portfolio theory, and market efficiency.',
+    academicLevel: 400,
+    prerequisites: ['FIN 201'],
+    concentrations: ['general', 'investments'],
+    modules: [
+      {
+        id: 'fin-403-1',
+        title: 'Portfolio Theory',
+        description: 'Learn modern portfolio theory and asset allocation strategies.',
+        content: '# Portfolio Theory\n\nModern Portfolio Theory (MPT) is a framework...',
+        duration: 45,
+        quizId: 'fin-403-quiz-1',
+        completed: false
+      }
+    ]
+  }
+];
+
+export const concentrations: Concentration[] = [
+  {
+    id: 'general',
+    name: 'General Finance',
+    description: 'A broad foundation in financial principles and practices, suitable for students seeking a comprehensive understanding of finance.',
+    requiredCourses: ['FIN 201', 'FIN 302', 'FIN 403'],
+    electiveCourses: ['FIN 306', 'FIN 402', 'FIN 405', 'FIN 411']
+  },
+  {
+    id: 'corporate',
+    name: 'Corporate Finance',
+    description: 'Focus on financial management within corporations, including capital structure, investments, and value creation.',
+    requiredCourses: ['FIN 201', 'FIN 302', 'FIN 405', 'FIN 407'],
+    electiveCourses: ['FIN 403', 'FIN 411', 'FIN 422']
+  },
+  {
+    id: 'investments',
+    name: 'Investment Management',
+    description: 'Specialization in portfolio management, securities analysis, and investment strategies.',
+    requiredCourses: ['FIN 201', 'FIN 403', 'FIN 404', 'FIN 406'],
+    electiveCourses: ['FIN 302', 'FIN 405', 'FIN 422']
+  },
+  {
+    id: 'banking',
+    name: 'Banking and Financial Services',
+    description: 'Focus on banking operations, financial institutions, and financial services management.',
+    requiredCourses: ['FIN 201', 'FIN 280', 'FIN 380', 'FIN 480'],
+    electiveCourses: ['FIN 302', 'FIN 403', 'FIN 411']
+  },
+  {
+    id: 'planning',
+    name: 'Financial Planning',
+    description: 'Preparation for careers in personal financial planning, wealth management, and advisory services.',
+    requiredCourses: ['FIN 201', 'FIN 306', 'FIN 402', 'FIN 408'],
+    electiveCourses: ['FIN 403', 'FIN 405', 'FIN 411']
+  }
+];
+
 export const financeModules: { [key: string]: Module[] } = {
   'fin-201': [
     {
@@ -1931,8 +2086,257 @@ WACC = 7.2% + 1.8% = 9%
   duration: 40,
   quizId: 'corporate-finance-1-quiz',
   completed: false
-}
-  ],
-}
+},
+  {
+  id: 'banking-services',
+  title: 'Financial Services & Banking',
+  description: 'Explore banking operations, financial products, regulatory compliance, and client relationship management.',
+  content: `# Financial Services & Banking
 
-// Continuing with other course content...
+## Introduction to Banking and Financial Services
+
+Banking and financial services form the backbone of the modern economy by:
+- Facilitating the flow of funds between savers and borrowers
+- Providing safe storage of wealth
+- Enabling efficient payment mechanisms
+- Supporting economic growth through credit creation
+- Offering risk management tools
+
+Financial institutions serve as intermediaries, transforming short-term deposits into longer-term loans, managing risk, and providing specialized services to meet diverse client needs.
+
+## Types of Financial Institutions
+
+### Commercial Banks
+Commercial banks are the most visible financial institutions, providing everyday banking services including:
+- Deposit accounts (checking, savings, certificates of deposit)
+- Loans (mortgages, personal loans, business loans)
+- Payment services
+- Basic investment products
+
+Examples: JPMorgan Chase, Bank of America, Wells Fargo
+
+### Investment Banks
+Investment banks focus on capital markets activities:
+- Securities underwriting
+- Mergers and acquisitions advisory
+- Trading and market-making
+- Institutional asset management
+- Research services
+
+Examples: Goldman Sachs, Morgan Stanley, Credit Suisse
+
+### Credit Unions
+Credit unions are member-owned, not-for-profit institutions that:
+- Serve defined membership groups
+- Typically offer higher deposit rates and lower loan rates
+- Focus on consumer financial services
+- Operate with a member-first philosophy
+
+### Insurance Companies
+Insurance companies provide protection against financial loss:
+- Life and health insurance
+- Property and casualty coverage
+- Annuities and retirement products
+- Reinsurance services
+
+### Asset Management Firms
+These firms manage investments on behalf of clients:
+- Mutual funds
+- Exchange-traded funds (ETFs)
+- Separately managed accounts
+- Alternative investments
+
+### Fintech Companies
+Technology-driven financial service providers:
+- Digital payment platforms
+- Online lending services
+- Robo-advisors
+- Blockchain and cryptocurrency services
+
+## Banking Operations
+
+### The Banking Business Model
+
+Banks operate on a fundamental principle of borrowing at lower rates (deposits) and lending at higher rates (loans):
+
+#### Key Revenue Streams:
+- **Net Interest Income**: The difference between interest earned on assets and paid on liabilities
+- **Fee Income**: Service charges, account fees, loan origination fees
+- **Trading Revenue**: For banks with capital markets operations
+- **Investment Banking Fees**: Advisory and underwriting revenues
+
+#### Key Expense Categories:
+- **Interest Expense**: Cost of deposits and other funding
+- **Operating Costs**: Branches, staff, technology
+- **Credit Costs**: Provisions for loan losses
+- **Regulatory Compliance**: Cost of meeting regulatory requirements
+
+### The Balance Sheet
+
+Banking balance sheets have unique characteristics:
+
+**Assets:**
+- Cash and reserves (highly liquid)
+- Investment securities (moderately liquid)
+- Loans (less liquid)
+- Fixed assets (illiquid)
+
+**Liabilities:**
+- Deposits (customer funds)
+- Wholesale funding (market-based financing)
+- Debt securities
+- Other liabilities
+
+**Equity:**
+- Common equity
+- Preferred equity
+- Retained earnings
+
+### Fractional Reserve Banking
+
+Modern banking systems operate on a fractional reserve basis:
+- Banks keep only a fraction of deposits as reserves
+- The remainder is lent out or invested
+- This process creates "bank money" beyond the original deposit
+- The money multiplier effect amplifies the money supply
+
+Example: With a 10% reserve requirement, a $1,000 deposit could theoretically lead to $10,000 in new money creation through multiple rounds of lending.
+
+## Banking Products and Services
+
+### Deposit Products
+- **Checking Accounts**: Transactional accounts with check-writing privileges
+- **Savings Accounts**: Interest-bearing accounts for short-term savings
+- **Money Market Accounts**: Higher-yield accounts with limited transactions
+- **Certificates of Deposit**: Time deposits with higher rates and penalties for early withdrawal
+
+### Lending Products
+- **Consumer Loans**: Auto loans, personal loans, credit cards
+- **Mortgages**: Home loans (fixed, adjustable, conforming, jumbo)
+- **Commercial Loans**: Business loans, lines of credit, equipment financing
+- **Specialized Lending**: Construction loans, agricultural loans, SBA loans
+
+### Payment Services
+- Electronic funds transfers
+- Wire transfers
+- Credit and debit card processing
+- Digital payment solutions
+- Foreign exchange services
+
+### Wealth Management
+- Financial planning
+- Investment management
+- Trust services
+- Retirement planning
+- Estate planning
+
+## Banking Regulation and Compliance
+
+### Regulatory Bodies
+- **Federal Reserve**: Central bank and primary regulator of bank holding companies
+- **Office of the Comptroller of the Currency (OCC)**: Regulates national banks
+- **Federal Deposit Insurance Corporation (FDIC)**: Insures deposits and regulates state-chartered banks
+- **Consumer Financial Protection Bureau (CFPB)**: Focuses on consumer protection
+
+### Key Banking Regulations
+- **Basel Accords**: International framework for bank capital requirements
+- **Dodd-Frank Act**: Post-2008 reform focusing on systemic risk and consumer protection
+- **Bank Secrecy Act/Anti-Money Laundering**: Rules to prevent financial crimes
+- **Truth in Lending Act**: Disclosure requirements for consumer credit
+
+### Capital Requirements
+Banks must maintain adequate capital to absorb potential losses:
+- **Tier 1 Capital**: Core capital (common equity, retained earnings)
+- **Tier 2 Capital**: Supplementary capital (subordinated debt, loan loss reserves)
+- **Risk-Weighted Assets**: Assets weighted by credit risk
+- **Capital Adequacy Ratio**: Capital as a percentage of risk-weighted assets
+
+### Banking Supervision
+- Regular examinations by regulatory authorities
+- Stress testing to assess resilience
+- Resolution planning ("living wills")
+- Reporting requirements
+
+## Bank Performance Analysis
+
+### Key Performance Indicators
+
+#### Profitability Metrics:
+- **Return on Assets (ROA)**: Net income ÷ Total assets
+- **Return on Equity (ROE)**: Net income ÷ Shareholders' equity
+- **Net Interest Margin (NIM)**: Net interest income ÷ Average earning assets
+- **Efficiency Ratio**: Non-interest expense ÷ Revenue (lower is better)
+
+#### Asset Quality Metrics:
+- **Non-Performing Loan Ratio**: Non-performing loans ÷ Total loans
+- **Loan Loss Provision Ratio**: Loan loss provisions ÷ Total loans
+- **Net Charge-Off Ratio**: Net charge-offs ÷ Total loans
+
+#### Liquidity Metrics:
+- **Loan-to-Deposit Ratio**: Total loans ÷ Total deposits
+- **Liquidity Coverage Ratio (LCR)**: High-quality liquid assets ÷ Short-term obligations
+
+#### Capital Metrics:
+- **Common Equity Tier 1 (CET1) Ratio**: CET1 capital ÷ Risk-weighted assets
+- **Leverage Ratio**: Tier 1 capital ÷ Total assets
+
+### Example: Bank Performance Analysis
+
+Comparing two major banks:
+
+| Metric | Bank A | Bank B | Industry Average |
+|--------|--------|--------|------------------|
+| ROA    | 1.1%   | 0.9%   | 1.0%             |
+| ROE    | 12.5%  | 10.2%  | 11.0%            |
+| NIM    | 3.2%   | 2.8%   | 3.0%             |
+| Efficiency Ratio | 55%  | 62%   | 58%      |
+| NPL Ratio | 0.8% | 1.2%  | 1.0%             |
+| CET1 Ratio | 12.3% | 13.5% | 12.0%          |
+
+This analysis shows Bank A with stronger profitability and asset quality, while Bank B maintains higher capital levels.
+
+## Modern Banking Trends
+
+### Digital Transformation
+- Mobile and online banking platforms
+- API-enabled open banking
+- Cloud migration
+- AI and machine learning applications
+
+### Fintech Disruption and Collaboration
+- Digital-only "neobanks"
+- Banking-as-a-Service (BaaS)
+- Embedded finance
+- Strategic partnerships between traditional banks and fintech companies
+
+### Changing Customer Expectations
+- Seamless omnichannel experiences
+- Personalized financial services
+- Real-time transactions and information
+- Enhanced user interfaces and experiences
+
+### Regulatory Evolution
+- Open banking mandates
+- Data privacy regulations
+- Regulatory technology ("regtech")
+- Digital asset regulation
+
+### Sustainable Banking
+- ESG (Environmental, Social, Governance) integration
+- Green financing
+- Impact investing
+- Climate risk assessment
+
+## Key Takeaways
+
+- Banks and financial institutions serve as crucial intermediaries in the financial system
+- Different types of financial institutions serve various market segments and needs
+- Banking operations revolve around managing the spread between assets and liabilities
+- Regulatory frameworks ensure stability, transparency, and consumer protection
+- Bank performance analysis uses specialized metrics to evaluate financial health
+- The financial services industry continues to evolve with technological and social changes`,
+  duration: 45,
+  quizId: 'banking-services-quiz',
+  completed: false
+}]
+}

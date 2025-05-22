@@ -126,8 +126,7 @@ const ProgramDashboard: React.FC<ProgramDashboardProps> = ({ userProgress = {
               <CardFooter>
                 <Button 
                   variant="outline" 
-                  className="w-full" 
-                  onClick={() => navigate('/learning/curriculum')}
+                  className="w-full"                  onClick={() => navigate('/learning/curriculum-pathway')}
                 >
                   View Full Curriculum
                 </Button>

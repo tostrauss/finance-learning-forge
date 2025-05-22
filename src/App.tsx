@@ -15,6 +15,8 @@ import Dashboard from "./pages/Dashboard";
 import Watchlist from "./pages/watchlist";
 import Signup from "./pages/Signup";
 import Signin from "./pages/Signin";
+import FinanceLearningPath from "./components/learning/FinanceLearningPath";
+import CurriculumPathway from "./components/learning/CurriculumPathway";
 
 const queryClient = new QueryClient();
 
@@ -28,12 +30,12 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/signin" element={<Signin />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/" element={<Index />} />
+            <Route path="/signup" element={<Signup />} />            <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/watchlist" element={<Watchlist />} />
             <Route path="/learning" element={<Learning />} />
-            <Route path="/learning/path/:pathId" element={<CourseDetail />} />
+            <Route path="/learning/path/:pathId" element={<FinanceLearningPath />} />
+            <Route path="/learning/course" element={<CurriculumPathway />} />
             <Route path="/learning/course/:courseId" element={<CourseDetail />} />
             <Route path="/learning/course/:courseId/:moduleId" element={<ModuleDetail />} />
             <Route
