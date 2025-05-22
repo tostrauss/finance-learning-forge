@@ -230,8 +230,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({
                                 ) : (
                                   <Button 
                                     size="sm" 
-                                    variant="outline"
-                                    onClick={() => navigate(`/learning/courses/${prereq.id}`)}
+                                    variant="outline"                                    onClick={() => navigate(`/learning/course/${prereq.id}`)}
                                   >
                                     View Course
                                   </Button>
@@ -334,13 +333,12 @@ const CourseDetail: React.FC<CourseDetailProps> = ({
                       </Button>
                     ) : isEnrolled ? (
                       <Button 
-                        className="w-full bg-app-purple hover:bg-app-dark-purple"
-                        onClick={() => {
+                        className="w-full bg-app-purple hover:bg-app-dark-purple"                        onClick={() => {
                           if (nextModule) {
-                            navigate(`/learning/courses/${course.id}/modules/${nextModule.id}`);
+                            navigate(`/learning/course/${course.id}/${nextModule.id}`);
                           } else {
                             // If all modules are completed but course isn't marked complete
-                            navigate(`/learning/courses/${course.id}/modules/${course.modules[0].id}`);
+                            navigate(`/learning/course/${course.id}/${course.modules[0].id}`);
                           }
                         }}
                       >
@@ -353,8 +351,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({
                         onClick={() => {
                           // Enrollment logic would go here
                           // For now, we'll just navigate to the first module
-                          if (course.modules.length > 0) {
-                            navigate(`/learning/courses/${course.id}/modules/${course.modules[0].id}`);
+                          if (course.modules.length > 0) {                            navigate(`/learning/course/${course.id}/${course.modules[0].id}`);
                           }
                         }}
                       >
@@ -419,7 +416,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({
                                 : "bg-gray-300 cursor-not-allowed"
                           }`}
                           disabled={!isAvailable}
-                          onClick={() => navigate(`/learning/courses/${course.id}/modules/${module.id}`)}
+                onClick={() => navigate(`/learning/course/${course.id}/${module.id}`)}
                         >
                           {isCompleted ? 'Review Module' : isAvailable ? 'Start Module' : 'Complete Previous Module'}
                         </Button>

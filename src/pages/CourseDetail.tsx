@@ -12,8 +12,7 @@ const CourseDetail = () => {
   const { courseId, pathId } = useParams<{ courseId?: string; pathId?: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // First check if we're viewing a learning path
+    // First check if we're viewing a learning path
   if (location.pathname.includes('/learning/path/')) {
     const learningPath = financeTopics.find(topic => topic.id === pathId);
     if (learningPath) {

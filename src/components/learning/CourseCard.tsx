@@ -66,8 +66,7 @@ const CourseCard = ({ course }: CourseCardProps) => {
         />
       </CardContent>
       <CardFooter className="p-4 pt-0">
-        <Link 
-          to={`/learning/${course.id}`}
+        <Link          to={`/learning/course/${course.id}`}
           className="w-full bg-app-purple hover:bg-app-dark-purple transition-colors text-white py-2 px-4 rounded text-center"
         >
           {course.progress > 0 ? 'Continue Learning' : 'Start Course'}
