@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,22 @@ const Layout = ({ children }: LayoutProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const location = useLocation(); // Keep useLocation if other parts of the "old" file used it
+  const location = useLocation();
+
+  // FIX: Move useEffect hook before any conditional returns
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    // Only add listener if menu might be open or dropdown exists
+    // However, to strictly follow rules of hooks, the effect itself runs,
+    // but its internal logic can be conditional.
+    // For this specific case, the listener is for the dropdown, which is always rendered.
+    window.addEventListener('mousedown', handleClickOutside);
+    return () => window.removeEventListener('mousedown', handleClickOutside);
+  }, []); // dropdownRef is stable, so empty dependency array is fine here.
 
   if (loading) {
     return (
@@ -24,21 +38,11 @@ const Layout = ({ children }: LayoutProps) => {
     );
   }
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    window.addEventListener('mousedown', handleClickOutside);
-    return () => window.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
   return (
     <div className="flex h-screen overflow-hidden bg-app-light-gray">
       <Sidebar />
       <main className="flex-1 overflow-y-auto flex flex-col">
-        {/* Header (assuming this was part of your old Layout structure) */}
+        {/* Header */}
         <div className="flex justify-end items-center p-4 bg-white border-b relative" ref={dropdownRef}>
           {user ? (
             <>
@@ -52,12 +56,14 @@ const Layout = ({ children }: LayoutProps) => {
                 <div className="absolute right-4 top-full mt-2 w-40 bg-white border rounded shadow-lg z-10">
                   <Link
                     to="/dashboard"
+                    onClick={() => setMenuOpen(false)} // Close menu on navigation
                     className="block px-4 py-2 hover:bg-gray-100"
                   >
                     Dashboard
                   </Link>
                   <Link
                     to="/profile"
+                    onClick={() => setMenuOpen(false)} // Close menu on navigation
                     className="block px-4 py-2 hover:bg-gray-100"
                   >
                     Profile
@@ -65,6 +71,7 @@ const Layout = ({ children }: LayoutProps) => {
                   <button
                     onClick={() => {
                       logout();
+                      setMenuOpen(false); // Close menu
                       navigate('/signin');
                     }}
                     className="w-full text-left px-4 py-2 hover:bg-gray-100"
@@ -90,8 +97,8 @@ const Layout = ({ children }: LayoutProps) => {
           )}
         </div>
 
-        {/* Page content - Reverted to consistent padding */}
-        <div className="p-6 flex-1"> {/* Assuming p-6 was the old default padding */}
+        {/* Page content */}
+        <div className="p-6 flex-1">
           {children}
         </div>
       </main>

@@ -2,13 +2,55 @@ import { Course, UserProgress, Quiz } from '../types/learning';
 
 // Export finance topics
 export const financeTopics = [
-  { id: 'corporate-finance', name: 'Corporate Finance', progress: 35, color: '#5C2D91' },
-  { id: 'planning', name: 'Financial Planning & Analysis', progress: 20, color: '#0078D4' },
-  { id: 'investments', name: 'Investment Management', progress: 30, color: '#217346' },
-  { id: 'banking', name: 'Financial Services & Banking', progress: 15, color: '#4A154B' },
-  { id: 'general', name: 'General Finance', progress: 65, color: '#B7472A' },
-  { id: 'international', name: 'International Finance', progress: 10, color: '#8764B8' },
-  { id: 'personal', name: 'Personal Financial Planning', progress: 45, color: '#C74634' },
+  { 
+    id: 'corporate-finance', 
+    name: 'Corporate Finance', 
+    description: 'Master corporate financial management, capital structure, and business valuation techniques.',
+    progress: 35, 
+    color: '#5C2D91' 
+  },
+  { 
+    id: 'planning', 
+    name: 'Financial Planning & Analysis', 
+    description: 'Learn strategic financial planning, budgeting, and business analysis.',
+    progress: 20, 
+    color: '#0078D4' 
+  },
+  { 
+    id: 'investments', 
+    name: 'Investment Management', 
+    description: 'Study portfolio management, asset allocation, and investment strategies.',
+    progress: 30, 
+    color: '#217346' 
+  },
+  { 
+    id: 'banking', 
+    name: 'Financial Services & Banking', 
+    description: 'Explore banking operations, financial services, and risk management.',
+    progress: 15, 
+    color: '#4A154B' 
+  },
+  { 
+    id: 'general', 
+    name: 'General Finance', 
+    description: 'Build a strong foundation in financial principles and practices.',
+    progress: 65, 
+    color: '#B7472A' 
+  },
+  { 
+    id: 'international', 
+    name: 'International Finance', 
+    description: 'Learn about global markets, forex, and international financial management.',
+    progress: 10, 
+    color: '#8764B8' 
+  },
+  { 
+    id: 'personal', 
+    name: 'Personal Financial Planning', 
+    description: 'Develop skills in personal finance, retirement planning, and wealth management.',
+    progress: 45, 
+    color: '#C74634' 
+  },
 ];
 
 export const userProgress: UserProgress = {
@@ -166,7 +208,73 @@ export const quizzes: Quiz[] = [
         explanation: 'The Quick Ratio (also known as the Acid-Test Ratio) measures a company\'s ability to pay short-term obligations with its most liquid assets, excluding inventory which may take time to sell.'
       }
     ]
-  }
+  }, 
+  {
+  id: 'banking-services-quiz',
+  title: 'Financial Services & Banking',
+  questions: [
+    {
+      id: 'bank-q1',
+      question: "Which of the following is NOT one of the primary functions of commercial banks?",
+      options: [
+        "Accepting deposits from customers",
+        "Providing loans to individuals and businesses",
+        "Setting monetary policy for the economy",
+        "Facilitating payment services"
+      ],
+      correctAnswer: 2,
+      explanation: "Setting monetary policy is a function of central banks (like the Federal Reserve), not commercial banks. Commercial banks focus on accepting deposits, making loans, and providing payment services."
+    },
+    {
+      id: 'bank-q2',
+      question: "What is the primary difference between investment banks and commercial banks?",
+      options: [
+        "Investment banks operate internationally while commercial banks operate domestically",
+        "Investment banks primarily help companies raise capital while commercial banks focus on deposits and loans",
+        "Investment banks are regulated while commercial banks are unregulated",
+        "Investment banks only serve wealthy individuals while commercial banks serve everyone"
+      ],
+      correctAnswer: 1,
+      explanation: "Investment banks primarily help companies raise capital through underwriting securities and facilitating mergers and acquisitions, while commercial banks focus on taking deposits and making loans."
+    },
+    {
+      id: 'bank-q3',
+      question: "Which regulatory requirement establishes minimum capital levels for banks to maintain based on their risk profile?",
+      options: [
+        "Truth in Lending Act",
+        "Basel Accords",
+        "Dodd-Frank Act",
+        "Glass-Steagall Act"
+      ],
+      correctAnswer: 1,
+      explanation: "The Basel Accords are international banking regulations that establish minimum capital requirements for banks based on their risk-weighted assets."
+    },
+    {
+      id: 'bank-q4',
+      question: "What is the process called when banks create money by lending out deposits?",
+      options: [
+        "Monetary expansion",
+        "Capital creation",
+        "Fractional reserve banking",
+        "Quantitative easing"
+      ],
+      correctAnswer: 2,
+      explanation: "Fractional reserve banking is the system where banks keep only a fraction of deposits as reserves and lend out the rest, effectively creating new money in the economy."
+    },
+    {
+      id: 'bank-q5',
+      question: "Which of the following metrics is most useful for evaluating a bank's ability to absorb unexpected losses?",
+      options: [
+        "Return on Assets (ROA)",
+        "Net Interest Margin (NIM)",
+        "Capital Adequacy Ratio (CAR)",
+        "Loan-to-Deposit Ratio (LDR)"
+      ],
+      correctAnswer: 2,
+      explanation: "The Capital Adequacy Ratio (CAR) measures a bank's capital as a percentage of its risk-weighted assets, indicating its ability to absorb unexpected losses while maintaining solvency."
+    }
+  ]
+}
 ];
 
 export const courses: Course[] = [
@@ -581,7 +689,259 @@ Developed by Harry Markowitz, MPT suggests that by combining assets with differe
         duration: 25,
         quizId: '',
         completed: false
-      }
+      },
+      {
+  id: 'banking-services',
+  title: 'Financial Services & Banking',
+  description: 'Explore banking operations, financial products, regulatory compliance, and client relationship management.',
+  content: `# Financial Services & Banking
+
+## Introduction to Banking and Financial Services
+
+Banking and financial services form the backbone of the modern economy by:
+- Facilitating the flow of funds between savers and borrowers
+- Providing safe storage of wealth
+- Enabling efficient payment mechanisms
+- Supporting economic growth through credit creation
+- Offering risk management tools
+
+Financial institutions serve as intermediaries, transforming short-term deposits into longer-term loans, managing risk, and providing specialized services to meet diverse client needs.
+
+## Types of Financial Institutions
+
+### Commercial Banks
+Commercial banks are the most visible financial institutions, providing everyday banking services including:
+- Deposit accounts (checking, savings, certificates of deposit)
+- Loans (mortgages, personal loans, business loans)
+- Payment services
+- Basic investment products
+
+Examples: JPMorgan Chase, Bank of America, Wells Fargo
+
+### Investment Banks
+Investment banks focus on capital markets activities:
+- Securities underwriting
+- Mergers and acquisitions advisory
+- Trading and market-making
+- Institutional asset management
+- Research services
+
+Examples: Goldman Sachs, Morgan Stanley, Credit Suisse
+
+### Credit Unions
+Credit unions are member-owned, not-for-profit institutions that:
+- Serve defined membership groups
+- Typically offer higher deposit rates and lower loan rates
+- Focus on consumer financial services
+- Operate with a member-first philosophy
+
+### Insurance Companies
+Insurance companies provide protection against financial loss:
+- Life and health insurance
+- Property and casualty coverage
+- Annuities and retirement products
+- Reinsurance services
+
+### Asset Management Firms
+These firms manage investments on behalf of clients:
+- Mutual funds
+- Exchange-traded funds (ETFs)
+- Separately managed accounts
+- Alternative investments
+
+### Fintech Companies
+Technology-driven financial service providers:
+- Digital payment platforms
+- Online lending services
+- Robo-advisors
+- Blockchain and cryptocurrency services
+
+## Banking Operations
+
+### The Banking Business Model
+
+Banks operate on a fundamental principle of borrowing at lower rates (deposits) and lending at higher rates (loans):
+
+#### Key Revenue Streams:
+- **Net Interest Income**: The difference between interest earned on assets and paid on liabilities
+- **Fee Income**: Service charges, account fees, loan origination fees
+- **Trading Revenue**: For banks with capital markets operations
+- **Investment Banking Fees**: Advisory and underwriting revenues
+
+#### Key Expense Categories:
+- **Interest Expense**: Cost of deposits and other funding
+- **Operating Costs**: Branches, staff, technology
+- **Credit Costs**: Provisions for loan losses
+- **Regulatory Compliance**: Cost of meeting regulatory requirements
+
+### The Balance Sheet
+
+Banking balance sheets have unique characteristics:
+
+**Assets:**
+- Cash and reserves (highly liquid)
+- Investment securities (moderately liquid)
+- Loans (less liquid)
+- Fixed assets (illiquid)
+
+**Liabilities:**
+- Deposits (customer funds)
+- Wholesale funding (market-based financing)
+- Debt securities
+- Other liabilities
+
+**Equity:**
+- Common equity
+- Preferred equity
+- Retained earnings
+
+### Fractional Reserve Banking
+
+Modern banking systems operate on a fractional reserve basis:
+- Banks keep only a fraction of deposits as reserves
+- The remainder is lent out or invested
+- This process creates "bank money" beyond the original deposit
+- The money multiplier effect amplifies the money supply
+
+Example: With a 10% reserve requirement, a $1,000 deposit could theoretically lead to $10,000 in new money creation through multiple rounds of lending.
+
+## Banking Products and Services
+
+### Deposit Products
+- **Checking Accounts**: Transactional accounts with check-writing privileges
+- **Savings Accounts**: Interest-bearing accounts for short-term savings
+- **Money Market Accounts**: Higher-yield accounts with limited transactions
+- **Certificates of Deposit**: Time deposits with higher rates and penalties for early withdrawal
+
+### Lending Products
+- **Consumer Loans**: Auto loans, personal loans, credit cards
+- **Mortgages**: Home loans (fixed, adjustable, conforming, jumbo)
+- **Commercial Loans**: Business loans, lines of credit, equipment financing
+- **Specialized Lending**: Construction loans, agricultural loans, SBA loans
+
+### Payment Services
+- Electronic funds transfers
+- Wire transfers
+- Credit and debit card processing
+- Digital payment solutions
+- Foreign exchange services
+
+### Wealth Management
+- Financial planning
+- Investment management
+- Trust services
+- Retirement planning
+- Estate planning
+
+## Banking Regulation and Compliance
+
+### Regulatory Bodies
+- **Federal Reserve**: Central bank and primary regulator of bank holding companies
+- **Office of the Comptroller of the Currency (OCC)**: Regulates national banks
+- **Federal Deposit Insurance Corporation (FDIC)**: Insures deposits and regulates state-chartered banks
+- **Consumer Financial Protection Bureau (CFPB)**: Focuses on consumer protection
+
+### Key Banking Regulations
+- **Basel Accords**: International framework for bank capital requirements
+- **Dodd-Frank Act**: Post-2008 reform focusing on systemic risk and consumer protection
+- **Bank Secrecy Act/Anti-Money Laundering**: Rules to prevent financial crimes
+- **Truth in Lending Act**: Disclosure requirements for consumer credit
+
+### Capital Requirements
+Banks must maintain adequate capital to absorb potential losses:
+- **Tier 1 Capital**: Core capital (common equity, retained earnings)
+- **Tier 2 Capital**: Supplementary capital (subordinated debt, loan loss reserves)
+- **Risk-Weighted Assets**: Assets weighted by credit risk
+- **Capital Adequacy Ratio**: Capital as a percentage of risk-weighted assets
+
+### Banking Supervision
+- Regular examinations by regulatory authorities
+- Stress testing to assess resilience
+- Resolution planning ("living wills")
+- Reporting requirements
+
+## Bank Performance Analysis
+
+### Key Performance Indicators
+
+#### Profitability Metrics:
+- **Return on Assets (ROA)**: Net income ÷ Total assets
+- **Return on Equity (ROE)**: Net income ÷ Shareholders' equity
+- **Net Interest Margin (NIM)**: Net interest income ÷ Average earning assets
+- **Efficiency Ratio**: Non-interest expense ÷ Revenue (lower is better)
+
+#### Asset Quality Metrics:
+- **Non-Performing Loan Ratio**: Non-performing loans ÷ Total loans
+- **Loan Loss Provision Ratio**: Loan loss provisions ÷ Total loans
+- **Net Charge-Off Ratio**: Net charge-offs ÷ Total loans
+
+#### Liquidity Metrics:
+- **Loan-to-Deposit Ratio**: Total loans ÷ Total deposits
+- **Liquidity Coverage Ratio (LCR)**: High-quality liquid assets ÷ Short-term obligations
+
+#### Capital Metrics:
+- **Common Equity Tier 1 (CET1) Ratio**: CET1 capital ÷ Risk-weighted assets
+- **Leverage Ratio**: Tier 1 capital ÷ Total assets
+
+### Example: Bank Performance Analysis
+
+Comparing two major banks:
+
+| Metric | Bank A | Bank B | Industry Average |
+|--------|--------|--------|------------------|
+| ROA    | 1.1%   | 0.9%   | 1.0%             |
+| ROE    | 12.5%  | 10.2%  | 11.0%            |
+| NIM    | 3.2%   | 2.8%   | 3.0%             |
+| Efficiency Ratio | 55%  | 62%   | 58%      |
+| NPL Ratio | 0.8% | 1.2%  | 1.0%             |
+| CET1 Ratio | 12.3% | 13.5% | 12.0%          |
+
+This analysis shows Bank A with stronger profitability and asset quality, while Bank B maintains higher capital levels.
+
+## Modern Banking Trends
+
+### Digital Transformation
+- Mobile and online banking platforms
+- API-enabled open banking
+- Cloud migration
+- AI and machine learning applications
+
+### Fintech Disruption and Collaboration
+- Digital-only "neobanks"
+- Banking-as-a-Service (BaaS)
+- Embedded finance
+- Strategic partnerships between traditional banks and fintech companies
+
+### Changing Customer Expectations
+- Seamless omnichannel experiences
+- Personalized financial services
+- Real-time transactions and information
+- Enhanced user interfaces and experiences
+
+### Regulatory Evolution
+- Open banking mandates
+- Data privacy regulations
+- Regulatory technology ("regtech")
+- Digital asset regulation
+
+### Sustainable Banking
+- ESG (Environmental, Social, Governance) integration
+- Green financing
+- Impact investing
+- Climate risk assessment
+
+## Key Takeaways
+
+- Banks and financial institutions serve as crucial intermediaries in the financial system
+- Different types of financial institutions serve various market segments and needs
+- Banking operations revolve around managing the spread between assets and liabilities
+- Regulatory frameworks ensure stability, transparency, and consumer protection
+- Bank performance analysis uses specialized metrics to evaluate financial health
+- The financial services industry continues to evolve with technological and social changes`,
+  duration: 45,
+  quizId: 'banking-services-quiz',
+  completed: false
+},
     ]
   },
   {

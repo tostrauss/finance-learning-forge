@@ -1,4 +1,3 @@
-
 export type Quiz = {
   id: string;
   title: string;
@@ -9,6 +8,14 @@ export type Quiz = {
     correctAnswer: number;
     explanation: string;
   }[];
+};
+
+export type FinanceTopic = {
+  id: string;
+  name: string;
+  description: string;
+  progress: number;
+  color: string;
 };
 
 export type Module = {

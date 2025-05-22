@@ -1,5 +1,5 @@
 // src/components/trading/PortfolioWidget.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -26,27 +26,99 @@ const performanceData = [
   { date: '05/10', value: 10385 },
 ];
 
-interface PortfolioWidgetProps {
-  symbol?: string;
-  price?: number;
-  name?: string;
+// Define or import PaperMetrics type
+interface PaperMetrics {
+  totalValue: number;
+  cashBalance: number;
+  totalGain: number;
+  dayGain: number; // Assuming this exists based on usage
+  dayGainPercent: number; // Assuming this exists
+  // Add any other properties that paperMetrics from usePaperTrading might have
 }
 
-const PortfolioWidget: React.FC<PortfolioWidgetProps> = ({ symbol, price, name }) => {
-  const { positions, metrics, executeBuy, executeSell } = usePaperTrading();
+// Assuming PaperPosition and SimulationSettings types are accessible
+// If not, they might need to be imported from where they are defined or redefined here.
+interface PaperPosition {
+  symbol: string;
+  name: string;
+  shares: number;
+  avgCost: number;
+  currentPrice: number;
+  value: number;
+  gain: number;
+  gainPercent: number;
+}
+
+interface SimulationSettings {
+  id: string;
+  name: string;
+  startingCash: number;
+}
+
+interface PortfolioWidgetProps {
+  allSimulations: SimulationSettings[];
+  activePortfolioId: string | null;
+  activePortfolioName?: string;
+  onPortfolioChange: (id: string) => void;
+  
+  tradeableSecuritySymbol?: string;
+  tradeableSecurityPrice?: number | null;
+  tradeableSecurityName?: string;
+
+  executeBuyAction: (marketSymbol: string, name: string, price: number, shares: number) => Promise<void>;
+  executeSellAction: (marketSymbol: string, price: number, shares: number) => Promise<void>;
+  // currentPortfolioCash: number; // This will come from currentPortfolioMetrics
+  currentPortfolioPositions: PaperPosition[] | undefined; // Allow undefined initially if that's possible
+  currentPortfolioMetrics: PaperMetrics | null; // <<<< ADD THIS PROP
+}
+
+const PortfolioWidget: React.FC<PortfolioWidgetProps> = ({
+  allSimulations,
+  activePortfolioId,
+  activePortfolioName,
+  onPortfolioChange,
+  tradeableSecuritySymbol,
+  tradeableSecurityPrice,
+  tradeableSecurityName,
+  executeBuyAction,
+  executeSellAction,
+  // currentPortfolioCash, // Remove if it's part of metrics
+  currentPortfolioPositions,
+  currentPortfolioMetrics, // <<<< DESTRUCTURE THIS PROP
+}) => {
   const { toast } = useToast();
   const [tradeDialogOpen, setTradeDialogOpen] = useState(false);
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy');
   const [tradeShares, setTradeShares] = useState('10');
+  const [quantity, setQuantity] = useState('');
+  const [amount, setAmount] = useState(''); // Total dollar amount
+  const [tradeError, setTradeError] = useState<string | null>(null);
+
+  // Effect to auto-calculate amount when quantity or tradeableSecurityPrice changes
+  useEffect(() => {
+    const qtyNum = parseInt(quantity, 10);
+    if (tradeableSecurityPrice && qtyNum > 0) {
+      setAmount((qtyNum * tradeableSecurityPrice).toFixed(2));
+    } else if (!quantity) {
+      // setAmount(''); // Optionally clear amount if quantity is cleared
+    }
+  }, [quantity, tradeableSecurityPrice]);
+
+  // Reset quantity and amount when the tradeable security changes
+  useEffect(() => {
+    setQuantity('');
+    setAmount('');
+    setTradeError(null);
+  }, [tradeableSecuritySymbol]);
   
   // Calculate allocation data for pie chart
-  const allocationData = positions.length > 0 
-    ? positions.map(pos => ({ name: pos.symbol, value: pos.value }))
-    : [{ name: 'Cash', value: metrics.cashBalance }];
-  
+  const allocationData = (currentPortfolioPositions && currentPortfolioPositions.length > 0)
+    ? currentPortfolioPositions.map(pos => ({ name: pos.symbol, value: pos.value }))
+    : [{ name: 'Cash', value: currentPortfolioMetrics?.cashBalance || 0 }]; // Use metrics here
+
   // Handle opening trade dialog
   const openTradeDialog = (type: 'buy' | 'sell') => {
-    if (!symbol || !price) {
+    if (!tradeableSecuritySymbol || !tradeableSecurityPrice) {
       toast({ 
         title: "Cannot execute trade",
         description: "Please select a stock first",
@@ -56,19 +128,20 @@ const PortfolioWidget: React.FC<PortfolioWidgetProps> = ({ symbol, price, name }
     }
     
     if (type === 'sell') {
-      const position = positions.find(p => p.symbol === symbol);
+      const position = currentPortfolioPositions?.find(p => p.symbol === tradeableSecuritySymbol);
       if (!position) {
         toast({ 
           title: "Cannot Sell",
-          description: `You don't own any shares of ${symbol}`,
+          description: `You don't own any shares of ${tradeableSecuritySymbol}`,
           variant: "destructive"
         });
         return;
       }
       setTradeShares(position.shares.toString());
     } else {
-      const maxShares = Math.floor(metrics.cashBalance / price);
-      setTradeShares(Math.min(10, maxShares).toString());
+      // Use metrics for cash balance
+      const maxShares = currentPortfolioMetrics ? Math.floor(currentPortfolioMetrics.cashBalance / tradeableSecurityPrice) : 0;
+      setTradeShares(Math.min(10, maxShares > 0 ? maxShares : 10).toString()); // ensure maxShares isn't 0 if cash is 0
     }
     
     setTradeType(type);
@@ -76,8 +149,8 @@ const PortfolioWidget: React.FC<PortfolioWidgetProps> = ({ symbol, price, name }
   };
   
   // Handle executing a trade
-  const executeTrade = () => {
-    if (!symbol || !price) return;
+  const executeTrade = async () => { // Make async if actions are async
+    if (!tradeableSecuritySymbol || !tradeableSecurityPrice) return;
     
     const shares = parseInt(tradeShares);
     if (isNaN(shares) || shares <= 0) {
@@ -91,23 +164,32 @@ const PortfolioWidget: React.FC<PortfolioWidgetProps> = ({ symbol, price, name }
     
     try {
       if (tradeType === 'buy') {
-        executeBuy(symbol, name || symbol, price, shares);
+        // Check cash from metrics before buying
+        if (currentPortfolioMetrics && (shares * tradeableSecurityPrice) > currentPortfolioMetrics.cashBalance) {
+            toast({
+                title: "Insufficient Funds",
+                description: "Not enough cash to complete this purchase.",
+                variant: "destructive"
+            });
+            return;
+        }
+        await executeBuyAction(tradeableSecuritySymbol, tradeableSecurityName || tradeableSecuritySymbol, tradeableSecurityPrice, shares);
         toast({ 
           title: "Trade Executed",
-          description: `Bought ${shares} shares of ${symbol} at $${price.toFixed(2)}`
+          description: `Bought ${shares} shares of ${tradeableSecuritySymbol} at $${tradeableSecurityPrice.toFixed(2)}`
         });
       } else {
-        executeSell(symbol, price, shares);
+        await executeSellAction(tradeableSecuritySymbol, tradeableSecurityPrice, shares);
         toast({ 
           title: "Trade Executed",
-          description: `Sold ${shares} shares of ${symbol} at $${price.toFixed(2)}`
+          description: `Sold ${shares} shares of ${tradeableSecuritySymbol} at $${tradeableSecurityPrice.toFixed(2)}`
         });
       }
       setTradeDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) { // Explicitly type error
       toast({ 
         title: "Trade Failed",
-        description: error.message,
+        description: error.message || "An unknown error occurred",
         variant: "destructive"
       });
     }
@@ -115,7 +197,7 @@ const PortfolioWidget: React.FC<PortfolioWidgetProps> = ({ symbol, price, name }
   
   // Update prices of existing positions (in a real app, this would fetch current prices)
   const updatePositionPrices = () => {
-    if (symbol && price && positions.some(p => p.symbol === symbol)) {
+    if (tradeableSecuritySymbol && tradeableSecurityPrice && currentPortfolioPositions?.some(p => p.symbol === tradeableSecuritySymbol)) {
       // In a real implementation, you would update all positions with current prices
       // This is just updating the selected symbol for demo purposes
       toast({
@@ -125,6 +207,71 @@ const PortfolioWidget: React.FC<PortfolioWidgetProps> = ({ symbol, price, name }
     }
   };
 
+  const handleExecuteInternalTrade = async (action: 'buy' | 'sell') => {
+    setTradeError(null);
+    const quantityNum = parseInt(quantity, 10);
+    const totalAmountNum = parseFloat(amount);
+
+    if (!activePortfolioId) {
+      setTradeError('No active portfolio selected in widget.');
+      return;
+    }
+    if (!tradeableSecuritySymbol || !tradeableSecurityPrice) {
+      setTradeError('No security selected for trading.');
+      return;
+    }
+    if (isNaN(quantityNum) || quantityNum <= 0) {
+      setTradeError('Please enter a valid quantity.');
+      return;
+    }
+    if (isNaN(totalAmountNum) || totalAmountNum <= 0) {
+        setTradeError('Please enter or calculate a valid total amount.');
+        return;
+    }
+
+    // Use the price of the security that was passed in
+    const pricePerShareToExecute = tradeableSecurityPrice;
+
+    // Validate amount against calculated amount if needed, or trust tradeableSecurityPrice
+    // For simplicity, we'll trust tradeableSecurityPrice and quantity to derive the cost.
+    const costOfTrade = quantityNum * pricePerShareToExecute;
+
+    // Use metrics for cash balance
+    if (action === 'buy' && currentPortfolioMetrics && costOfTrade > currentPortfolioMetrics.cashBalance) {
+      setTradeError(`Insufficient cash. Trade cost: $${costOfTrade.toFixed(2)}, Available: $${currentPortfolioMetrics.cashBalance.toFixed(2)}`);
+      return;
+    }
+
+    try {
+      const securityName = tradeableSecurityName || tradeableSecuritySymbol;
+      if (action === 'buy') {
+        await executeBuyAction(tradeableSecuritySymbol, securityName, pricePerShareToExecute, quantityNum);
+      } else {
+        await executeSellAction(tradeableSecuritySymbol, pricePerShareToExecute, quantityNum);
+      }
+      setQuantity('');
+      setAmount('');
+    } catch (error: any) {
+      setTradeError(error.message || 'Trade execution failed.');
+    }
+  };
+
+  // Conditional rendering if metrics are not yet available
+  if (!currentPortfolioMetrics) {
+    return (
+        <Card className="h-full flex flex-col items-center justify-center">
+            <CardHeader>
+                <CardTitle className="text-lg font-bold">Portfolio</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p>Loading portfolio data...</p>
+                {/* Or show a spinner/skeleton loader */}
+            </CardContent>
+        </Card>
+    );
+  }
+
+  // Now use currentPortfolioMetrics instead of the undefined 'metrics'
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="px-4 py-3">
@@ -136,16 +283,17 @@ const PortfolioWidget: React.FC<PortfolioWidgetProps> = ({ symbol, price, name }
         <div className="flex justify-between items-center">
           <div>
             <p className="text-sm text-gray-500">Portfolio Value</p>
-            <p className="text-2xl font-bold">${(metrics.totalValue + metrics.cashBalance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            {/* Assuming totalValue in metrics includes cash. If not, adjust. */}
+            <p className="text-2xl font-bold">${(currentPortfolioMetrics.totalValue).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-500">Today's Change</p>
-            <div className={`text-lg font-bold flex items-center justify-end ${metrics.dayGain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {metrics.dayGain >= 0 ? 
+            <div className={`text-lg font-bold flex items-center justify-end ${currentPortfolioMetrics.dayGain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {currentPortfolioMetrics.dayGain >= 0 ? 
                 <ArrowUpRight className="h-5 w-5 mr-1" /> : 
                 <ArrowDownRight className="h-5 w-5 mr-1" />
               }
-              ${metrics.dayGain.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({metrics.dayGainPercent.toFixed(2)}%)
+              ${currentPortfolioMetrics.dayGain.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({currentPortfolioMetrics.dayGainPercent.toFixed(2)}%)
             </div>
           </div>
         </div>
@@ -157,15 +305,15 @@ const PortfolioWidget: React.FC<PortfolioWidgetProps> = ({ symbol, price, name }
               <DollarSign className="h-4 w-4 mr-1" />
               <p className="text-sm">Cash Balance</p>
             </div>
-            <p className="text-lg font-bold">${metrics.cashBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <p className="text-lg font-bold">${currentPortfolioMetrics.cashBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
           </div>
           <div className="bg-gray-50 rounded-md p-3">
             <div className="flex items-center text-gray-600 mb-1">
               <Activity className="h-4 w-4 mr-1" />
               <p className="text-sm">Total Return</p>
             </div>
-            <p className={`text-lg font-bold ${metrics.totalGain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {metrics.totalGain >= 0 ? '+' : ''}${metrics.totalGain.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <p className={`text-lg font-bold ${currentPortfolioMetrics.totalGain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {currentPortfolioMetrics.totalGain >= 0 ? '+' : ''}${currentPortfolioMetrics.totalGain.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -175,7 +323,7 @@ const PortfolioWidget: React.FC<PortfolioWidgetProps> = ({ symbol, price, name }
           <Button 
             onClick={() => openTradeDialog('buy')} 
             className="flex-1 bg-app-purple hover:bg-app-dark-purple"
-            disabled={!symbol || !price}
+            disabled={!tradeableSecuritySymbol || !tradeableSecurityPrice}
           >
             <PlusCircle className="mr-1 h-4 w-4" />
             Buy
@@ -184,7 +332,7 @@ const PortfolioWidget: React.FC<PortfolioWidgetProps> = ({ symbol, price, name }
             onClick={() => openTradeDialog('sell')} 
             variant="outline" 
             className="flex-1 border-app-purple text-app-purple hover:bg-app-light-purple/10"
-            disabled={!symbol || !price || !positions.some(p => p.symbol === symbol)}
+            disabled={!tradeableSecuritySymbol || !tradeableSecurityPrice || !currentPortfolioPositions?.some(p => p.symbol === tradeableSecuritySymbol)}
           >
             <MinusCircle className="mr-1 h-4 w-4" />
             Sell
@@ -200,9 +348,9 @@ const PortfolioWidget: React.FC<PortfolioWidgetProps> = ({ symbol, price, name }
           </TabsList>
           
           <TabsContent value="positions" className="flex-grow overflow-auto">
-            {positions.length > 0 ? (
+            {currentPortfolioPositions && currentPortfolioPositions.length > 0 ? (
               <div className="divide-y">
-                {positions.map(position => (
+                {currentPortfolioPositions.map(position => (
                   <div key={position.symbol} className="py-3 flex justify-between">
                     <div>
                       <p className="font-medium">{position.symbol}</p>
@@ -292,7 +440,7 @@ const PortfolioWidget: React.FC<PortfolioWidgetProps> = ({ symbol, price, name }
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>
-              {tradeType === 'buy' ? 'Buy' : 'Sell'} {symbol}
+              {tradeType === 'buy' ? 'Buy' : 'Sell'} {tradeableSecuritySymbol}
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -311,16 +459,16 @@ const PortfolioWidget: React.FC<PortfolioWidgetProps> = ({ symbol, price, name }
               <div className="bg-gray-50 p-3 rounded-md">
                 <div className="flex justify-between text-sm">
                   <span>Price per Share:</span>
-                  <span>${price?.toFixed(2)}</span>
+                  <span>${tradeableSecurityPrice?.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm mt-1">
                   <span>Total Value:</span>
-                  <span>${(parseFloat(tradeShares) * (price || 0)).toFixed(2)}</span>
+                  <span>${(parseFloat(tradeShares) * (tradeableSecurityPrice || 0)).toFixed(2)}</span>
                 </div>
                 {tradeType === 'buy' && (
                   <div className="flex justify-between text-sm mt-1">
                     <span>Cash Remaining After Trade:</span>
-                    <span>${(metrics.cashBalance - (parseFloat(tradeShares) * (price || 0))).toFixed(2)}</span>
+                    <span>${(currentPortfolioMetrics.cashBalance - (parseFloat(tradeShares) * (tradeableSecurityPrice || 0))).toFixed(2)}</span>
                   </div>
                 )}
               </div>
