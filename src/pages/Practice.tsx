@@ -6,7 +6,7 @@ import type { AssetType } from '@/components/trading/WatchlistWidget';
 import SearchSecurities from '@/components/trading/SearchSecurities';
 import { X as XIcon, Plus as PlusIcon, Settings as SettingsIcon, Trash2 as Trash2Icon } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
-import { usePaperTrading, type Holding } from '@/hooks/usePaperTrading'; // Modified: Import Holding type
+import { usePaperTrading, type Position as Holding } from '@/hooks/usePaperTrading'; // Modified: Import Position and alias as Holding
 import { useStockSearch } from '@/hooks/useStockSearch';
 import { getHistoricalPrices } from '@/services/yahooFinanceService';
 
@@ -506,10 +506,10 @@ const PracticePage: React.FC = () => {
                 )}
                 {activePortfolioId && (
                   <button
-                    onClick={() => setIsSettingsDropdownOpen(prev => !prev)}
-                    className="p-1.5 text-gray-600 hover:text-gray-800 border border-gray-300 rounded hover:bg-gray-100 settings-button" // Added class
+                    onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
+                    className="p-2 rounded hover:bg-gray-200" // Example className
                     aria-label="Portfolio Settings"
-                    aria-expanded={isSettingsDropdownOpen}
+                    aria-expanded={isSettingsDropdownOpen} // Pass the boolean state directly
                     aria-haspopup="true"
                   >
                     <SettingsIcon size={16} />
@@ -724,8 +724,13 @@ const PracticePage: React.FC = () => {
           <div className="w-[29.25%] h-full overflow-y-auto relative p-2">
             <div className="sticky top-0 bg-white z-10 border-b flex justify-between items-center p-2">
               <h2 className="text-lg font-semibold">My Watchlists</h2>
-              <button onClick={() => setIsManaging(!isManaging)} className="text-sm text-blue-600 hover:text-blue-800">
-                {isManaging ? 'Done' : 'Add'}
+              <button 
+                type="button" // Add type attribute
+                onClick={() => setIsManaging(!isManaging)} 
+                className="text-sm text-blue-600 hover:text-blue-800"
+                aria-label={isManaging ? "Done managing watchlists" : "Manage watchlists"} // Add aria-label
+              >
+                {isManaging ? 'Done' : 'Manage'}
               </button>
             </div>
 
@@ -778,7 +783,7 @@ const PracticePage: React.FC = () => {
                   </ul>
                 </div>
               ))
-            ) : (
+            ): (
               <div className="text-center text-gray-500 mt-4">
                 <p>No watchlists selected.</p>
               </div>

@@ -108,8 +108,8 @@ export const usePaperTrading = (portfolioId: string | null, initialCash?: number
     if (currentPortfolioData) {
       setPositions(currentPortfolioData.positions);
       setMetrics(currentPortfolioData.metrics);
-      setTradeHistory(currentPortfolioData.tradeHistory || emptyHistory);
-      setPortfolioValueHistory(currentPortfolioData.portfolioValueHistory || emptyPortfolioValueHistory); // Load portfolio value history
+      setTradeHistory(currentPortfolioData.tradeHistory || emptyHistory); // Provide default
+      setPortfolioValueHistory(currentPortfolioData.portfolioValueHistory || emptyPortfolioValueHistory); // Provide default
     } else {
       const startingCash = initialCash !== undefined ? initialCash : DEFAULT_CASH;
       const initialPortfolioValuePoint: PortfolioHistoryPoint = { timestamp: Date.now(), totalValue: startingCash };
@@ -118,12 +118,12 @@ export const usePaperTrading = (portfolioId: string | null, initialCash?: number
         metrics: defaultMetrics(startingCash),
         initialCash: startingCash,
         tradeHistory: [],
-        portfolioValueHistory: [initialPortfolioValuePoint], // Initialize with current value
+        portfolioValueHistory: [initialPortfolioValuePoint],
       };
       setPositions(newPortfolioData.positions);
       setMetrics(newPortfolioData.metrics);
-      setTradeHistory(newPortfolioData.tradeHistory);
-      setPortfolioValueHistory(newPortfolioData.portfolioValueHistory); // Set initial portfolio value history
+      setTradeHistory(newPortfolioData.tradeHistory || emptyHistory); // Ensure array
+      setPortfolioValueHistory(newPortfolioData.portfolioValueHistory || emptyPortfolioValueHistory); // Ensure array
       savePortfolioData(portfolioId, newPortfolioData);
     }
   }, [portfolioId, initialCash, loadAllPortfolios, savePortfolioData]);
