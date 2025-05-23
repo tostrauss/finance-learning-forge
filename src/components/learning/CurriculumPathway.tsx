@@ -27,13 +27,14 @@ const CurriculumPathway: React.FC<CurriculumPathwayProps> = ({
   
   const concentration = concentrations.find(c => c.id === selectedConcentration) || concentrations[0];
   
-  // Group courses by academic level
-  const coursesByLevel: { [level: number]: any[] } = {};
+  // Group courses by academic level  const coursesByLevel: { [level: number]: any[] } = {};
   financeCourses.forEach(course => {
-    if (course.concentrations.includes(selectedConcentration) || 
-        concentration.requiredCourses.includes(course.courseCode) ||
-        concentration.electiveCourses.includes(course.courseCode)) {
-      
+    const isInConcentration = course.concentrations.includes(selectedConcentration);
+    const isRequired = concentration.requiredCourses.includes(course.courseCode);
+    const isElective = concentration.electiveCourses.includes(course.courseCode);
+    const isGeneralCore = course.concentrations.includes('general');
+    
+    if (isInConcentration || isRequired || isElective || isGeneralCore) {
       if (!coursesByLevel[course.academicLevel]) {
         coursesByLevel[course.academicLevel] = [];
       }
