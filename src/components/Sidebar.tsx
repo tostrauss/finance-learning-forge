@@ -13,6 +13,7 @@ import {
   Settings,
   Star,
   Edit3,
+  LineChart, // Add LineChart
 } from 'lucide-react';
 
 type NavItemProps = {
@@ -47,6 +48,7 @@ const Sidebar = () => {
     { to: "/dashboard",       icon: <Home size={18} />,           label: "Dashboard" },
     { to: "/watchlist",       icon: <Star size={18} />,           label: "Watchlist" },
     { to: "/stock-analysis",  icon: <BarChart2 size={18} />,      label: "Stock Analysis" },
+    { to: "/charting",        icon: <LineChart size={18} />,      label: "Charting" }, // New Charting item
     { to: "/options-trading", icon: <FileSpreadsheet size={18} />, label: "Options Trading" },
     { to: "/backtesting",     icon: <Clock size={18} />,          label: "Backtesting" },
     { to: "/learning",        icon: <School size={18} />,         label: "Learning Hub" },

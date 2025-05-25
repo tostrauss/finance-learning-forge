@@ -1,163 +1,265 @@
-// src/pages/Watchlist.tsx
-import React, { useState, useEffect } from 'react';
-import Layout from '@/components/Layout';
-import WatchlistWidget, { WatchlistItem, AssetType } from '@/components/trading/WatchlistWidget';
-import { useWatchlistManager } from '@/hooks/useWatchlistManager'; // IMPORT THE HOOK
+import React, { useState } from 'react';
+import Layout from '../components/Layout';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWatchlistManager, WatchlistBoard } from '@/hooks/useWatchlistManager';
+// MODIFIED: WatchlistWidget import might no longer be needed here if all its display logic is moved.
+// If WatchlistWidget is used for other things or you want to keep its internal logic,
+// you might adjust this differently. For now, we'll bypass it for item display.
+// import WatchlistWidget, { WatchlistItem, AssetType } from '@/components/trading/WatchlistWidget';
+import { AssetType, WatchlistItem } from '@/components/trading/WatchlistWidget'; // Assuming AssetType and WatchlistItem are exported here or from types file
 
-interface WatchlistBoard {
-  id: string;
-  title: string;
-  items: WatchlistItem[];
-}
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PlusCircle, Edit3, Trash2, Save } from 'lucide-react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+    DialogTrigger,
+    DialogClose,
+} from "@/components/ui/dialog";
 
-const Watchlist: React.FC = () => {
+
+const WatchlistPage: React.FC = () => {
+  const { user, loading: authLoading } = useAuth();
   const {
     boards,
-    addBoard: addBoardLogic, // Use the hook's addBoard
+    isLoading: watchlistsLoading,
+    isInitialized: watchlistsInitialized,
+    error: watchlistError,
+    addBoard,
+    removeBoard,
     updateBoardTitle,
     addItemToBoard,
     removeItemFromBoard,
-    // removeBoard, // if you add UI to delete boards directly on this page
   } = useWatchlistManager();
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]); // Keep this for UI display logic
-  const [isAddingBoard, setIsAddingBoard] = useState(false);
-  const [newBoardTitle, setNewBoardTitle] = useState('');
+  const [newBoardName, setNewBoardName] = useState('');
+  const [editingBoard, setEditingBoard] = useState<{ id: string; title: string } | null>(null);
+  const [addingItem, setAddingItem] = useState<{ boardId: string; symbol: string; assetType: AssetType } | null>(null);
 
-  // Initialize selectedIds, e.g., select all or first, or load from localStorage if you persist this UI state
-   useEffect(() => {
-    if (boards.length > 0 && selectedIds.length === 0) {
-      // setSelectedIds(boards.map(b => b.id)); // Optionally select all by default
-    }
-  }, [boards, selectedIds.length]);
+  const canModify = user && !authLoading && watchlistsInitialized && !watchlistsLoading;
 
+  const handleAddBoard = async () => {
+    if (!newBoardName.trim() || !canModify) return;
+    await addBoard(newBoardName.trim());
+    setNewBoardName('');
+  };
 
-  const toggleBoard = (id: string) => {
-    setSelectedIds(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+  const handleStartEditTitle = (board: WatchlistBoard) => {
+    if (!canModify) return;
+    setEditingBoard({ id: board.id, title: board.title });
+  };
+
+  const handleSaveTitle = async () => {
+    if (!editingBoard || !editingBoard.title.trim() || !canModify) return;
+    await updateBoardTitle(editingBoard.id, editingBoard.title.trim());
+    setEditingBoard(null);
+  };
+
+  const handleAddItem = async (boardId: string) => {
+    if (!addingItem || addingItem.boardId !== boardId || !addingItem.symbol.trim() || !canModify) return;
+    await addItemToBoard(boardId, addingItem.symbol.trim().toUpperCase(), addingItem.assetType);
+    setAddingItem(null); // Reset form
+  };
+
+  // MODIFIED: Corrected loading condition
+  if (authLoading || (user && watchlistsLoading)) {
+    return <Layout><div className="p-6 text-center">Loading your watchlists...</div></Layout>;
+  }
+
+  if (!user && !authLoading) {
+    return (
+      <Layout>
+        <div className="p-6 text-center">
+          <p>Please log in to view and manage your watchlists.</p>
+          {/* Optionally, add a login button here */}
+        </div>
+      </Layout>
     );
-  };
+  }
 
-  const beginAddBoard = () => {
-    setNewBoardTitle('');
-    setIsAddingBoard(true);
-  };
-  const cancelAddBoard = () => {
-    setNewBoardTitle('');
-    setIsAddingBoard(false);
-  };
-
-  const saveNewBoard = () => { // This function now uses the hook's logic
-    const newBoardId = addBoardLogic(newBoardTitle);
-    if (newBoardId) { // Check if board was actually added (title wasn't empty)
-      setSelectedIds(prev => [...prev, newBoardId]); // Optionally auto-select new board
-      setIsAddingBoard(false);
-      setNewBoardTitle('');
-    } else {
-      // Handle case where title was empty, e.g., show an error
-      console.warn("New board title was empty.");
-    }
-  };
-
-  // updateBoardTitle, addItemToBoard, removeItemFromBoard are directly from the hook
-
-  const selectSymbol = (symbol: string) => {
-    console.log('Selected from Watchlist Page:', symbol);
-    // TODO: navigate to symbol detail
-  };
+  if (watchlistError) {
+    return <Layout><div className="p-6 text-center text-red-500">Error loading watchlists: {watchlistError.message}</div></Layout>;
+  }
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto py-6 space-y-6">
-        {/* Create New Watchlist UI (uses saveNewBoard which calls hook's addBoardLogic) */}
-        <div className="bg-white p-4 rounded shadow flex items-center gap-4">
-          {isAddingBoard ? (
-            <>
-              <input
+      <div className="container mx-auto p-4 md:p-6">
+        <Card className="mb-6 bg-white shadow-lg">
+          <CardHeader>
+            <CardTitle>Create New Watchlist</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
                 type="text"
-                value={newBoardTitle}
-                onChange={e => setNewBoardTitle(e.target.value)}
                 placeholder="New watchlist name"
-                className="border rounded-md px-3 py-2 flex-1 focus:ring-2 focus:ring-app-purple"
-                aria-label="New watchlist name"
+                value={newBoardName}
+                onChange={(e) => setNewBoardName(e.target.value)}
+                className="flex-grow"
+                disabled={!canModify}
               />
-              <button
-                onClick={saveNewBoard} // This now calls the local saveNewBoard which uses the hook
-                className="px-4 py-2 bg-app-purple text-white rounded-md"
-                aria-label="Save new watchlist"
-              >
-                Save
-              </button>
-              <button
-                onClick={cancelAddBoard}
-                className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
-                aria-label="Cancel new watchlist"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={beginAddBoard}
-              className="px-4 py-2 border-dashed border rounded-md text-gray-500 hover:bg-gray-50"
-              aria-label="Add watchlist"
-            >
-              + Create New Watchlist
-            </button>
-          )}
-        </div>
+              <Button onClick={handleAddBoard} disabled={!canModify || !newBoardName.trim()} className="bg-app-blue hover:bg-app-blue-dark">
+                <PlusCircle className="mr-2 h-4 w-4" /> Create Watchlist
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Saved Watchlists Library (uses boards from hook) */}
-        <div className="bg-white p-4 rounded shadow">
-          <h2 className="text-xl font-semibold mb-3">Saved Watchlists</h2>
-          <div className="flex flex-wrap gap-2">
-            {boards.map(board => {
-              const isSelected = selectedIds.includes(board.id);
-              return isSelected ? (
-                <button
-                  key={board.id}
-                  onClick={() => toggleBoard(board.id)}
-                  className="px-4 py-2 rounded-md bg-app-purple text-white"
-                  aria-pressed="true"
-                  title="Hide watchlist"
-                >
-                  {board.title}
-                </button>
-              ) : (
-                <button
-                  key={board.id}
-                  onClick={() => toggleBoard(board.id)}
-                  className="px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  aria-pressed="false"
-                  title="Show watchlist"
-                >
-                  {board.title}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        {boards.length === 0 && watchlistsInitialized && !watchlistsLoading && (
+          <p className="text-center text-gray-500">You don't have any watchlists yet. Create one above!</p>
+        )}
 
-        {/* Display Selected Widgets (uses boards from hook and handlers from hook) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {selectedIds
-            .map(id => boards.find(b => b.id === id))
-            .filter(board => board !== undefined)
-            .map(board => (
-              <WatchlistWidget
-                key={board!.id}
-                title={board!.title}
-                onTitleChange={t => updateBoardTitle(board!.id, t)}
-                items={board!.items}
-                onAdd={(symbol, assetType) => addItemToBoard(board!.id, symbol, assetType)}
-                onRemove={symbol => removeItemFromBoard(board!.id, symbol)}
-                onSelectSymbol={selectSymbol}
-              />
-            ))}
+          {boards.map((board) => (
+            <Card key={board.id} className="bg-white shadow-lg flex flex-col">
+              <CardHeader className="flex flex-row justify-between items-start">
+                {editingBoard && editingBoard.id === board.id ? (
+                  <div className="flex-grow flex items-center gap-2">
+                    <Input
+                      type="text"
+                      value={editingBoard.title}
+                      onChange={(e) => setEditingBoard({ ...editingBoard, title: e.target.value })}
+                      autoFocus
+                      className="flex-grow"
+                      disabled={!canModify}
+                    />
+                    <Button onClick={handleSaveTitle} size="icon" variant="ghost" disabled={!canModify || !editingBoard.title.trim()} title="Save title">
+                      <Save className="h-5 w-5 text-green-600" />
+                    </Button>
+                    <Button onClick={() => setEditingBoard(null)} size="icon" variant="ghost" title="Cancel edit">
+                      <Trash2 className="h-5 w-5 text-gray-500" /> {/* Using Trash2 as a generic cancel/close icon */}
+                    </Button>
+                  </div>
+                ) : (
+                  <CardTitle className="flex-grow cursor-pointer hover:text-app-blue" onClick={() => handleStartEditTitle(board)}>
+                    {board.title}
+                  </CardTitle>
+                )}
+                <div className="flex items-center">
+                  {!editingBoard || editingBoard.id !== board.id ? (
+                    <Button onClick={() => handleStartEditTitle(board)} size="icon" variant="ghost" disabled={!canModify} title="Edit title">
+                      <Edit3 className="h-5 w-5" />
+                    </Button>
+                  ) : null}
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="ghost" size="icon" disabled={!canModify} title="Delete watchlist">
+                        <Trash2 className="h-5 w-5 text-red-500" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Are you sure?</DialogTitle>
+                        <DialogDescription>
+                          This action will permanently delete the watchlist "{board.title}". This cannot be undone.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button
+                          variant="destructive"
+                          onClick={async () => {
+                            if (canModify) await removeBoard(board.id);
+                          }}
+                        >
+                          Delete Watchlist
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent className="flex-grow pt-2"> {/* Added pt-2 for a little space */}
+                {/* MODIFIED: Display items directly here */}
+                {board.items && board.items.length > 0 ? (
+                  <ul className="space-y-1 text-sm">
+                    {board.items.map((item) => (
+                      <li
+                        key={`${item.symbol}-${item.assetType}`}
+                        className="flex justify-between items-center p-1.5 hover:bg-gray-50 rounded"
+                      >
+                        <div>
+                          <span className="font-semibold">{item.symbol}</span>
+                          <span className="text-xs text-gray-500 ml-1">({item.assetType})</span>
+                          {/* You can add more item details here if available, e.g., price, change */}
+                          {item.price != null && ( /* MODIFIED: Check for null as well */
+                            <span className={`ml-2 ${ (item.change || 0) < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                               ${item.price.toFixed(2)}
+                            </span>
+                          )}
+                          {item.changePercent != null && ( /* MODIFIED: Check for null as well */
+                             <span className={`ml-1 text-xs ${ (item.changePercent || 0) < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                               ({item.changePercent.toFixed(2)}%)
+                             </span>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            if (canModify) removeItemFromBoard(board.id, item.symbol, item.assetType);
+                          }}
+                          disabled={!canModify}
+                          className="text-red-500 hover:text-red-700 px-1"
+                          title="Remove item"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-gray-400 italic py-2">No items in this watchlist yet.</p>
+                )}
+              </CardContent>
+              <CardFooter className="border-t pt-4">
+                <div className="w-full space-y-2">
+                  <p className="text-sm font-medium">Add New Item</p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Symbol (e.g., AAPL)"
+                      value={addingItem?.boardId === board.id ? addingItem.symbol : ''}
+                      onChange={(e) => setAddingItem({ boardId: board.id, symbol: e.target.value, assetType: addingItem?.assetType || AssetType.EQUITY })}
+                      className="flex-grow"
+                      disabled={!canModify}
+                    />
+                    <Select
+                      value={addingItem?.boardId === board.id ? addingItem.assetType : AssetType.EQUITY}
+                      onValueChange={(value) => setAddingItem({ boardId: board.id, symbol: addingItem?.symbol || '', assetType: value as AssetType })}
+                      disabled={!canModify}
+                    >
+                      <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Asset Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={AssetType.EQUITY}>Equity</SelectItem>
+                        <SelectItem value={AssetType.CRYPTO}>Crypto</SelectItem>
+                        <SelectItem value={AssetType.FOREX}>Forex</SelectItem>
+                        <SelectItem value={AssetType.COMMODITY}>Commodity</SelectItem> {/* Error Here */}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={() => handleAddItem(board.id)} disabled={!canModify || !addingItem || addingItem.boardId !== board.id || !addingItem.symbol.trim()} className="w-full bg-app-green hover:bg-app-green-dark">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Add Item
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          ))}
         </div>
       </div>
     </Layout>
   );
 };
 
-export default Watchlist;
+export default WatchlistPage;

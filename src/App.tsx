@@ -18,6 +18,7 @@ import Signin from "./pages/Signin";
 import FinanceLearningPath from "./components/learning/FinanceLearningPath";
 import CurriculumPathway from "./components/learning/CurriculumPathway";
 import PracticePage from "./pages/Practice";
+import ChartingPage from "./pages/Charting"; // Import the new Charting page
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />            <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/watchlist" element={<Watchlist />} />
+            <Route path="/charting" element={<ChartingPage />} /> {/* Add route for Charting */}
             <Route path="/practice" element={<PracticePage />} />            <Route path="/learning" element={<Learning />} />
             <Route path="/learning/path" element={<FinanceLearningPath />} />
             <Route path="/learning/path/:pathId" element={<CourseDetail />} />

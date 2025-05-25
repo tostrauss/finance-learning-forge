@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vitest/config'; // Import from vitest/config
 import react from '@vitejs/plugin-react';
-import * as path from 'path'; // Changed import style for 'path'
+import path from 'path'; // Make sure to import 'path'
 
 // Removed incorrect import: import { sveltekit } from '@sveltejs/kit/vite';
 

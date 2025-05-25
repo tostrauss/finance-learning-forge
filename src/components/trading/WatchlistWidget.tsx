@@ -6,14 +6,24 @@ import StockSearch from '@/components/StockSearch';
 import { useStockSearch } from '@/hooks/useStockSearch';
 import { useStockTimeSeries } from '@/hooks/useStockTimeSeries';
 
-export type AssetType = 'security' | 'crypto' | 'bond' | 'commodity';
+// MODIFIED: Define AssetType as a string enum
+export enum AssetType {
+  EQUITY = 'equity', // Changed from 'security' to match usage in watchlist.tsx
+  CRYPTO = 'crypto',
+  FOREX = 'forex',   // Added to match usage in watchlist.tsx
+  OPTION = 'option',
+  COMMODITY = 'commodity', // Added to match usage in watchlist.tsx
+  // BOND = 'bond', // Keep if needed, or remove if not used
+  // COMMODITY = 'commodity', // Keep if needed, or remove if not used
+}
 
 export interface WatchlistItem {
   symbol: string;
   assetType: AssetType;
-  price: number;
-  change: number;
-  changePercent: number;
+  price?: number | null; // MODIFIED: Allow null
+  change?: number | null; // MODIFIED: Allow null
+  changePercent?: number | null; // MODIFIED: Allow null
+  // Add any other relevant fields, e.g., name, lastPrice, etc.
 }
 
 export interface WatchlistWidgetProps {
@@ -59,7 +69,7 @@ const WatchlistWidget: React.FC<WatchlistWidgetProps> = ({
   };
 
   const handleAdd = (symbol: string) => {
-    if (onAdd) onAdd(symbol, 'security');
+    if (onAdd) onAdd(symbol, AssetType.EQUITY);
     setIsAdding(false);
   };
 
