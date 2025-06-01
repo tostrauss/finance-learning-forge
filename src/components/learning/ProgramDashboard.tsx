@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { School, BookOpen, Award, Star, Clock, ArrowRight, Check } from 'lucide-react';
-import { financeProgram, concentrations, programRequirements } from '@/data/financeProgram';
+import { financeCourses, concentrations, programRequirements } from '@/data/financeProgram';
 
 interface ProgramDashboardProps {
   userProgress?: {
@@ -27,9 +27,9 @@ const ProgramDashboard: React.FC<ProgramDashboardProps> = ({ userProgress = {
 }}) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  
-  // Calculate program progress percentage
-  const progressPercentage = Math.round((userProgress.completedCredits / financeProgram.totalCredits) * 100);
+    // Calculate program progress percentage - assuming 120 total credits for BS in Finance
+  const totalCredits = 120;
+  const progressPercentage = Math.round((userProgress.completedCredits / totalCredits) * 100);
   
   // Get selected concentration
   const selectedConcentration = concentrations.find(c => c.id === userProgress.selectedConcentration) || concentrations[0];
@@ -42,11 +42,10 @@ const ProgramDashboard: React.FC<ProgramDashboardProps> = ({ userProgress = {
           <div className="flex items-start justify-between">
             <div>
               <CardTitle className="text-2xl text-app-purple flex items-center">
-                <School className="mr-2 h-6 w-6" />
-                {financeProgram.name}
+                <School className="mr-2 h-6 w-6" />                Bachelor of Science in Finance
               </CardTitle>
               <CardDescription className="mt-2 text-base">
-                {financeProgram.description.substring(0, 180)}...
+                A comprehensive program that prepares you for a career in finance through a blend of theoretical knowledge and practical applications.
               </CardDescription>
             </div>
             <div className="text-right">
@@ -59,7 +58,7 @@ const ProgramDashboard: React.FC<ProgramDashboardProps> = ({ userProgress = {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="flex flex-col">
               <span className="text-sm text-gray-500">Total Credits</span>
-              <span className="text-2xl font-bold">{financeProgram.totalCredits}</span>
+              <span className="text-2xl font-bold">{totalCredits}</span>
               <span className="text-xs text-gray-500 mt-1">Required for graduation</span>
             </div>
             <div className="flex flex-col">

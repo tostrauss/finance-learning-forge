@@ -61,6 +61,7 @@ export interface FinanceCourse {
   modules: Module[];
   progress?: number; // Student's progress in the course (0-100)
   learningOutcomes?: string[];
+  pathId?: string; // Learning path ID this course belongs to
 }
 
 /**

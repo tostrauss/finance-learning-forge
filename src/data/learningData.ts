@@ -27,30 +27,30 @@ export const financeTopics = [
     id: 'banking', 
     name: 'Financial Services & Banking', 
     description: 'Explore banking operations, financial services, and risk management.',
-    progress: 15, 
-    color: '#4A154B' 
+    progress: 15,
+    color: '#B7472A'
   },
-  { 
-    id: 'general', 
-    name: 'General Finance', 
-    description: 'Build a strong foundation in financial principles and practices.',
-    progress: 65, 
-    color: '#B7472A' 
+  {
+    id: 'general',
+    name: 'General Finance',
+    description: 'Build a broad foundation in finance principles including markets, investments, and corporate finance.',
+    progress: 25,
+    color: '#8764B8'
   },
-  { 
-    id: 'international', 
-    name: 'International Finance', 
-    description: 'Learn about global markets, forex, and international financial management.',
-    progress: 10, 
-    color: '#8764B8' 
+  {
+    id: 'international',
+    name: 'International Finance',
+    description: 'Study global financial markets, exchange rates, and cross-border financial management.',
+    progress: 10,
+    color: '#107C41'
   },
-  { 
-    id: 'personal', 
-    name: 'Personal Financial Planning', 
-    description: 'Develop skills in personal finance, retirement planning, and wealth management.',
-    progress: 45, 
-    color: '#C74634' 
-  },
+  {
+    id: 'personal',
+    name: 'Personal Financial Planning',
+    description: 'Master individual financial planning, including retirement, tax, and estate planning.',
+    progress: 20,
+    color: '#C74634'
+  }
 ];
 
 export const userProgress: UserProgress = {
