@@ -6,13 +6,13 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBYpCMOKwoaz1BZvHw3sNY08YmFbITEXfo",
-  authDomain: "finance-learning-05.firebaseapp.com",
-  projectId: "finance-learning-05",
-  storageBucket: "finance-learning-05.firebasestorage.app",
-  messagingSenderId: "198980342027",
-  appId: "1:198980342027:web:66eb5c5b787e5332d4520e",
-  measurementId: "G-3CBZGHDHMX",
+  apiKey: "AIzaSyA1O-9q63pm6mKhMsYDgXGmfod3RioArTQ",
+  authDomain: "stock-trader-angular.firebaseapp.com",
+  projectId: "stock-trader-angular",
+  storageBucket: "stock-trader-angular.appspot.com",
+  messagingSenderId: "739725551861",
+  appId: "1:739725551861:web:your-app-id", // You'll need to provide the correct App ID
+  measurementId: "G-your-measurement-id" // You'll need to provide the correct Measurement ID if you're using Analytics
 };
 
 // Initialize Firebase

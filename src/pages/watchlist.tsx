@@ -2,35 +2,56 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import WatchlistWidget, { WatchlistItem, AssetType } from '@/components/trading/WatchlistWidget';
-import { useWatchlistManager } from '@/hooks/useWatchlistManager'; // IMPORT THE HOOK
-
-interface WatchlistBoard {
-  id: string;
-  title: string;
-  items: WatchlistItem[];
-}
+import { useWatchlist } from '@/contexts/watchListContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 const Watchlist: React.FC = () => {
+  const { user } = useAuth();
   const {
-    boards,
-    addBoard: addBoardLogic, // Use the hook's addBoard
-    updateBoardTitle,
-    addItemToBoard,
-    removeItemFromBoard,
-    // removeBoard, // if you add UI to delete boards directly on this page
-  } = useWatchlistManager();
-
-  const [selectedIds, setSelectedIds] = useState<string[]>([]); // Keep this for UI display logic
+    watchlists,
+    loading,
+    error,
+    create,
+    updateItems,
+    remove,
+    addItem,
+    removeItem,
+    migrateFromLocalStorage
+  } = useWatchlist();
+  const [selectedIds, setSelectedIds] = useState<string[]>([]); 
   const [isAddingBoard, setIsAddingBoard] = useState(false);
   const [newBoardTitle, setNewBoardTitle] = useState('');
+  const [hasMigrated, setHasMigrated] = useState(false);
 
-  // Initialize selectedIds, e.g., select all or first, or load from localStorage if you persist this UI state
-   useEffect(() => {
-    if (boards.length > 0 && selectedIds.length === 0) {
-      // setSelectedIds(boards.map(b => b.id)); // Optionally select all by default
+  // Attempt to migrate localStorage data when user first logs in
+  useEffect(() => {
+    if (user && !hasMigrated) {
+      migrateFromLocalStorage()
+        .then(() => {
+          setHasMigrated(true);
+          toast({
+            title: "Watchlists Migrated",
+            description: "Your watchlists have been migrated to your account.",
+          });
+        })
+        .catch(error => {
+          console.error("Migration failed:", error);
+          toast({
+            title: "Migration Failed",
+            description: "Failed to migrate your watchlists. Please try again.",
+            variant: "destructive",
+          });
+        });
     }
-  }, [boards, selectedIds.length]);
+  }, [user, hasMigrated]);
 
+  // Initialize selected watchlists
+  useEffect(() => {
+    if (watchlists.length > 0 && selectedIds.length === 0) {
+      setSelectedIds(watchlists.map(w => w.id));
+    }
+  }, [watchlists, selectedIds.length]);
 
   const toggleBoard = (id: string) => {
     setSelectedIds(prev =>
@@ -39,23 +60,48 @@ const Watchlist: React.FC = () => {
   };
 
   const beginAddBoard = () => {
+    if (!user) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to create watchlists.",
+        variant: "destructive",
+      });
+      return;
+    }
     setNewBoardTitle('');
     setIsAddingBoard(true);
   };
+
   const cancelAddBoard = () => {
     setNewBoardTitle('');
     setIsAddingBoard(false);
   };
 
-  const saveNewBoard = () => { // This function now uses the hook's logic
-    const newBoardId = addBoardLogic(newBoardTitle);
-    if (newBoardId) { // Check if board was actually added (title wasn't empty)
-      setSelectedIds(prev => [...prev, newBoardId]); // Optionally auto-select new board
+  const saveNewBoard = async () => {
+    if (!newBoardTitle.trim()) {
+      toast({
+        title: "Invalid Name",
+        description: "Please enter a name for your watchlist.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await create(newBoardTitle);
       setIsAddingBoard(false);
       setNewBoardTitle('');
-    } else {
-      // Handle case where title was empty, e.g., show an error
-      console.warn("New board title was empty.");
+      toast({
+        title: "Watchlist Created",
+        description: "Your new watchlist has been created.",
+      });
+    } catch (error) {
+      console.error("Failed to create watchlist:", error);
+      toast({
+        title: "Creation Failed",
+        description: "Failed to create watchlist. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -105,52 +151,102 @@ const Watchlist: React.FC = () => {
               + Create New Watchlist
             </button>
           )}
-        </div>
-
-        {/* Saved Watchlists Library (uses boards from hook) */}
+        </div>        {/* Saved Watchlists Library */}
         <div className="bg-white p-4 rounded shadow">
           <h2 className="text-xl font-semibold mb-3">Saved Watchlists</h2>
-          <div className="flex flex-wrap gap-2">
-            {boards.map(board => {
-              const isSelected = selectedIds.includes(board.id);
-              return isSelected ? (
-                <button
-                  key={board.id}
-                  onClick={() => toggleBoard(board.id)}
-                  className="px-4 py-2 rounded-md bg-app-purple text-white"
-                  aria-pressed="true"
-                  title="Hide watchlist"
-                >
-                  {board.title}
-                </button>
-              ) : (
-                <button
-                  key={board.id}
-                  onClick={() => toggleBoard(board.id)}
-                  className="px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  aria-pressed="false"
-                  title="Show watchlist"
-                >
-                  {board.title}
-                </button>
-              );
-            })}
-          </div>
+          {loading ? (
+            <div className="flex justify-center p-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-app-purple"></div>
+            </div>
+          ) : error ? (
+            <div className="text-red-500 p-4 text-center">
+              {error.message || "An error occurred loading your watchlists"}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {watchlists.map(watchlist => {
+                const isSelected = selectedIds.includes(watchlist.id);
+                return (
+                  <div key={watchlist.id} className="flex items-center gap-2">
+                    <button
+                      onClick={() => toggleBoard(watchlist.id)}
+                      className={`px-4 py-2 rounded-md ${
+                        isSelected 
+                          ? 'bg-app-purple text-white' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                      aria-pressed={isSelected}
+                      title={isSelected ? "Hide watchlist" : "Show watchlist"}
+                    >
+                      {watchlist.name}
+                    </button>
+                    <button
+                      onClick={() => remove(watchlist.id)}
+                      className="p-2 text-gray-500 hover:text-red-500 rounded-full"
+                      aria-label={`Delete ${watchlist.name}`}
+                      title="Delete watchlist"
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Display Selected Widgets (uses boards from hook and handlers from hook) */}
+        {/* Display Selected Widgets */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {selectedIds
-            .map(id => boards.find(b => b.id === id))
-            .filter(board => board !== undefined)
-            .map(board => (
+            .map(id => watchlists.find(w => w.id === id))
+            .filter(watchlist => watchlist !== undefined)
+            .map(watchlist => (
               <WatchlistWidget
-                key={board!.id}
-                title={board!.title}
-                onTitleChange={t => updateBoardTitle(board!.id, t)}
-                items={board!.items}
-                onAdd={(symbol, assetType) => addItemToBoard(board!.id, symbol, assetType)}
-                onRemove={symbol => removeItemFromBoard(board!.id, symbol)}
+                key={watchlist!.id}
+                title={watchlist!.name}
+                onTitleChange={async (newName) => {
+                  try {
+                    await updateItems(watchlist!.items);
+                    toast({
+                      title: "Watchlist Updated",
+                      description: "Watchlist name has been updated.",
+                    });
+                  } catch (error) {
+                    toast({
+                      title: "Update Failed",
+                      description: "Failed to update watchlist name.",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                items={watchlist!.items}
+                onAdd={async (symbol, assetType) => {
+                  try {
+                    await addItem({
+                      symbol,
+                      name: symbol,
+                      assetType,
+                      addedAt: new Date().toISOString()
+                    });
+                  } catch (error) {
+                    toast({
+                      title: "Add Failed",
+                      description: "Failed to add item to watchlist.",
+                      variant: "destructive",
+                    });
+                  }
+                }}
+                onRemove={async (symbol) => {
+                  try {
+                    await removeItem(symbol);
+                  } catch (error) {
+                    toast({
+                      title: "Remove Failed",
+                      description: "Failed to remove item from watchlist.",
+                      variant: "destructive",
+                    });
+                  }
+                }}
                 onSelectSymbol={selectSymbol}
               />
             ))}

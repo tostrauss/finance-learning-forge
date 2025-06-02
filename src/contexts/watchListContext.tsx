@@ -10,6 +10,7 @@ import {
   removeItemFromWatchlist
 } from '@/services/watchlistService';
 import { Watchlist, WatchlistItem } from '@/types/watchlist';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface WatchlistContextType {
   watchlists: Watchlist[];
@@ -23,20 +24,30 @@ interface WatchlistContextType {
   remove: (id: string) => Promise<void>;
   addItem: (item: WatchlistItem) => Promise<void>;
   removeItem: (symbol: string) => Promise<void>;
+  migrateFromLocalStorage: () => Promise<void>;
 }
 
 const WatchlistContext = createContext<WatchlistContextType | undefined>(undefined);
 
+const LOCAL_STORAGE_KEY = 'watchlistBoards';
+
 export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [watchlists, setWatchlists] = useState<Watchlist[]>([]);
   const [selectedWatchlist, setSelectedWatchlistState] = useState<Watchlist | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const loadAll = async () => {
+    if (!user) {
+      setWatchlists([]);
+      setSelectedWatchlistState(null);
+      return;
+    }
+
     setLoading(true);
     try {
-      const data = await fetchWatchlists();
+      const data = await fetchWatchlists(user);
       setWatchlists(data);
     } catch (err: any) {
       setError(err);
@@ -46,9 +57,11 @@ export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const select = async (id: string) => {
+    if (!user) return;
+    
     setLoading(true);
     try {
-      const data = await fetchWatchlist(id);
+      const data = await fetchWatchlist(id, user);
       setSelectedWatchlistState(data);
     } catch (err: any) {
       setError(err);
@@ -58,9 +71,11 @@ export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const create = async (name: string) => {
+    if (!user) return;
+    
     setLoading(true);
     try {
-      const newWL = await createWatchlist(name);
+      const newWL = await createWatchlist(name, user);
       setWatchlists(prev => [...prev, newWL]);
       setSelectedWatchlistState(newWL);
     } catch (err: any) {
@@ -71,10 +86,11 @@ export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const updateItems = async (items: WatchlistItem[]) => {
-    if (!selectedWatchlist) return;
+    if (!selectedWatchlist || !user) return;
+    
     setLoading(true);
     try {
-      const updated = await updateWatchlist(selectedWatchlist.id, items);
+      const updated = await updateWatchlist(selectedWatchlist.id, items, user);
       setSelectedWatchlistState(updated);
       setWatchlists(prev => prev.map(w => w.id === updated.id ? updated : w));
     } catch (err: any) {
@@ -85,9 +101,11 @@ export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const remove = async (id: string) => {
+    if (!user) return;
+    
     setLoading(true);
     try {
-      await deleteWatchlist(id);
+      await deleteWatchlist(id, user);
       setWatchlists(prev => prev.filter(w => w.id !== id));
       if (selectedWatchlist?.id === id) setSelectedWatchlistState(null);
     } catch (err: any) {
@@ -98,11 +116,13 @@ export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const addItem = async (item: WatchlistItem) => {
-    if (!selectedWatchlist) return;
+    if (!selectedWatchlist || !user) return;
+    
     setLoading(true);
     try {
-      const updated = await addItemToWatchlist(selectedWatchlist.id, item);
+      const updated = await addItemToWatchlist(selectedWatchlist.id, item, user);
       setSelectedWatchlistState(updated);
+      setWatchlists(prev => prev.map(w => w.id === updated.id ? updated : w));
     } catch (err: any) {
       setError(err);
     } finally {
@@ -111,11 +131,13 @@ export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const removeItem = async (symbol: string) => {
-    if (!selectedWatchlist) return;
+    if (!selectedWatchlist || !user) return;
+    
     setLoading(true);
     try {
-      const updated = await removeItemFromWatchlist(selectedWatchlist.id, symbol);
+      const updated = await removeItemFromWatchlist(selectedWatchlist.id, symbol, user);
       setSelectedWatchlistState(updated);
+      setWatchlists(prev => prev.map(w => w.id === updated.id ? updated : w));
     } catch (err: any) {
       setError(err);
     } finally {
@@ -123,7 +145,48 @@ export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  useEffect(() => { loadAll(); }, []);
+  const migrateFromLocalStorage = async () => {
+    if (!user) return;
+
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (!stored) return;
+
+      const localBoards = JSON.parse(stored);
+      if (!Array.isArray(localBoards)) return;
+
+      setLoading(true);
+
+      // Create each local board in Firebase
+      for (const board of localBoards) {
+        const newWL = await createWatchlist(board.title, user);
+        if (board.items?.length > 0) {
+          await updateWatchlist(newWL.id, board.items.map(item => ({
+            symbol: item.symbol,
+            name: item.symbol, // Use symbol as name if not available
+            assetType: item.assetType || 'security',
+            addedAt: new Date().toISOString()
+          })), user);
+        }
+      }
+
+      // Clear localStorage after successful migration
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      
+      // Reload all watchlists
+      await loadAll();
+    } catch (err: any) {
+      setError(err);
+      console.error('Error migrating watchlists:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load watchlists when user changes
+  useEffect(() => {
+    loadAll();
+  }, [user?.uid]);
 
   return (
     <WatchlistContext.Provider value={{
@@ -137,7 +200,8 @@ export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       updateItems,
       remove,
       addItem,
-      removeItem
+      removeItem,
+      migrateFromLocalStorage
     }}>
       {children}
     </WatchlistContext.Provider>
