@@ -45,13 +45,13 @@ const Watchlist: React.FC = () => {
         });
     }
   }, [user, hasMigrated]);
-
   // Initialize selected watchlists
   useEffect(() => {
-    if (watchlists.length > 0 && selectedIds.length === 0) {
-      setSelectedIds(watchlists.map(w => w.id));
+    if (!loading && watchlists.length > 0) {
+      // Only set selected IDs if there are no existing selections
+      setSelectedIds(prev => prev.length === 0 ? watchlists.map(w => w.id) : prev);
     }
-  }, [watchlists, selectedIds.length]);
+  }, [loading, watchlists]);
 
   const toggleBoard = (id: string) => {
     setSelectedIds(prev =>

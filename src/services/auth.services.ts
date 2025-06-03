@@ -6,6 +6,7 @@ import { redis } from '../config/redis';
 import { User, RefreshToken } from '@prisma/client';
 import { AppError } from '../utils/errors';
 import { emailService } from './email.service';
+import { env } from '../config/environment';
 
 interface TokenPayload {
   userId: string;
@@ -71,7 +72,7 @@ class AuthService {
     try {
       const decoded = jwt.verify(
         refreshToken,
-        process.env.REFRESH_TOKEN_SECRET!
+        env.REFRESH_TOKEN_SECRET!
       ) as TokenPayload;
 
       const storedToken = await prisma.refreshToken.findUnique({
@@ -114,13 +115,13 @@ class AuthService {
 
     const accessToken = jwt.sign(
       payload,
-      process.env.ACCESS_TOKEN_SECRET!,
+      env.ACCESS_TOKEN_SECRET!,
       { expiresIn: this.ACCESS_TOKEN_EXPIRY }
     );
 
     const refreshToken = jwt.sign(
       payload,
-      process.env.REFRESH_TOKEN_SECRET!,
+      env.REFRESH_TOKEN_SECRET!,
       { expiresIn: this.REFRESH_TOKEN_EXPIRY }
     );
 

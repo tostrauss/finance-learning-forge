@@ -1,17 +1,16 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is authenticated
+    // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    // Helper function to check if user owns the document
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
-
-    // Helper function to validate watchlist item
+    
+    // Data validation helpers
     function isValidWatchlistItem(item) {
       return item.size() == 4 
         && 'symbol' in item && item.symbol is string
@@ -20,12 +19,46 @@ service cloud.firestore {
         && 'assetType' in item && item.assetType in ['security', 'crypto', 'bond', 'commodity'];
     }
 
-    // Helper function to validate watchlist items array
+    function isValidQuizResult(result) {
+      return result.size() == 3
+        && 'score' in result && result.score is number && result.score >= 0
+        && 'totalQuestions' in result && result.totalQuestions is number && result.totalQuestions > 0
+        && 'dateTaken' in result && result.dateTaken is string;
+    }
+    
+    function isValidModuleProgress(module) {
+      return module.size() == 3
+        && 'moduleId' in module && module.moduleId is string
+        && 'completed' in module && module.completed is bool
+        && 'lastAccessed' in module && module.lastAccessed is timestamp;
+    }
+    
+    function isValidCourseProgress(course) {
+      return course.size() == 4
+        && 'courseId' in course && course.courseId is string
+        && 'enrolled' in course && course.enrolled is bool
+        && 'completed' in course && course.completed is bool
+        && 'lastAccessed' in course && course.lastAccessed is timestamp;
+    }
+
+    function isValidPaperTrade(trade) {
+      return trade.size() == 8
+        && 'symbol' in trade && trade.symbol is string
+        && 'type' in trade && trade.type in ['buy', 'sell']
+        && 'quantity' in trade && trade.quantity is number && trade.quantity > 0
+        && 'price' in trade && trade.price is number && trade.price > 0
+        && 'timestamp' in trade && trade.timestamp is timestamp
+        && 'status' in trade && trade.status in ['open', 'closed']
+        && 'profitLoss' in trade && trade.profitLoss is number
+        && 'notes' in trade && trade.notes is string;
+    }
+
     function hasValidItems(items) {
       return items is list && items.size() <= 100 && items.every(item => isValidWatchlistItem(item));
     }
 
-    // Watchlist collection rules
+    // Collection rules
+    match /watchlists/{docId}
     match /watchlists/{docId} {
       // Allow read if user owns the document
       allow read: if isOwner(resource.data.userId);
@@ -59,10 +92,53 @@ service cloud.firestore {
         && hasValidItems(request.resource.data.items)
         && request.resource.data.userId == resource.data.userId
         && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.updatedAt is timestamp;
-
-      // Allow delete if user owns the document
+        && request.resource.data.updatedAt is timestamp;      // Allow delete if user owns the document
       allow delete: if isOwner(resource.data.userId);
+    }
+
+    // User Progress collection rules
+    match /userProgress/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId 
+        && request.resource.data.keys().hasAll(['courseProgress', 'moduleProgress', 'quizResults', 'streak', 'xpEarned', 'lastActive'])
+        && request.resource.data.courseProgress is map
+        && request.resource.data.moduleProgress is map
+        && request.resource.data.quizResults is map
+        && request.resource.data.streak is number
+        && request.resource.data.xpEarned is number
+        && request.resource.data.lastActive is timestamp;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Paper Trading collection rules
+    match /paperTrading/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId
+        && request.resource.data.keys().hasAll(['positions', 'transactions', 'cash', 'settings'])
+        && request.resource.data.positions is list
+        && request.resource.data.transactions is list
+        && request.resource.data.cash is number
+        && request.resource.data.settings is map;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Paper Trading Transactions subcollection rules
+    match /paperTrading/{userId}/transactions/{transactionId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId && isValidPaperTrade(request.resource.data);
+      allow update: if isAuthenticated() && request.auth.uid == userId && isValidPaperTrade(request.resource.data);
+    }
+
+    // Analytics collection rules
+    match /analytics/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId
+        && request.resource.data.keys().hasAll(['dailyStats', 'weeklyStats', 'monthlyStats', 'achievements'])
+        && request.resource.data.dailyStats is map
+        && request.resource.data.weeklyStats is map
+        && request.resource.data.monthlyStats is map
+        && request.resource.data.achievements is list;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
     }
 
     // Catch-all rule - deny everything else

@@ -114,17 +114,27 @@ export const WatchlistProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setLoading(false);
     }
   };
-
   const addItem = async (item: WatchlistItem) => {
-    if (!selectedWatchlist || !user) return;
+    if (!selectedWatchlist || !user) {
+      setError(new Error('No watchlist selected or user not logged in'));
+      return;
+    }
+    
+    // Check if item already exists in the watchlist
+    if (selectedWatchlist.items.some(i => i.symbol === item.symbol)) {
+      setError(new Error(`${item.symbol} is already in this watchlist`));
+      return;
+    }
     
     setLoading(true);
     try {
       const updated = await addItemToWatchlist(selectedWatchlist.id, item, user);
       setSelectedWatchlistState(updated);
       setWatchlists(prev => prev.map(w => w.id === updated.id ? updated : w));
+      setError(null); // Clear any previous errors
     } catch (err: any) {
-      setError(err);
+      setError(err instanceof Error ? err : new Error(err.message || 'Failed to add item'));
+      throw err; // Rethrow to allow handling in UI components
     } finally {
       setLoading(false);
     }

@@ -10,10 +10,12 @@ export type AssetType = 'security' | 'crypto' | 'bond' | 'commodity';
 
 export interface WatchlistItem {
   symbol: string;
-  assetType: AssetType;
-  price: number;
-  change: number;
-  changePercent: number;
+  name: string;
+  assetType?: AssetType;
+  addedAt?: string;
+  price?: number;
+  change?: number;
+  changePercent?: number;
 }
 
 export interface WatchlistWidgetProps {
@@ -57,10 +59,21 @@ const WatchlistWidget: React.FC<WatchlistWidgetProps> = ({
     setIsEditing(false);
     setDraftTitle(title);
   };
-
-  const handleAdd = (symbol: string) => {
-    if (onAdd) onAdd(symbol, 'security');
-    setIsAdding(false);
+  const [addingSymbol, setAddingSymbol] = useState<string | null>(null);
+  
+  const handleAdd = async (symbol: string) => {
+    if (!onAdd) return;
+    
+    setAddingSymbol(symbol);
+    try {
+      await onAdd(symbol, 'security');
+      setIsAdding(false);
+      setQuery(''); // Clear search when successful
+    } catch (error) {
+      // Error handling is done in parent component via toast
+    } finally {
+      setAddingSymbol(null);
+    }
   };
 
   const toggleCollapse = () => {
