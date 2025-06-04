@@ -6,20 +6,33 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBYpCMOKwoaz1BZvHw3sNY08YmFbITEXfo",
-  authDomain: "finance-learning-05.firebaseapp.com",
-  projectId: "finance-learning-05",
-  storageBucket: "finance-learning-05.firebasestorage.app",
-  messagingSenderId: "198980342027",
-  appId: "1:198980342027:web:66eb5c5b787e5332d4520e",
-  measurementId: "G-3CBZGHDHMX",
+  apiKey: "AIzaSyA1O-9q63pm6mKhMsYDgXGmfod3RioArTQ",
+  authDomain: "stock-trader-angular.firebaseapp.com",
+  projectId: "stock-trader-angular",
+  storageBucket: "stock-trader-angular.firebasestorage.app",
+  messagingSenderId: "739725551861",
+  appId: "1:739725551861:web:cd2e3c91a04e2a9c877dbc",
+  measurementId: "G-QLCHGXZ623"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase with error handling
+let app;
+try {
+  app = initializeApp(firebaseConfig);
+  console.log("🔥 Firebase initialized successfully");
+} catch (error) {
+  console.error("❌ Firebase initialization error:", error);
+  throw error;
+}
 
 // Optional: Analytics
-export const analytics = getAnalytics(app);
+let analytics;
+try {
+  analytics = getAnalytics(app);
+  console.log("📊 Firebase Analytics initialized");
+} catch (error) {
+  console.warn("⚠️ Firebase Analytics initialization skipped:", error);
+}
 
 // Auth client and Google provider
 export const auth = getAuth(app);
@@ -28,3 +41,6 @@ export const googleProvider = new GoogleAuthProvider();
 // Firestore and Storage clients
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+// Export for use in other files
+export { app, analytics };

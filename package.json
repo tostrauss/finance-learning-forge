@@ -8,7 +8,11 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "firebase:login": "firebase login",
+    "firebase:init": "firebase init",
+    "firebase:rules:test": "firebase emulators:start --only firestore",
+    "firebase:rules:deploy": "firebase deploy --only firestore:rules"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -40,6 +44,7 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.4",
     "@tanstack/react-query": "^5.56.2",
+    "@types/redis": "^4.0.10",
     "axios": "^1.9.0",
     "chart.js": "^4.4.9",
     "class-variance-authority": "^0.7.1",
@@ -62,6 +67,7 @@
     "react-router-dom": "^6.26.2",
     "react-sparklines": "^1.7.0",
     "recharts": "^2.15.3",
+    "redis": "^5.1.1",
     "sonner": "^1.5.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
@@ -83,6 +89,7 @@
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
+    "firebase-tools": "^13.5.1",
     "globals": "^15.9.0",
     "jsdom": "^26.1.0",
     "lovable-tagger": "^1.1.7",

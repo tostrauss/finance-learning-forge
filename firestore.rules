@@ -1,0 +1,149 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Data validation helpers
+    function isValidWatchlistItem(item) {
+      return item.size() == 4 
+        && 'symbol' in item && item.symbol is string
+        && 'name' in item && item.name is string
+        && 'addedAt' in item && item.addedAt is string
+        && 'assetType' in item && item.assetType in ['security', 'crypto', 'bond', 'commodity'];
+    }
+
+    function isValidQuizResult(result) {
+      return result.size() == 3
+        && 'score' in result && result.score is number && result.score >= 0
+        && 'totalQuestions' in result && result.totalQuestions is number && result.totalQuestions > 0
+        && 'dateTaken' in result && result.dateTaken is string;
+    }
+    
+    function isValidModuleProgress(module) {
+      return module.size() == 3
+        && 'moduleId' in module && module.moduleId is string
+        && 'completed' in module && module.completed is bool
+        && 'lastAccessed' in module && module.lastAccessed is timestamp;
+    }
+    
+    function isValidCourseProgress(course) {
+      return course.size() == 4
+        && 'courseId' in course && course.courseId is string
+        && 'enrolled' in course && course.enrolled is bool
+        && 'completed' in course && course.completed is bool
+        && 'lastAccessed' in course && course.lastAccessed is timestamp;
+    }
+
+    function isValidPaperTrade(trade) {
+      return trade.size() == 8
+        && 'symbol' in trade && trade.symbol is string
+        && 'type' in trade && trade.type in ['buy', 'sell']
+        && 'quantity' in trade && trade.quantity is number && trade.quantity > 0
+        && 'price' in trade && trade.price is number && trade.price > 0
+        && 'timestamp' in trade && trade.timestamp is timestamp
+        && 'status' in trade && trade.status in ['open', 'closed']
+        && 'profitLoss' in trade && trade.profitLoss is number
+        && 'notes' in trade && trade.notes is string;
+    }
+
+    function hasValidItems(items) {
+      return items is list && items.size() <= 100 && items.every(item => isValidWatchlistItem(item));
+    }
+
+    // Collection rules
+    match /watchlists/{docId}
+    match /watchlists/{docId} {
+      // Allow read if user owns the document
+      allow read: if isOwner(resource.data.userId);
+      
+      // Allow create if:
+      // 1. User is authenticated
+      // 2. userId matches auth user
+      // 3. Document has all required fields
+      // 4. Items is a valid array
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasAll(['name', 'items', 'userId', 'createdAt', 'updatedAt'])
+        && request.resource.data.name is string 
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 100
+        && hasValidItems(request.resource.data.items)
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+
+      // Allow update if:
+      // 1. User owns the document
+      // 2. Only allowed fields are being modified
+      // 3. Items array remains valid
+      // 4. Can't change userId or createdAt
+      allow update: if isOwner(resource.data.userId)
+        && request.resource.data.diff(resource.data).affectedKeys()
+           .hasOnly(['name', 'items', 'updatedAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 100
+        && hasValidItems(request.resource.data.items)
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt is timestamp;      // Allow delete if user owns the document
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    // User Progress collection rules
+    match /userProgress/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId 
+        && request.resource.data.keys().hasAll(['courseProgress', 'moduleProgress', 'quizResults', 'streak', 'xpEarned', 'lastActive'])
+        && request.resource.data.courseProgress is map
+        && request.resource.data.moduleProgress is map
+        && request.resource.data.quizResults is map
+        && request.resource.data.streak is number
+        && request.resource.data.xpEarned is number
+        && request.resource.data.lastActive is timestamp;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Paper Trading collection rules
+    match /paperTrading/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId
+        && request.resource.data.keys().hasAll(['positions', 'transactions', 'cash', 'settings'])
+        && request.resource.data.positions is list
+        && request.resource.data.transactions is list
+        && request.resource.data.cash is number
+        && request.resource.data.settings is map;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Paper Trading Transactions subcollection rules
+    match /paperTrading/{userId}/transactions/{transactionId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId && isValidPaperTrade(request.resource.data);
+      allow update: if isAuthenticated() && request.auth.uid == userId && isValidPaperTrade(request.resource.data);
+    }
+
+    // Analytics collection rules
+    match /analytics/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId
+        && request.resource.data.keys().hasAll(['dailyStats', 'weeklyStats', 'monthlyStats', 'achievements'])
+        && request.resource.data.dailyStats is map
+        && request.resource.data.weeklyStats is map
+        && request.resource.data.monthlyStats is map
+        && request.resource.data.achievements is list;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Catch-all rule - deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -136,6 +136,53 @@ Get ready to launch your finance career.
 *   **`FinanceResume.tsx`**: A dynamic resume builder that helps you articulate the skills and experiences gained from your coursework and FLF platform activities, with templates tailored for finance roles.
 *   **`InterviewSimulator.tsx`**: Practice answering a wide range of technical and behavioral interview questions common in finance interviews, with guidance on structuring effective responses (e.g., STAR method).
 
+## Firebase Setup and Security Rules
+
+FLF uses Firebase for backend services, including Firestore for data storage. Here's how to set up and deploy Firebase security rules:
+
+### Prerequisites
+
+1. Install Firebase CLI globally (if not already installed):
+```powershell
+npm install -g firebase-tools
+```
+
+2. Log in to Firebase:
+```powershell
+npm run firebase:login
+```
+
+3. Initialize Firebase in the project (first time only):
+```powershell
+npm run firebase:init
+```
+
+### Testing Security Rules
+
+1. Start the Firebase emulator to test rules locally:
+```powershell
+npm run firebase:rules:test
+```
+
+2. The emulator UI will be available at http://localhost:4000
+
+### Deploying Security Rules
+
+1. Deploy the Firestore security rules:
+```powershell
+npm run firebase:rules:deploy
+```
+
+### Security Rules Overview
+
+Our Firestore security rules enforce:
+- User authentication for all operations
+- User can only access their own watchlists
+- Strict data validation for watchlist items
+- Rate limiting and other security best practices
+
+See `firestore.rules` for the complete security rules configuration.
+
 ## Future Roadmap
 
 We're just getting started! Here are some of the exciting features and enhancements we envision for the future of FLF:
@@ -149,6 +196,59 @@ We're just getting started! Here are some of the exciting features and enhanceme
 *   **Guest Lectures & Industry Insights:** Integrating content from finance professionals.
 *   **Gamification:** Badges, leaderboards (optional), and challenges to enhance engagement.
 
+## Firebase Setup and Security Rules
+
+FLF uses Firebase for backend services, including Firestore for data storage. Here's how to set up and deploy Firebase security rules:
+
+### Prerequisites
+
+1. Install Firebase CLI globally (if not already installed):
+
+```powershell
+npm install -g firebase-tools
+```
+
+2. Log in to Firebase:
+
+```powershell
+npm run firebase:login
+```
+
+3. Initialize Firebase in the project (first time only):
+
+```powershell
+npm run firebase:init
+```
+
+### Testing Security Rules
+
+1. Start the Firebase emulator to test rules locally:
+
+```powershell
+npm run firebase:rules:test
+```
+
+2. The emulator UI will be available at `http://localhost:4000`
+
+### Deploying Security Rules
+
+1. Deploy the Firestore security rules:
+
+```powershell
+npm run firebase:rules:deploy
+```
+
+### Security Rules Overview
+
+Our Firestore security rules enforce:
+
+* User authentication for all operations
+* User can only access their own watchlists
+* Strict data validation for watchlist items
+* Rate limiting and other security best practices
+
+See `firestore.rules` for the complete security rules configuration.
+
 ## Contributing
 
 We built Finance Learning Forge for students, and we believe in the power of collaboration. We welcome contributions from fellow students, educators, and developers who share our passion for improving finance education. If you're interested in contributing, please read our `CONTRIBUTING.md` file (to be created) for guidelines on how to submit pull requests, report issues, and suggest features.
@@ -160,4 +260,3 @@ This project is licensed under the MIT License - see the `LICENSE` file for deta
 ---
 
 **Built with 💜 by students, for students. We believe finance education deserves better tools, and we're excited to build them with you.**
-```

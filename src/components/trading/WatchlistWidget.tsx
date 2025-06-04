@@ -19,11 +19,20 @@ export enum AssetType {
 
 export interface WatchlistItem {
   symbol: string;
+<<<<<<< HEAD
   assetType: AssetType;
   price?: number | null; // MODIFIED: Allow null
   change?: number | null; // MODIFIED: Allow null
   changePercent?: number | null; // MODIFIED: Allow null
   // Add any other relevant fields, e.g., name, lastPrice, etc.
+=======
+  name: string;
+  assetType?: AssetType;
+  addedAt?: string;
+  price?: number;
+  change?: number;
+  changePercent?: number;
+>>>>>>> origin
 }
 
 export interface WatchlistWidgetProps {
@@ -67,10 +76,28 @@ const WatchlistWidget: React.FC<WatchlistWidgetProps> = ({
     setIsEditing(false);
     setDraftTitle(title);
   };
+<<<<<<< HEAD
 
   const handleAdd = (symbol: string) => {
     if (onAdd) onAdd(symbol, AssetType.EQUITY);
     setIsAdding(false);
+=======
+  const [addingSymbol, setAddingSymbol] = useState<string | null>(null);
+  
+  const handleAdd = async (symbol: string) => {
+    if (!onAdd) return;
+    
+    setAddingSymbol(symbol);
+    try {
+      await onAdd(symbol, 'security');
+      setIsAdding(false);
+      setQuery(''); // Clear search when successful
+    } catch (error) {
+      // Error handling is done in parent component via toast
+    } finally {
+      setAddingSymbol(null);
+    }
+>>>>>>> origin
   };
 
   const toggleCollapse = () => {
