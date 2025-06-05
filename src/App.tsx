@@ -22,12 +22,8 @@ import Signin from "./pages/Signin";
 import FinanceLearningPath from "./components/learning/FinanceLearningPath";
 import CurriculumPathway from "./components/learning/CurriculumPathway";
 import PracticePage from "./pages/Practice";
-<<<<<<< HEAD
-import ChartingPage from "./pages/Charting"; // Import the new Charting page
-=======
 import LearningLayout from "./components/learning/LearningLayout";
 import WatchlistLayout from "./components/trading/WatchlistLayout";
->>>>>>> origin
 
 const queryClient = new QueryClient();
 
@@ -51,22 +47,6 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/signin" element={<Signin />} />
-<<<<<<< HEAD
-            <Route path="/signup" element={<Signup />} />            <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/watchlist" element={<Watchlist />} />
-            <Route path="/charting" element={<ChartingPage />} /> {/* Add route for Charting */}
-            <Route path="/practice" element={<PracticePage />} />            <Route path="/learning" element={<Learning />} />
-            <Route path="/learning/path" element={<FinanceLearningPath />} />
-            <Route path="/learning/path/:pathId" element={<CourseDetail />} />
-            <Route path="/learning/course" element={<CurriculumPathway />} />
-            <Route path="/learning/course/:courseId" element={<CourseDetail />} />
-            <Route path="/learning/course/:courseId/:moduleId" element={<ModuleDetail />} />
-            <Route
-              path="/learning/course/:courseId/:moduleId/quiz/:quizId"
-              element={<Quiz />}
-            />
-=======
             <Route path="/signup" element={<Signup />} />
             <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />            {/* Wrap watchlist route with WatchlistLayout */}
@@ -86,7 +66,6 @@ const App = () => (
               <Route path="/learning/course/:courseId/:moduleId/quiz/:quizId" element={<Quiz />} />
             </Route>
 
->>>>>>> origin
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

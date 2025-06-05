@@ -5,45 +5,17 @@ import { Pencil, Check, X, Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import StockSearch from '@/components/StockSearch';
 import { useStockSearch } from '@/hooks/useStockSearch';
 import { useStockTimeSeries } from '@/hooks/useStockTimeSeries';
-
-// MODIFIED: Define AssetType as a string enum
-export enum AssetType {
-  EQUITY = 'equity', // Changed from 'security' to match usage in watchlist.tsx
-  CRYPTO = 'crypto',
-  FOREX = 'forex',   // Added to match usage in watchlist.tsx
-  OPTION = 'option',
-  COMMODITY = 'commodity', // Added to match usage in watchlist.tsx
-  // BOND = 'bond', // Keep if needed, or remove if not used
-  // COMMODITY = 'commodity', // Keep if needed, or remove if not used
-}
-
-export interface WatchlistItem {
-  symbol: string;
-<<<<<<< HEAD
-  assetType: AssetType;
-  price?: number | null; // MODIFIED: Allow null
-  change?: number | null; // MODIFIED: Allow null
-  changePercent?: number | null; // MODIFIED: Allow null
-  // Add any other relevant fields, e.g., name, lastPrice, etc.
-=======
-  name: string;
-  assetType?: AssetType;
-  addedAt?: string;
-  price?: number;
-  change?: number;
-  changePercent?: number;
->>>>>>> origin
-}
+import { WatchlistItem, AssetType } from '@/types/watchlist';
 
 export interface WatchlistWidgetProps {
-  title?: string;
-  onTitleChange?: (newTitle: string) => void;
+  title: string;
   items: WatchlistItem[];
-  loading?: boolean;
-  error?: string;
-  onRemove?: (symbol: string) => void;
+  loading?: boolean;                      // ← add this
+  error?: string | React.ReactNode;       // ← add this (or adjust type as needed)
+  onTitleChange?: (newTitle: string) => void;
+  onAdd?:    (symbol: string, assetType: AssetType) => void;
+  onRemove?: (symbol: string, assetType: AssetType) => void;
   onSelectSymbol?: (symbol: string) => void;
-  onAdd?: (symbol: string, assetType: AssetType) => void;
 }
 
 const WatchlistWidget: React.FC<WatchlistWidgetProps> = ({
@@ -76,12 +48,7 @@ const WatchlistWidget: React.FC<WatchlistWidgetProps> = ({
     setIsEditing(false);
     setDraftTitle(title);
   };
-<<<<<<< HEAD
 
-  const handleAdd = (symbol: string) => {
-    if (onAdd) onAdd(symbol, AssetType.EQUITY);
-    setIsAdding(false);
-=======
   const [addingSymbol, setAddingSymbol] = useState<string | null>(null);
   
   const handleAdd = async (symbol: string) => {
@@ -97,7 +64,6 @@ const WatchlistWidget: React.FC<WatchlistWidgetProps> = ({
     } finally {
       setAddingSymbol(null);
     }
->>>>>>> origin
   };
 
   const toggleCollapse = () => {
@@ -200,7 +166,7 @@ const WatchlistWidget: React.FC<WatchlistWidgetProps> = ({
 const ItemRow: React.FC<{
   item: WatchlistItem;
   onSelect?: (symbol: string) => void;
-  onRemove?: (symbol: string) => void;
+  onRemove?: (symbol: string, assetType: AssetType) => void;
 }> = ({ item, onSelect, onRemove }) => {
   const { series } = useStockTimeSeries(item.symbol);
   const last = series[series.length - 1] ?? { open: 0, close: 0 };
@@ -220,7 +186,7 @@ const ItemRow: React.FC<{
         </span>
         <span className="italic text-sm lowercase">{item.assetType}</span>
         {onRemove && (
-          <button onClick={() => onRemove(item.symbol)} className="text-sm text-gray-500 hover:text-red-600" aria-label={`Remove ${item.symbol}`}>
+          <button onClick={() => onRemove(item.symbol, item.assetType)} className="text-sm text-gray-500 hover:text-red-600" aria-label={`Remove ${item.symbol}`}>
             Remove
           </button>
         )}

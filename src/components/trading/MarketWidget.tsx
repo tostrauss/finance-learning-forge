@@ -93,8 +93,9 @@ const MarketWidget: React.FC<MarketWidgetProps> = ({
           onIntervalChange={setInterval}
         />
       </CardHeader>
-      
-      <CardContent className="p-4 flex-1 min-h-0">
+
+      {/* give the chart area a fixed height */}
+      <CardContent className="p-4 h-96">
         {loading ? (
           <div className="h-full flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-app-purple"></div>

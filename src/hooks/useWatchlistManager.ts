@@ -16,7 +16,7 @@ import {
   arrayUnion, // MODIFIED: Add this for adding items to an array
   arrayRemove // MODIFIED: Add this for removing items from an array
 } from 'firebase/firestore';
-import { WatchlistItem, AssetType } from '@/components/trading/WatchlistWidget';
+import { WatchlistItem, AssetType } from '../types/watchlist';
 
 export interface WatchlistBoard {
   id: string;
@@ -201,10 +201,8 @@ export function useWatchlistManager() {
     const newItem: WatchlistItem = {
       symbol: symbol.trim().toUpperCase(), // Ensure symbol is trimmed and uppercase
       assetType,
-      // You might want to fetch initial price/change data here or leave it for a separate update
-      price: null, // MODIFIED: Use null instead of undefined
-      change: null, // MODIFIED: Use null instead of undefined
-      changePercent: null, // MODIFIED: Use null instead of undefined
+      name: symbol.trim().toUpperCase(),     // fill in `name`
+      addedAt: serverTimestamp(),            // fill in `addedAt`
     };
 
     // Check if item already exists (optional, arrayUnion handles duplicates by not adding them)
@@ -234,46 +232,32 @@ export function useWatchlistManager() {
     }
   }, [canPerformMutation, user, boards]); // Added boards to deps if using it for pre-check
 
-  const removeItemFromBoard = useCallback(async (boardId: string, symbol: string, assetType: AssetType) => {
+  const removeItemFromBoard = useCallback(async (
+    boardId: string,
+    symbol: string,
+    assetType: AssetType
+  ) => {
     if (!canPerformMutation() || !user) return;
 
-    const itemToRemove: WatchlistItem = { // Construct the exact object to remove
-      symbol,
-      assetType,
-      // Important: arrayRemove needs the exact object or an object that matches all fields
-      // If your items in Firestore have more fields (like price, change),
-      // you'll need to fetch the item or ensure this object matches.
-      // For simplicity, assuming symbol and assetType are enough to identify.
-      // If not, you'd fetch the board, find the item, then use that full item object in arrayRemove.
-    };
-
-    // Optimistic update can be kept
-    // setBoards(prevBoards => ... ); // Your existing optimistic update
+    // find the full item (with name & addedAt) in your local cache
+    const board = boards.find(b => b.id === boardId);
+    if (!board) return;
+    const itemToRemove = board.items.find(
+      i => i.symbol === symbol && i.assetType === assetType
+    );
+    if (!itemToRemove) return;
 
     try {
       const boardRef = doc(db, `users/${user.uid}/watchlists`, boardId);
-      // To use arrayRemove effectively, you often need to provide an object
-      // that exactly matches an element in the array.
-      // If your items only store symbol and assetType primarily for identification, this is simpler.
-      // If they store dynamic data like price, you might need to query the item first
-      // or structure your arrayRemove based on a query if Firestore supported it directly (it doesn't for sub-objects in arrays).
-      // A common pattern is to filter items on the client, then overwrite the whole array,
-      // but arrayRemove is better for concurrent updates if you can match the object.
-
-      // Assuming items are identified by symbol and assetType for removal:
-      // You might need to fetch the document, find the exact item object, then remove it.
-      // A simpler approach if your WatchlistItem structure is consistent:
       await updateDoc(boardRef, {
-        items: arrayRemove(itemToRemove), // This requires itemToRemove to match an item in the array
-        updatedAt: serverTimestamp()
+        items: arrayRemove(itemToRemove),
+        updatedAt: serverTimestamp(),
       });
-      // onSnapshot should update the local state.
     } catch (err) {
-      console.error("Error removing item from board in Firestore:", err);
+      console.error('Error removing item from board:', err);
       setError(err instanceof Error ? err : new Error(String(err)));
-      // Potentially revert optimistic update
     }
-  }, [canPerformMutation, user]);
+  }, [boards, canPerformMutation, user]);
 
   return {
     boards,

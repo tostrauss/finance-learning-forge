@@ -49,12 +49,11 @@ export async function fetchYahooAutocomplete(query: string): Promise<SearchRespo
 // Update getHistoricalPrices function to ensure all OHLC data is returned
 export async function getHistoricalPrices(
   symbol: string
-): Promise<{ date: string; open: number; high: number; low: number; close: number; volume?: number }[]> {
+): Promise<MarketDataPoint[]> {
   try {
     const url = `/api/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1mo`;
     const response = await axios.get<HistoricalResponse>(url);
 
-    // DEBUGGING: Log the entire response data
     console.log(`Yahoo Finance API response for ${symbol}:`, JSON.stringify(response.data, null, 2));
 
     if (response.data?.chart?.error) {
@@ -107,13 +106,16 @@ export async function getHistoricalPrices(
         };
       })
       .filter((point): point is Exclude<typeof point, null> => point !== null);
-  } catch (error) {
-    if (!(error instanceof Error && error.message.startsWith('API error for'))) {
-        console.error(`General error in getHistoricalPrices for ${symbol}:`, error);
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      console.error(`❌ AxiosError in getHistoricalPrices for ${symbol}:`, {
+        status: err.response?.status,
+        body: err.response?.data,
+        config: err.config,
+      });
+    } else {
+      console.error(`❌ Non-Axios error in getHistoricalPrices for ${symbol}:`, err);
     }
-    // It's often better to let the calling code decide how to handle the error,
-    // e.g., by showing a message to the user or retrying.
-    // For now, re-throwing is fine.
-    throw error;
+    throw err;
   }
 }

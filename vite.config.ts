@@ -22,8 +22,7 @@ export default defineConfig({
       '/api': {
         target: 'https://query1.finance.yahoo.com',
         changeOrigin: true,
-        rewrite: (apiPath) => apiPath.replace(/^\/api/, ''), // Renamed 'path' variable to 'apiPath' to avoid conflict
-        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },
