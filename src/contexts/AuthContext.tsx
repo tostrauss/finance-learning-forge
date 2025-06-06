@@ -1,114 +1,84 @@
-// C:\Users\Hamid Malakpour\Desktop\Finance2.6\finance-learning-forge\src\contexts\AuthContext.tsx
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-  updateProfile,
-  User as FirebaseUser,
-  UserCredential
-} from 'firebase/auth';
-import {
-  doc,
-  setDoc,
-  serverTimestamp,
-  collection,
-  query,
-  where,
-  getDocs
-} from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authAPI } from '@/services/api'; // Make sure the path is correct
 
-type AuthContextType = {
-  user: FirebaseUser | null;
+interface User {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+interface AuthContextType {
+  user: User | null;
   loading: boolean;
-  signup: (username: string, email: string, password: string) => Promise<void>;
-  login: (email: string, password: string) => Promise<UserCredential>;
-  loginWithUsername: (username: string, password: string) => Promise<UserCredential>;
-  logout: () => Promise<void>;
-};
+  login: (email: string, password: string) => Promise<void>;
+  register: (data: any) => Promise<void>;
+  logout: () => void;
+}
 
-const AuthContext = createContext<AuthContextType>({} as any);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [user, setUser]       = useState<FirebaseUser | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, u => {
-      setUser(u);
-      setLoading(false);
-    });
-    return unsubscribe;
+    // Check if the user is already logged in when the app loads
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+          // If a token exists, verify it with the backend
+          const response = await authAPI.getMe();
+          setUser(response.data);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        localStorage.removeItem('accessToken'); // Clear invalid token
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkAuth();
   }, []);
 
-  const signup = async (
-    username: string,
-    email: string,
-    password: string
-  ): Promise<void> => {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    if (cred.user) {
-      await updateProfile(cred.user, { displayName: username });
-      await setDoc(doc(db, 'users', cred.user.uid), {
-        username,
-        email,
-        createdAt: serverTimestamp(),
-      });
-    }
+  const login = async (email: string, password: string) => {
+    const response = await authAPI.login({ email, password });
+    // Note: The refresh token is handled automatically by the httpOnly cookie
+    localStorage.setItem('accessToken', response.data.accessToken);
+    setUser(response.data.user);
   };
 
-  const login = async ( 
-    email: string, 
-    password:string 
-  ): Promise<UserCredential> => {
-    setLoading(true);
+  const register = async (data: any) => {
+    const response = await authAPI.register(data);
+    localStorage.setItem('accessToken', response.data.accessToken);
+    setUser(response.data.user);
+  };
+
+  const logout = async () => {
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      setUser(cred.user);
-      return cred;
-    }finally {
-      setLoading(false);
+        await authAPI.logout(); // Call the backend logout endpoint
+    } catch (error) {
+        console.error("Logout failed", error);
+    } finally {
+        localStorage.removeItem('accessToken');
+        setUser(null);
+        // Redirect to signin to ensure a clean state
+        window.location.href = '/signin';
     }
   };
-  
-  const loginWithUsername = async (
-    username: string,
-    password: string
-  ): Promise<UserCredential> => {
-    console.log('[Auth] loginWithUsername called with username:', username);
-
-    // 1) Look up the user’s email by username in Firestore
-    const usersRef = collection(db, 'users');
-    const q        = query(usersRef, where('username', '==', username));
-    const snap     = await getDocs(q);
-    console.log('[Auth] Firestore query returned:', snap.size, 'docs');
-
-    if (snap.empty) {
-      console.error('[Auth] No user found with that username');
-      throw new Error('No user found with that username');
-    }
-
-    const { email } = snap.docs[0].data() as { email: string };
-    console.log('[Auth] Found email for username:', email);
-
-    // 2) Sign in with the found email
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    console.log('[Auth] signInWithEmailAndPassword succeeded, uid:', cred.user.uid);
-
-    return cred;
-  };
-
-  const logout = (): Promise<void> => signOut(auth);
 
   return (
-    <AuthContext.Provider
-      value={{ user, loading, signup, login, loginWithUsername, logout }}
-    >
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = (): AuthContextType => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
