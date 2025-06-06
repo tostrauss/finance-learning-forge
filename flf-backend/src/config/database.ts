@@ -2,8 +2,10 @@ import { Sequelize } from 'sequelize-typescript';
 import dotenv from 'dotenv';
 import { logger } from '../utils/logger';
 import { User } from '../models/User';
-import { Course, Module } from '../models/Course'; // Course and Module are in the same file
+import { Course, Module } from '../models/Course';
 import { RefreshToken } from '../models/RefreshToken';
+import { UserProgress } from '../models/UserProgress';
+import { Quiz, QuizQuestion, QuizResult } from '../models/Quiz';
 
 dotenv.config();
 
@@ -25,7 +27,16 @@ const sequelize = new Sequelize({
 });
 
 // 2. Add all of our models to the instance manually
-sequelize.addModels([User, Course, Module, RefreshToken]);
+sequelize.addModels([
+  User, 
+  Course, 
+  Module, 
+  RefreshToken, 
+  UserProgress,
+  Quiz,
+  QuizQuestion,
+  QuizResult
+]);
 
 export const initializeDatabase = async () => {
   try {
