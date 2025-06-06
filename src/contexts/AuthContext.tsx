@@ -1,5 +1,7 @@
+// src/contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '@/services/api'; // Make sure the path is correct
+import { authAPI } from '@/services/api';
+import { toast } from '@/hooks/use-toast';
 
 interface User {
   id: string;
@@ -11,69 +13,14 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: any) => Promise<void>;
-  logout: () => void;
+  signup: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Check if the user is already logged in when the app loads
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem('accessToken');
-        if (token) {
-          // If a token exists, verify it with the backend
-          const response = await authAPI.getMe();
-          setUser(response.data);
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-        localStorage.removeItem('accessToken'); // Clear invalid token
-      } finally {
-        setLoading(false);
-      }
-    };
-    checkAuth();
-  }, []);
-
-  const login = async (email: string, password: string) => {
-    const response = await authAPI.login({ email, password });
-    // Note: The refresh token is handled automatically by the httpOnly cookie
-    localStorage.setItem('accessToken', response.data.accessToken);
-    setUser(response.data.user);
-  };
-
-  const register = async (data: any) => {
-    const response = await authAPI.register(data);
-    localStorage.setItem('accessToken', response.data.accessToken);
-    setUser(response.data.user);
-  };
-
-  const logout = async () => {
-    try {
-        await authAPI.logout(); // Call the backend logout endpoint
-    } catch (error) {
-        console.error("Logout failed", error);
-    } finally {
-        localStorage.removeItem('accessToken');
-        setUser(null);
-        // Redirect to signin to ensure a clean state
-        window.location.href = '/signin';
-    }
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -81,4 +28,152 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Check if user is logged in on mount
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await authAPI.getMe();
+      setUser(response.data);
+    } catch (err) {
+      // Token is invalid or expired
+      localStorage.removeItem('accessToken');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const login = async (email: string, password: string) => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const response = await authAPI.login({ email, password });
+      const { user, accessToken } = response.data;
+      
+      // Store the access token
+      localStorage.setItem('accessToken', accessToken);
+      
+      // Set the user in state
+      setUser(user);
+      
+      toast({
+        title: "Welcome back!",
+        description: `Logged in as ${user.email}`,
+      });
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || 'Failed to login';
+      setError(errorMessage);
+      toast({
+        title: "Login Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signup = async (email: string, password: string, firstName?: string, lastName?: string) => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const response = await authAPI.register({ 
+        email, 
+        password, 
+        firstName, 
+        lastName 
+      });
+      const { user, accessToken } = response.data;
+      
+      // Store the access token
+      localStorage.setItem('accessToken', accessToken);
+      
+      // Set the user in state
+      setUser(user);
+      
+      toast({
+        title: "Account created!",
+        description: "Welcome to Finance Learning Forge",
+      });
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || 'Failed to create account';
+      setError(errorMessage);
+      toast({
+        title: "Signup Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    setLoading(true);
+    
+    try {
+      await authAPI.logout();
+    } catch (err) {
+      // Even if the server logout fails, we should still clear local state
+      console.error('Logout error:', err);
+    }
+    
+    // Clear local storage and state
+    localStorage.removeItem('accessToken');
+    setUser(null);
+    
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out",
+    });
+    
+    setLoading(false);
+  };
+
+  const refreshUser = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await authAPI.getMe();
+      setUser(response.data);
+    } catch (err) {
+      console.error('Failed to refresh user:', err);
+    }
+  };
+
+  const value: AuthContextType = {
+    user,
+    loading,
+    error,
+    login,
+    signup,
+    logout,
+    refreshUser,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
