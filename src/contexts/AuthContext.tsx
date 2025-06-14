@@ -1,122 +1,163 @@
-// C:\Users\Hamid Malakpour\Desktop\Finance2.6\finance-learning-forge\src\contexts\AuthContext.tsx
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-  updateProfile,
-  User as FirebaseUser,
-  UserCredential
-} from 'firebase/auth';
-import {
-  doc,
-  setDoc,
-  serverTimestamp,
-  collection,
-  query,
-  where,
-  getDocs
-} from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+// src/contexts/AuthContext.tsx
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authAPI } from '@/services/api';
+import { toast } from '@/hooks/use-toast';
 
-type AuthContextType = {
-  user: FirebaseUser | null;
+interface User {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+interface AuthContextType {
+  user: User | null;
   loading: boolean;
-  signup: (email: string, password: string, firstName: string, lastName: string) => Promise<void>; // Changed signature
+  signup: (username: string, email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<UserCredential>;
   loginWithUsername: (username: string, password: string) => Promise<UserCredential>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
 
-const AuthContext = createContext<AuthContextType>({} as any);
-
-export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [user, setUser]       = useState<FirebaseUser | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Check if user is logged in on mount
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, u => {
-      setUser(u);
-      setLoading(false);
-    });
-    return unsubscribe;
+    checkAuth();
   }, []);
 
+  const checkAuth = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await authAPI.getMe();
+      setUser(response.data);
+    } catch (err) {
+      // Token is invalid or expired
+      localStorage.removeItem('accessToken');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signup = async (
-    email: string, // Changed parameter order and added new ones
-    password: string,
-    firstName: string,
-    lastName: string
+    username: string,
+    email: string,
+    password: string
   ): Promise<void> => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     if (cred.user) {
-      const displayName = `${firstName} ${lastName}`.trim();
-      await updateProfile(cred.user, { displayName });
-      // Storing firstName, lastName, and displayName.
-      // Using firstName as 'username' for compatibility with loginWithUsername.
-      // You may want to adjust the 'username' strategy if a unique, user-chosen username is required.
+      await updateProfile(cred.user, { displayName: username });
       await setDoc(doc(db, 'users', cred.user.uid), {
-        username: firstName, // Or another strategy for username if needed
+        username,
         email,
-        firstName,
-        lastName,
-        displayName,
         createdAt: serverTimestamp(),
       });
     }
   };
 
-  const login = async ( 
-    email: string, 
-    password:string 
-  ): Promise<UserCredential> => {
+  const signup = async (email: string, password: string, firstName?: string, lastName?: string) => {
+    setError(null);
     setLoading(true);
+
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      setUser(cred.user);
-      return cred;
-    }finally {
+      const response = await authAPI.register({ 
+        email, 
+        password, 
+        firstName, 
+        lastName 
+      });
+      const { user, accessToken } = response.data;
+      
+      // Store the access token
+      localStorage.setItem('accessToken', accessToken);
+      
+      // Set the user in state
+      setUser(user);
+      
+      toast({
+        title: "Account created!",
+        description: "Welcome to Finance Learning Forge",
+      });
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || 'Failed to create account';
+      setError(errorMessage);
+      toast({
+        title: "Signup Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      throw new Error(errorMessage);
+    } finally {
       setLoading(false);
     }
   };
-  
-  const loginWithUsername = async (
-    username: string,
-    password: string
-  ): Promise<UserCredential> => {
-    console.log('[Auth] loginWithUsername called with username:', username);
 
-    // 1) Look up the user’s email by username in Firestore
-    const usersRef = collection(db, 'users');
-    const q        = query(usersRef, where('username', '==', username));
-    const snap     = await getDocs(q);
-    console.log('[Auth] Firestore query returned:', snap.size, 'docs');
-
-    if (snap.empty) {
-      console.error('[Auth] No user found with that username');
-      throw new Error('No user found with that username');
+  const logout = async () => {
+    setLoading(true);
+    
+    try {
+      await authAPI.logout();
+    } catch (err) {
+      // Even if the server logout fails, we should still clear local state
+      console.error('Logout error:', err);
     }
-
-    const { email } = snap.docs[0].data() as { email: string };
-    console.log('[Auth] Found email for username:', email);
-
-    // 2) Sign in with the found email
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    console.log('[Auth] signInWithEmailAndPassword succeeded, uid:', cred.user.uid);
-
-    return cred;
+    
+    // Clear local storage and state
+    localStorage.removeItem('accessToken');
+    setUser(null);
+    
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out",
+    });
+    
+    setLoading(false);
   };
 
-  const logout = (): Promise<void> => signOut(auth);
+  const refreshUser = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await authAPI.getMe();
+      setUser(response.data);
+    } catch (err) {
+      console.error('Failed to refresh user:', err);
+    }
+  };
+
+  const value: AuthContextType = {
+    user,
+    loading,
+    error,
+    login,
+    signup,
+    logout,
+    refreshUser,
+  };
 
   return (
-    <AuthContext.Provider
-      value={{ user, loading, signup, login, loginWithUsername, logout }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
-
-export const useAuth = (): AuthContextType => useContext(AuthContext);

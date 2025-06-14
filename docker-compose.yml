@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database Service
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: finance_learning_forge
+      POSTGRES_USER: flf_admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD} # Pulls from your .env file
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # Redis Cache Service
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  # Your Backend Service
+  backend:
+    build: ./flf-backend # Tells Docker Compose to build the image from the Dockerfile in this directory
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://flf_admin:${DB_PASSWORD}@postgres:5432/finance_learning_forge
+      - REDIS_URL=redis://redis:6379
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET} # Ensure these are in your .env file
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+    ports:
+      - "3001:3001"
+    depends_on: # Ensures the backend starts only after the database and cache are ready
+      - postgres
+      - redis
+
+# Defines a persistent volume for the database data
+volumes:
+  postgres_data:
