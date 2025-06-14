@@ -6,8 +6,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PracticeProvider } from "@/contexts/PracticeContext";
-import { LearningProvider } from "@/contexts/LearningContext";
+import { LearningProvider } from "@/contexts/LearningContext"; // Changed import path
 import { useAuth } from "@/contexts/AuthContext";
+import { User as FirebaseUser } from 'firebase/auth'; // Import Firebase User type
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Learning from "./pages/Learning";
@@ -17,13 +18,13 @@ import Quiz from "./pages/Quiz";
 import Dashboard from "./pages/Dashboard";
 import Watchlist from "./pages/watchlist";
 import Backtesting from "./pages/Backtesting";
-import Signup from "./pages/Signup";
-import Signin from "./pages/Signin";
 import FinanceLearningPath from "./components/learning/FinanceLearningPath";
 import CurriculumPathway from "./components/learning/CurriculumPathway";
 import PracticePage from "./pages/Practice";
 import LearningLayout from "./components/learning/LearningLayout";
 import WatchlistLayout from "./components/trading/WatchlistLayout";
+import Signin from "./pages/Signin"; 
+import Signup from "./pages/Signup"; // Changed to default import if Signup.tsx uses default export
 
 const queryClient = new QueryClient();
 
@@ -31,7 +32,10 @@ const queryClient = new QueryClient();
 const PracticePageWithProvider = () => {
   const { user } = useAuth();
   return (
-    <PracticeProvider user={user}>
+    // Cast the user to FirebaseUser | null.
+    // Ideally, ensure AuthContext provides user in the expected type,
+    // or PracticeContext adapts to the type from AuthContext.
+    <PracticeProvider user={user as FirebaseUser | null}>
       <PracticePage />
     </PracticeProvider>
   );

@@ -23,7 +23,7 @@ import { auth, db } from '@/lib/firebase';
 type AuthContextType = {
   user: FirebaseUser | null;
   loading: boolean;
-  signup: (username: string, email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, firstName: string, lastName: string) => Promise<void>; // Changed signature
   login: (email: string, password: string) => Promise<UserCredential>;
   loginWithUsername: (username: string, password: string) => Promise<UserCredential>;
   logout: () => Promise<void>;
@@ -44,16 +44,24 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   }, []);
 
   const signup = async (
-    username: string,
-    email: string,
-    password: string
+    email: string, // Changed parameter order and added new ones
+    password: string,
+    firstName: string,
+    lastName: string
   ): Promise<void> => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     if (cred.user) {
-      await updateProfile(cred.user, { displayName: username });
+      const displayName = `${firstName} ${lastName}`.trim();
+      await updateProfile(cred.user, { displayName });
+      // Storing firstName, lastName, and displayName.
+      // Using firstName as 'username' for compatibility with loginWithUsername.
+      // You may want to adjust the 'username' strategy if a unique, user-chosen username is required.
       await setDoc(doc(db, 'users', cred.user.uid), {
-        username,
+        username: firstName, // Or another strategy for username if needed
         email,
+        firstName,
+        lastName,
+        displayName,
         createdAt: serverTimestamp(),
       });
     }
