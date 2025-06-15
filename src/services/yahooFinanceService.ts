@@ -236,6 +236,9 @@ export async function getHistoricalPricesWithInfo(
       }
     }
 
+    // Sort data by date to ensure chronological order (oldest to newest)
+    data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
     return { data, companyInfo };
   } catch (error) {
     console.error('Error fetching historical data:', error);
@@ -345,6 +348,9 @@ export async function getIntradayPricesWithInfo(
         });
       }
     }
+
+    // Sort data by timestamp to ensure chronological order (oldest to newest)
+    data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     return { data, companyInfo };
   } catch (error) {

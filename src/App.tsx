@@ -19,6 +19,7 @@ import Dashboard from "./pages/Dashboard";
 import Watchlist from "./pages/watchlist";
 import Backtesting from "./pages/Backtesting";
 import ShowHistorical from "./pages/ShowHistorical";
+import Charting from "./pages/Charting";
 import FinanceLearningPath from "./components/learning/FinanceLearningPath";
 import CurriculumPathway from "./components/learning/CurriculumPathway";
 import PracticePage from "./pages/Practice";
@@ -55,6 +56,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/show-historical" element={<ShowHistorical />} />
+            <Route path="/charting" element={<Charting />} />
             
             {/* Wrap watchlist route with WatchlistLayout */}
             <Route element={<WatchlistLayout />}>
