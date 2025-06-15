@@ -1,19 +1,22 @@
 // middleware/validation.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 
-export const validateCacheBody = (req: Request, res: Response, next: NextFunction) => {
+export const validateCacheBody = (req: Request, res: Response, next: NextFunction): void => {
   const { key, value, ttl } = req.body;
 
   if (!key || typeof key !== 'string') {
-    return res.status(400).json({ message: 'Key must be a non-empty string' });
+    res.status(400).json({ error: 'Key is required and must be a string' });
+    return;
   }
 
   if (!value || typeof value !== 'string') {
-    return res.status(400).json({ message: 'Value must be a non-empty string' });
+    res.status(400).json({ error: 'Value is required and must be a string' });
+    return;
   }
 
   if (!ttl || typeof ttl !== 'number' || ttl <= 0) {
-    return res.status(400).json({ message: 'TTL must be a positive number' });
+    res.status(400).json({ error: 'TTL is required and must be a positive number' });
+    return;
   }
 
   next();

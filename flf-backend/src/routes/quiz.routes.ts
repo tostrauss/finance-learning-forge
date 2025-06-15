@@ -17,11 +17,12 @@ const submitQuizSchema = joi.object({
 });
 
 // Get a specific quiz by ID (Public - for studying)
-router.get('/:quizId', async (req, res) => {
+router.get('/:quizId', async (req, res): Promise<void> => {
   try {
     const quiz = await QuizService.getQuizById(req.params.quizId);
     if (!quiz) {
-      return res.status(404).json({ error: 'Quiz not found' });
+      res.status(404).json({ error: 'Quiz not found' });
+      return;
     }
     
     // Remove correct answers from response for active quiz
@@ -46,19 +47,21 @@ router.get('/:quizId', async (req, res) => {
 });
 
 // Get quiz with answers (Protected - for review after submission)
-router.get('/:quizId/answers', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/:quizId/answers', authMiddleware, async (req: AuthRequest, res): Promise<void> => {
   try {
     // Check if user has attempted this quiz
     const userAttempts = await QuizService.getUserQuizHistory(req.user!.userId);
     const hasAttempted = userAttempts.some(attempt => attempt.quizId === req.params.quizId);
     
     if (!hasAttempted) {
-      return res.status(403).json({ error: 'You must complete the quiz before viewing answers' });
+      res.status(403).json({ error: 'You must complete the quiz before viewing answers' });
+      return;
     }
     
     const quiz = await QuizService.getQuizById(req.params.quizId);
     if (!quiz) {
-      return res.status(404).json({ error: 'Quiz not found' });
+      res.status(404).json({ error: 'Quiz not found' });
+      return;
     }
     
     res.json(quiz);
@@ -68,11 +71,12 @@ router.get('/:quizId/answers', authMiddleware, async (req: AuthRequest, res) => 
 });
 
 // Submit quiz answers (Protected)
-router.post('/:quizId/submit', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/:quizId/submit', authMiddleware, async (req: AuthRequest, res): Promise<void> => {
   try {
     const { error } = submitQuizSchema.validate(req.body);
     if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+      res.status(400).json({ error: error.details[0].message });
+      return;
     }
     
     const { answers, timeSpentSeconds } = req.body;
@@ -90,7 +94,7 @@ router.post('/:quizId/submit', authMiddleware, async (req: AuthRequest, res) => 
 });
 
 // Get user's quiz history (Protected)
-router.get('/history/me', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/history/me', authMiddleware, async (req: AuthRequest, res): Promise<void> => {
   try {
     const limit = parseInt(req.query.limit as string) || 10;
     const history = await QuizService.getUserQuizHistory(req.user!.userId, limit);
@@ -101,7 +105,7 @@ router.get('/history/me', authMiddleware, async (req: AuthRequest, res) => {
 });
 
 // Get user's best score for a quiz (Protected)
-router.get('/:quizId/best-score', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/:quizId/best-score', authMiddleware, async (req: AuthRequest, res): Promise<void> => {
   try {
     const score = await QuizService.getUserBestScore(req.user!.userId, req.params.quizId);
     res.json({ score });
@@ -111,7 +115,7 @@ router.get('/:quizId/best-score', authMiddleware, async (req: AuthRequest, res) 
 });
 
 // Get quiz statistics (Public - for displaying quiz difficulty)
-router.get('/:quizId/statistics', async (req, res) => {
+router.get('/:quizId/statistics', async (req, res): Promise<void> => {
   try {
     const stats = await QuizService.getQuizStatistics(req.params.quizId);
     res.json(stats);
@@ -121,7 +125,7 @@ router.get('/:quizId/statistics', async (req, res) => {
 });
 
 // Get all quizzes for a course (Public)
-router.get('/course/:courseId', async (req, res) => {
+router.get('/course/:courseId', async (req, res): Promise<void> => {
   try {
     const quizzes = await QuizService.getQuizzesByCourse(req.params.courseId);
     res.json(quizzes);

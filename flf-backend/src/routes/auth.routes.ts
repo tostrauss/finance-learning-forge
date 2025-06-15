@@ -24,7 +24,8 @@ router.post('/register', async (req, res) => {
   try {
     const { error } = registerSchema.validate(req.body);
     if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+      res.status(400).json({ error: error.details[0].message });
+      return; // Remove the return statement from res.status()
     }
     const { email, password, firstName, lastName } = req.body;
     const { user, tokens } = await AuthService.register(email, password, firstName, lastName);
@@ -51,7 +52,8 @@ router.post('/login', async (req, res) => {
   try {
     const { error } = loginSchema.validate(req.body);
     if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+      res.status(400).json({ error: error.details[0].message });
+      return; // Remove the return statement from res.status()
     }
     const { email, password } = req.body;
     const { user, tokens } = await AuthService.login(email, password);
@@ -83,13 +85,14 @@ router.post('/logout', async (req, res) => {
 });
 
 // Get current user
-router.get('/me', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/me', authMiddleware, async (req: AuthRequest, res): Promise<void> => {
   try {
     const user = await User.findByPk(req.user!.userId, {
         attributes: ['id', 'email', 'firstName', 'lastName']
     });
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
     res.json(user);
   } catch (error) {

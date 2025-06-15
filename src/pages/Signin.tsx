@@ -151,3 +151,5 @@ const Signin: React.FC = () => {
     </div>
   );
 };
+
+export default Signin;

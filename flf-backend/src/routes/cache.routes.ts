@@ -6,12 +6,13 @@ import { validateCacheBody } from '../middleware/validation.middleware';
 const router = express.Router();
 
 // Get cached value
-router.get('/:key', async (req, res) => {
+router.get('/:key', async (req, res): Promise<void> => {
   const { key } = req.params;
   try {
     const value = await redis.get(key);
     if (!value) {
-      return res.status(404).json({ message: 'Cache key not found' });
+      res.status(404).json({ message: 'Cache key not found' });
+      return;
     }
     res.json({ value });
   } catch (error) {
@@ -20,7 +21,7 @@ router.get('/:key', async (req, res) => {
 });
 
 // Set cached value with TTL
-router.post('/', validateCacheBody, async (req, res) => {
+router.post('/', validateCacheBody, async (req, res): Promise<void> => {
   const { key, value, ttl } = req.body;
   try {
     await redis.setex(key, ttl, value);
@@ -31,7 +32,7 @@ router.post('/', validateCacheBody, async (req, res) => {
 });
 
 // Delete cached value
-router.delete('/:key', async (req, res) => {
+router.delete('/:key', async (req, res): Promise<void> => {
   const { key } = req.params;
   try {
     await redis.del(key);
@@ -42,7 +43,7 @@ router.delete('/:key', async (req, res) => {
 });
 
 // Flush all cache
-router.delete('/', async (req, res) => {
+router.delete('/', async (req, res): Promise<void> => {
   try {
     await redis.flushAll();
     res.json({ message: 'Cache flushed successfully' });

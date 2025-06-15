@@ -5,7 +5,7 @@ import { LearningService } from '../services/learning.service';
 const router = express.Router();
 
 // Get all courses (Public)
-router.get('/courses', async (req, res) => {
+router.get('/courses', async (req, res): Promise<void> => {
   try {
     const courses = await LearningService.getAllCourses();
     res.json(courses);
@@ -15,11 +15,12 @@ router.get('/courses', async (req, res) => {
 });
 
 // Get a specific course by its ID (Public)
-router.get('/courses/:courseId', async (req, res) => {
+router.get('/courses/:courseId', async (req, res): Promise<void> => {
   try {
     const course = await LearningService.getCourseById(req.params.courseId);
     if (!course) {
-      return res.status(404).json({ error: 'Course not found' });
+      res.status(404).json({ error: 'Course not found' });
+      return;
     }
     res.json(course);
   } catch (error) {
@@ -28,7 +29,7 @@ router.get('/courses/:courseId', async (req, res) => {
 });
 
 // Get user's progress and completed credits (Protected)
-router.get('/progress', authMiddleware, async (req: AuthRequest, res) => {
+router.get('/progress', authMiddleware, async (req: AuthRequest, res): Promise<void> => {
   try {
     const userId = req.user!.userId;
     const progress = await LearningService.getUserProgress(userId);
@@ -44,12 +45,13 @@ router.get('/progress', authMiddleware, async (req: AuthRequest, res) => {
 });
 
 // Update user's progress on a module (Protected)
-router.post('/progress', authMiddleware, async (req: AuthRequest, res) => {
+router.post('/progress', authMiddleware, async (req: AuthRequest, res): Promise<void> => {
   try {
     const { courseId, moduleId, score } = req.body;
 
     if (!courseId || !moduleId) {
-      return res.status(400).json({ error: 'courseId and moduleId are required' });
+      res.status(400).json({ error: 'courseId and moduleId are required' });
+      return;
     }
 
     const progress = await LearningService.updateProgress(

@@ -8,16 +8,18 @@ export interface AuthRequest extends Request {
   };
 }
 
-export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
     if (!token) {
-      return res.status(401).json({ error: 'Please authenticate' });
+      res.status(401).json({ error: 'Please authenticate' });
+      return;
     }
     const decoded = AuthService.verifyAccessToken(token);
     req.user = decoded;
     next();
   } catch (error) {
     res.status(401).json({ error: 'Invalid or expired token' });
+    return;
   }
 };

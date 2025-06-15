@@ -23,8 +23,8 @@ import CurriculumPathway from "./components/learning/CurriculumPathway";
 import PracticePage from "./pages/Practice";
 import LearningLayout from "./components/learning/LearningLayout";
 import WatchlistLayout from "./components/trading/WatchlistLayout";
-import Signin from "./pages/Signin"; 
-import Signup from "./pages/Signup"; // Changed to default import if Signup.tsx uses default export
+import Signin from "../src/pages/Signin"; 
+import Signup from "../src/pages/Signup"; // Changed to default import if Signup.tsx uses default export
 
 const queryClient = new QueryClient();
 
