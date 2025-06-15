@@ -55,12 +55,13 @@ export async function fetchYahooAutocomplete(query: string): Promise<SearchRespo
   return response.data;
 }
 
-// Update getHistoricalPrices function to ensure all OHLC data is returned
+// Update getHistoricalPrices function to accept a range parameter
 export async function getHistoricalPrices(
-  symbol: string
+  symbol: string,
+  range: string = '1mo'
 ): Promise<MarketDataPoint[]> {
   try {
-    const url = `/api/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1mo`;
+    const url = `/api/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
     const response = await axios.get<HistoricalResponse>(url);
 
     console.log(`Yahoo Finance API response for ${symbol}:`, JSON.stringify(response.data, null, 2));

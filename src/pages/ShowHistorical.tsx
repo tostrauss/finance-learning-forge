@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { History, Search, Loader2 } from 'lucide-react';
+import { History, Search, Loader2, Calendar } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import { getHistoricalPrices, MarketDataPoint } from '@/services/yahooFinanceService';
 
@@ -11,61 +11,133 @@ interface ExtendedMarketDataPoint extends MarketDataPoint {
   isWeekend?: boolean;
 }
 
+type TimeframeOption = 'week' | '3month' | '6month' | 'ytd' | '1year' | '5year' | 'all';
+
 const ShowHistorical: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSymbol, setSelectedSymbol] = useState('');
   const [historicalData, setHistoricalData] = useState<ExtendedMarketDataPoint[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [timeframe, setTimeframe] = useState<TimeframeOption>('week');
 
-  const getLastSevenDays = (data: MarketDataPoint[]): ExtendedMarketDataPoint[] => {
-    // Get the last 7 calendar days
+  const getDaysForTimeframe = (period: TimeframeOption): number => {
     const today = new Date();
     
-    // Create array of last 7 calendar days
-    const last7Days: string[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      last7Days.push(date.toISOString().split('T')[0]);
+    switch (period) {
+      case 'week':
+        return 7;
+      case '3month':
+        return 90;
+      case '6month':
+        return 180;
+      case 'ytd':
+        // Calculate days from January 1st to today
+        const startOfYear = new Date(today.getFullYear(), 0, 1);
+        return Math.ceil((today.getTime() - startOfYear.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      case '1year':
+        return 365;
+      case '5year':
+        return 365 * 5;
+      case 'all':
+        return 365 * 30; // 30 years should cover most stocks
+      default:
+        return 7;
     }
-    
-    // Map each day to either real data or weekend placeholder
-    return last7Days.map((dateStr: string): ExtendedMarketDataPoint => {
-      const date = new Date(dateStr);
-      // Saturday = 6, Sunday = 0 (markets are closed)
-      const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-      
-      // Find matching data point
-      const dataPoint = data.find((d: MarketDataPoint) => d.date === dateStr);
-      
-      if (dataPoint) {
-        return { ...dataPoint, isWeekend: false };
-      } else if (isWeekend) {
-        // Only create placeholder for actual weekends
-        return {
-          date: dateStr,
-          open: 0,
-          high: 0,
-          low: 0,
-          close: 0,
-          volume: 0,
-          isWeekend: true
-        };
-      } else {
-        // For weekdays with missing data, try to get the most recent available data
-        // or return a placeholder indicating no data available
-        return {
-          date: dateStr,
-          open: 0,
-          high: 0,
-          low: 0,
-          close: 0,
-          volume: 0,
-          isWeekend: false // This is a weekday, just no data available
-        };
+  };
+
+  const getFilteredData = (data: MarketDataPoint[], period: TimeframeOption): ExtendedMarketDataPoint[] => {
+    if (period === 'week') {
+      // For week view, show all calendar days including weekends (your existing logic)
+      const today = new Date();
+      const last7Days: string[] = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        // Format date manually to avoid timezone issues
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        last7Days.push(`${year}-${month}-${day}`);
       }
-    });
+      
+      return last7Days.map((dateStr: string): ExtendedMarketDataPoint => {
+        // Use local date parsing to avoid timezone shifts
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const date = new Date(year, month - 1, day); // month is 0-indexed
+        // Saturday = 6, Sunday = 0 (markets are closed)
+        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+        
+        // Find matching data point
+        const dataPoint = data.find((d: MarketDataPoint) => d.date === dateStr);
+        
+        if (dataPoint) {
+          return { ...dataPoint, isWeekend: false };
+        } else if (isWeekend) {
+          // Return weekend placeholder for Saturday and Sunday only
+          return {
+            date: dateStr,
+            open: 0,
+            high: 0,
+            low: 0,
+            close: 0,
+            volume: 0,
+            isWeekend: true
+          };
+        } else {
+          // For weekdays with missing data, still show as no data but not weekend
+          return {
+            date: dateStr,
+            open: 0,
+            high: 0,
+            low: 0,
+            close: 0,
+            volume: 0,
+            isWeekend: false
+          };
+        }
+      });
+    } else {
+      // For all other timeframes, just return the data from the API as-is
+      // The API already returned the correct timeframe data
+      return data
+        .map(d => ({ ...d, isWeekend: false }))
+        .reverse(); // Show most recent first
+    }
+  };
+
+  const getTimeframeLabel = (period: TimeframeOption): string => {
+    switch (period) {
+      case 'week': return 'Past Week';
+      case '3month': return 'Past 3 Months';
+      case '6month': return 'Past 6 Months';
+      case 'ytd': return 'Year to Date';
+      case '1year': return 'Past Year';
+      case '5year': return 'Past 5 Years';
+      case 'all': return 'All Available Data';
+      default: return 'Historical Data';
+    }
+  };
+
+  const getYahooRange = (period: TimeframeOption): string => {
+    switch (period) {
+      case 'week':
+        return '7d';
+      case '3month':
+        return '3mo';
+      case '6month':
+        return '6mo';
+      case 'ytd':
+        return 'ytd';
+      case '1year':
+        return '1y';
+      case '5year':
+        return '5y';
+      case 'all':
+        return 'max';
+      default:
+        return '1mo';
+    }
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -77,16 +149,26 @@ const ShowHistorical: React.FC = () => {
       setError(null);
       
       try {
-        const data = await getHistoricalPrices(symbol);
-        // Get last 7 calendar days (including weekends)
-        const lastWeek = getLastSevenDays(data);
-        setHistoricalData(lastWeek);
+        const range = getYahooRange(timeframe);
+        const data = await getHistoricalPrices(symbol, range);
+        // Get filtered data based on selected timeframe
+        const filteredData = getFilteredData(data, timeframe);
+        setHistoricalData(filteredData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch historical data');
         setHistoricalData([]);
       } finally {
         setLoading(false);
       }
+    }
+  };
+
+  const handleTimeframeChange = (newTimeframe: TimeframeOption) => {
+    setTimeframe(newTimeframe);
+    // If we have data already, re-filter it
+    if (historicalData.length > 0 && selectedSymbol) {
+      // Re-search with new timeframe
+      handleSearch({ preventDefault: () => {} } as React.FormEvent);
     }
   };
 
@@ -97,7 +179,8 @@ const ShowHistorical: React.FC = () => {
     return date.toLocaleDateString('en-US', { 
       weekday: 'short', 
       month: 'short', 
-      day: 'numeric' 
+      day: 'numeric',
+      year: timeframe === 'week' ? undefined : 'numeric' // Show year for longer timeframes
     });
   };
 
@@ -121,7 +204,7 @@ const ShowHistorical: React.FC = () => {
               <CardTitle>Search Historical Data</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSearch} className="flex gap-2">
+              <form onSubmit={handleSearch} className="flex gap-2 mb-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <Input
@@ -144,9 +227,81 @@ const ShowHistorical: React.FC = () => {
                   )}
                 </Button>
               </form>
+              
+              {/* Timeframe Selector */}
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar size={16} className="text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">Timeframe:</span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 mb-4">
+                <Button
+                  type="button"
+                  variant={timeframe === 'week' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleTimeframeChange('week')}
+                  disabled={loading}
+                >
+                  1W
+                </Button>
+                <Button
+                  type="button"
+                  variant={timeframe === '3month' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleTimeframeChange('3month')}
+                  disabled={loading}
+                >
+                  3M
+                </Button>
+                <Button
+                  type="button"
+                  variant={timeframe === '6month' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleTimeframeChange('6month')}
+                  disabled={loading}
+                >
+                  6M
+                </Button>
+                <Button
+                  type="button"
+                  variant={timeframe === 'ytd' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleTimeframeChange('ytd')}
+                  disabled={loading}
+                >
+                  YTD
+                </Button>
+                <Button
+                  type="button"
+                  variant={timeframe === '1year' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleTimeframeChange('1year')}
+                  disabled={loading}
+                >
+                  1Y
+                </Button>
+                <Button
+                  type="button"
+                  variant={timeframe === '5year' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleTimeframeChange('5year')}
+                  disabled={loading}
+                >
+                  5Y
+                </Button>
+                <Button
+                  type="button"
+                  variant={timeframe === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleTimeframeChange('all')}
+                  disabled={loading}
+                >
+                  ALL
+                </Button>
+              </div>
+
               {selectedSymbol && (
-                <p className="mt-2 text-sm text-gray-600">
-                  Showing historical data for: <span className="font-semibold">{selectedSymbol}</span>
+                <p className="text-sm text-gray-600">
+                  Showing {getTimeframeLabel(timeframe).toLowerCase()} data for: <span className="font-semibold">{selectedSymbol}</span>
                 </p>
               )}
               {error && (
@@ -160,7 +315,9 @@ const ShowHistorical: React.FC = () => {
           {/* Historical Data Display */}
           <Card>
             <CardHeader>
-              <CardTitle>Past Week Data - {selectedSymbol || 'Historical Market Analysis'}</CardTitle>
+              <CardTitle>
+                {getTimeframeLabel(timeframe)} Data - {selectedSymbol || 'Historical Market Analysis'}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -226,7 +383,7 @@ const ShowHistorical: React.FC = () => {
                 </div>
               ) : (
                 <p className="text-gray-600">
-                  Search for a stock symbol to view real historical market data for the past week.
+                  Search for a stock symbol to view real historical market data.
                 </p>
               )}
             </CardContent>
