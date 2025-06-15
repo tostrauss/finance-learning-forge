@@ -38,6 +38,21 @@ const Layout = ({ children }: LayoutProps) => {
     );
   }
 
+  // Helper function to get user display name
+  const getUserDisplayName = () => {
+    if (!user) return 'User';
+
+    // Try different possible properties for display name
+    if ('displayName' in user && user.displayName) return user.displayName;
+    if ('name' in user && user.name) return user.name;
+    if ('firstName' in user && user.firstName) {
+      const lastName = 'lastName' in user && user.lastName ? ` ${user.lastName}` : '';
+      return `${user.firstName}${lastName}`;
+    }
+    if (user.email) return user.email.split('@')[0]; // Use email username part
+    return 'User';
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-app-light-gray">
       <Sidebar />
@@ -50,20 +65,20 @@ const Layout = ({ children }: LayoutProps) => {
                 onClick={() => setMenuOpen((o) => !o)}
                 className="px-4 py-2 bg-app-pink hover:bg-app-pink/90 text-white rounded"
               >
-                {user.displayName || user.email || 'User'}
+                {getUserDisplayName()}
               </button>
               {menuOpen && (
                 <div className="absolute right-4 top-full mt-2 w-40 bg-white border rounded shadow-lg z-10">
                   <Link
                     to="/dashboard"
-                    onClick={() => setMenuOpen(false)} // Close menu on navigation
+                    onClick={() => setMenuOpen(false)}
                     className="block px-4 py-2 hover:bg-gray-100"
                   >
                     Dashboard
                   </Link>
                   <Link
                     to="/profile"
-                    onClick={() => setMenuOpen(false)} // Close menu on navigation
+                    onClick={() => setMenuOpen(false)}
                     className="block px-4 py-2 hover:bg-gray-100"
                   >
                     Profile
@@ -71,7 +86,7 @@ const Layout = ({ children }: LayoutProps) => {
                   <button
                     onClick={() => {
                       logout();
-                      setMenuOpen(false); // Close menu
+                      setMenuOpen(false);
                       navigate('/signin');
                     }}
                     className="w-full text-left px-4 py-2 hover:bg-gray-100"
