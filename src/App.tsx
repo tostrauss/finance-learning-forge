@@ -6,9 +6,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PracticeProvider } from "@/contexts/PracticeContext";
-import { LearningProvider } from "@/contexts/LearningContext"; // Changed import path
+import { LearningProvider } from "@/contexts/LearningContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { User as FirebaseUser } from 'firebase/auth'; // Import Firebase User type
+import { User as FirebaseUser } from 'firebase/auth';
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Learning from "./pages/Learning";
@@ -18,13 +18,14 @@ import Quiz from "./pages/Quiz";
 import Dashboard from "./pages/Dashboard";
 import Watchlist from "./pages/watchlist";
 import Backtesting from "./pages/Backtesting";
+import ShowHistorical from "./pages/ShowHistorical";
 import FinanceLearningPath from "./components/learning/FinanceLearningPath";
 import CurriculumPathway from "./components/learning/CurriculumPathway";
 import PracticePage from "./pages/Practice";
 import LearningLayout from "./components/learning/LearningLayout";
 import WatchlistLayout from "./components/trading/WatchlistLayout";
 import Signin from "../src/pages/Signin"; 
-import Signup from "../src/pages/Signup"; // Changed to default import if Signup.tsx uses default export
+import Signup from "../src/pages/Signup";
 
 const queryClient = new QueryClient();
 
@@ -47,16 +48,20 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        {/* AuthProvider must wrap all Route consumers */}
         <AuthProvider>
           <Routes>
             <Route path="/signin" element={<Signin />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />            {/* Wrap watchlist route with WatchlistLayout */}
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/show-historical" element={<ShowHistorical />} />
+            
+            {/* Wrap watchlist route with WatchlistLayout */}
             <Route element={<WatchlistLayout />}>
               <Route path="/watchlist" element={<Watchlist />} />
-            </Route>            <Route path="/practice" element={<PracticePageWithProvider />} />
+            </Route>
+            
+            <Route path="/practice" element={<PracticePageWithProvider />} />
             <Route path="/backtesting" element={<Backtesting />} />
             
             {/* Learning routes wrapped with LearningLayout */}

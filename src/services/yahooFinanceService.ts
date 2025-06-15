@@ -6,8 +6,17 @@ export interface AutocompleteQuote {
   shortname?: string;
   longname?: string;
   name?: string;
-  regularMarketPrice?: number; // Or whatever the actual field name is, e.g., currentPrice, price
-  // Add any other relevant fields
+  regularMarketPrice?: number;
+}
+
+// Add the MarketDataPoint interface
+export interface MarketDataPoint {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume?: number;
 }
 
 // Response type for autocomplete
@@ -30,10 +39,10 @@ export type HistoricalResponse = {
     result: [{
       timestamp: number[];
       indicators: { 
-        quote: [IndicatorQuote] // Use the more specific IndicatorQuote type
+        quote: [IndicatorQuote];
       };
     }];
-    error: any | null; // It's good practice to type the error as well if known
+    error: any | null;
   };
 };
 
@@ -96,8 +105,9 @@ export async function getHistoricalPrices(
           return null;
         }
 
+        // Update the date formatting in the return statement
         return {
-          date: new Date(ts * 1000).toISOString().slice(0, 10),
+          date: new Date(ts * 1000).toISOString().split('T')[0], // This gives YYYY-MM-DD
           open,
           high,
           low,
