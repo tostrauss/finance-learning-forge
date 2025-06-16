@@ -20,6 +20,7 @@ import Watchlist from "./pages/watchlist";
 import Backtesting from "./pages/Backtesting";
 import ShowHistorical from "./pages/ShowHistorical";
 import Charting from "./pages/Charting";
+import Indicators from "./pages/Indicators";
 import FinanceLearningPath from "./components/learning/FinanceLearningPath";
 import CurriculumPathway from "./components/learning/CurriculumPathway";
 import PracticePage from "./pages/Practice";
@@ -34,9 +35,6 @@ const queryClient = new QueryClient();
 const PracticePageWithProvider = () => {
   const { user } = useAuth();
   return (
-    // Cast the user to FirebaseUser | null.
-    // Ideally, ensure AuthContext provides user in the expected type,
-    // or PracticeContext adapts to the type from AuthContext.
     <PracticeProvider user={user as FirebaseUser | null}>
       <PracticePage />
     </PracticeProvider>
@@ -57,6 +55,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/show-historical" element={<ShowHistorical />} />
             <Route path="/charting" element={<Charting />} />
+            <Route path="/indicators" element={<Indicators />} />
             
             {/* Wrap watchlist route with WatchlistLayout */}
             <Route element={<WatchlistLayout />}>

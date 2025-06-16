@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   History,
+  TrendingUp,
 } from 'lucide-react';
 
 type NavItemProps = {
@@ -61,6 +62,7 @@ const Sidebar = () => {
     { to: "/watchlist",       icon: <Star size={18} />,           label: "Watchlist" },
     { to: "/stock-analysis",  icon: <BarChart2 size={18} />,      label: "Stock Analysis" },
     { to: "/charting",        icon: <LineChart size={18} />,      label: "Charting" },
+    { to: "/indicators",      icon: <TrendingUp size={18} />,     label: "Indicators" },
     { to: "/show-historical", icon: <History size={18} />,        label: "Historical Data" },
     { to: "/options-trading", icon: <FileSpreadsheet size={18} />, label: "Options Trading" },
     { to: "/backtesting",     icon: <Clock size={18} />,          label: "Backtesting" },
