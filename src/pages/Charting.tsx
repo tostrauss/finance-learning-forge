@@ -1,7 +1,7 @@
 import Layout from '@/components/Layout';
 import { useWatchlistManager, WatchlistBoard } from '@/hooks/useWatchlistManager';
 import { useAuth } from '@/contexts/AuthContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import StockChart from '@/components/StockChart';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,8 +17,16 @@ const ChartingPage = () => {
   } = useWatchlistManager();
 
   const [selectedWatchlist, setSelectedWatchlist] = useState<WatchlistBoard | null>(null);
-  const [selectedSymbol, setSelectedSymbol] = useState<string>('');
+  const [selectedSymbol, setSelectedSymbol] = useState<string>('SPY'); // Default to S&P 500
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Auto-load S&P 500 on page load
+  useEffect(() => {
+    // Only set SPY if no symbol is already selected
+    if (!selectedSymbol) {
+      setSelectedSymbol('SPY');
+    }
+  }, []);
 
   const handleSelectWatchlist = (watchlist: WatchlistBoard) => {
     setSelectedWatchlist(watchlist);
@@ -26,7 +34,7 @@ const ChartingPage = () => {
     if (watchlist.items.length > 0) {
       setSelectedSymbol(watchlist.items[0].symbol);
     } else {
-      setSelectedSymbol('');
+      setSelectedSymbol('SPY'); // Fallback to S&P 500
     }
     console.log("Selected watchlist for charting:", watchlist);
   };
@@ -51,6 +59,13 @@ const ChartingPage = () => {
     setSearchQuery(e.target.value);
   };
 
+  // Quick access button for S&P 500
+  const handleLoadSP500 = () => {
+    setSelectedSymbol('SPY');
+    setSelectedWatchlist(null);
+    setSearchQuery('');
+  };
+
   return (
     <Layout>
       <div className="flex h-full">
@@ -59,6 +74,22 @@ const ChartingPage = () => {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-app-purple">Chart Selection</h2>
           </div>
+          
+          {/* Quick Access Section */}
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Quick Access:</h3>
+            <Button 
+              onClick={handleLoadSP500}
+              variant={selectedSymbol === 'SPY' ? 'default' : 'outline'}
+              size="sm"
+              className="w-full mb-2"
+            >
+              📈 S&P 500 (SPY)
+            </Button>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-200 my-4"></div>
           
           {/* Search Section */}
           <div className="mb-6">
@@ -87,7 +118,7 @@ const ChartingPage = () => {
               </Button>
             </form>
             
-            {selectedSymbol && !selectedWatchlist && (
+            {selectedSymbol && !selectedWatchlist && selectedSymbol !== 'SPY' && (
               <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
                 Currently charting: <span className="font-semibold">{selectedSymbol}</span>
               </div>
@@ -174,7 +205,10 @@ const ChartingPage = () => {
             {selectedSymbol && (
               <div className="text-right">
                 <p className="text-sm text-gray-600">Currently Viewing:</p>
-                <p className="text-lg font-semibold text-app-purple">{selectedSymbol}</p>
+                <p className="text-lg font-semibold text-app-purple">
+                  {selectedSymbol}
+                  {selectedSymbol === 'SPY' && <span className="text-sm text-gray-600 ml-2">(S&P 500)</span>}
+                </p>
               </div>
             )}
           </div>
@@ -226,13 +260,13 @@ const ChartingPage = () => {
 
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="font-medium text-gray-900 mb-2">Chart Features:</h3>
-                    <ul className="text-gray-700 text-sm space-y-1">
-                      <li>• Real-time intraday data (5-minute and 15-minute intervals)</li>
-                      <li>• Historical daily data (1 week to all available data)</li>
-                      <li>• Interactive price charts with trend indicators</li>
-                      <li>• Multiple timeframe analysis</li>
-                      <li>• Live price updates and change indicators</li>
-                    </ul>
+                    <div className="text-gray-700 text-sm space-y-1">
+                      <div>Real-time intraday data (5-minute and 15-minute intervals)</div>
+                      <div>Historical daily data (1 week to all available data)</div>
+                      <div>Interactive price charts with trend indicators</div>
+                      <div>Multiple timeframe analysis</div>
+                      <div>Live price updates and change indicators</div>
+                    </div>
                   </div>
                 </div>
               </CardContent>

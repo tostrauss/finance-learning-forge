@@ -36,14 +36,17 @@ const StockChart: React.FC<StockChartProps> = ({
   const [isHovering, setIsHovering] = useState(false);
 
   const isIntradayTimeframe = (period: TimeframeOption): boolean => {
-    return period === 'today' || period === '5days';
+    return period === 'today' || period === '5days' || period === 'week' || period === '3month' || period === '6month';
   };
 
   const getIntradayInterval = (period: TimeframeOption): string => {
     switch (period) {
-      case 'today': return '5m';
-      case '5days': return '15m';
-      default: return '5m';
+      case 'today': return '1m';      // 1-minute for today (most granular)
+      case '5days': return '5m';      // 5-minute for 5 days
+      case 'week': return '15m';      // 15-minute for week
+      case '3month': return '1h';     // 1-hour for 3 months
+      case '6month': return '1d';     // Daily for 6 months (but treated as intraday)
+      default: return '1m';
     }
   };
 
@@ -66,9 +69,9 @@ const StockChart: React.FC<StockChartProps> = ({
     switch (period) {
       case 'today': return 'Today (Intraday)';
       case '5days': return 'Past 5 Days (Intraday)';
-      case 'week': return 'Past Week';
-      case '3month': return 'Past 3 Months';
-      case '6month': return 'Past 6 Months';
+      case 'week': return 'Past Week (Intraday)';
+      case '3month': return 'Past 3 Months (Hourly)';
+      case '6month': return 'Past 6 Months (Daily)';
       case 'ytd': return 'Year to Date';
       case '1year': return 'Past Year';
       case '5year': return 'Past 5 Years';
@@ -80,55 +83,15 @@ const StockChart: React.FC<StockChartProps> = ({
   // Add the same filtering logic from ShowHistorical
   const getFilteredData = (data: MarketDataPoint[], period: TimeframeOption): ExtendedMarketDataPoint[] => {
     if (period === 'week') {
-      // For week view, show all calendar days including weekends
-      const today = new Date();
-      const last7Days: string[] = [];
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(today.getDate() - i);
-        // Format date manually to avoid timezone issues
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        last7Days.push(`${year}-${month}-${day}`);
-      }
-      
-      return last7Days.map((dateStr: string): ExtendedMarketDataPoint => {
-        // Use local date parsing to avoid timezone shifts
-        const [year, month, day] = dateStr.split('-').map(Number);
-        const date = new Date(year, month - 1, day); // month is 0-indexed
-        // Saturday = 6, Sunday = 0 (markets are closed)
-        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-        
-        // Find matching data point
-        const dataPoint = data.find((d: MarketDataPoint) => d.date === dateStr);
-        
-        if (dataPoint) {
-          return { ...dataPoint, isWeekend: false };
-        } else if (isWeekend) {
-          // Return weekend placeholder for Saturday and Sunday only
-          return {
-            date: dateStr,
-            open: 0,
-            high: 0,
-            low: 0,
-            close: 0,
-            volume: 0,
-            isWeekend: true
-          };
-        } else {
-          // For weekdays with missing data, still show as no data but not weekend
-          return {
-            date: dateStr,
-            open: 0,
-            high: 0,
-            low: 0,
-            close: 0,
-            volume: 0,
-            isWeekend: false
-          };
-        }
+      // For week view with intraday data, don't try to create calendar days
+      // Just return the intraday data in chronological order
+      const sortedData = [...data].sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateA - dateB; // Ascending order (oldest first)
       });
+      
+      return sortedData.map(d => ({ ...d, isWeekend: false }));
     } else {
       // For all other timeframes, return data in chronological order (oldest to newest)
       // Sort by date to ensure proper chronological order
@@ -645,7 +608,7 @@ const StockChart: React.FC<StockChartProps> = ({
               <Clock size={16} className="text-blue-500" />
               <span className="text-sm font-medium text-gray-700">Intraday:</span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant={timeframe === 'today' ? 'default' : 'outline'}
                 size="sm"
@@ -662,6 +625,30 @@ const StockChart: React.FC<StockChartProps> = ({
               >
                 5D
               </Button>
+              <Button
+                variant={timeframe === 'week' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleTimeframeChange('week')}
+                disabled={loading}
+              >
+                1W
+              </Button>
+              <Button
+                variant={timeframe === '3month' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleTimeframeChange('3month')}
+                disabled={loading}
+              >
+                3M
+              </Button>
+              <Button
+                variant={timeframe === '6month' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleTimeframeChange('6month')}
+                disabled={loading}
+              >
+                6M
+              </Button>
             </div>
           </div>
 
@@ -672,7 +659,7 @@ const StockChart: React.FC<StockChartProps> = ({
               <span className="text-sm font-medium text-gray-700">Daily:</span>
             </div>
             <div className="flex gap-2 flex-wrap">
-              {(['week', '3month', '6month', 'ytd', '1year', '5year', 'all'] as TimeframeOption[]).map((tf) => (
+              {(['ytd', '1year', '5year', 'all'] as TimeframeOption[]).map((tf) => (
                 <Button
                   key={tf}
                   variant={timeframe === tf ? 'default' : 'outline'}
@@ -680,10 +667,7 @@ const StockChart: React.FC<StockChartProps> = ({
                   onClick={() => handleTimeframeChange(tf)}
                   disabled={loading}
                 >
-                  {tf === 'week' ? '1W' : 
-                   tf === '3month' ? '3M' : 
-                   tf === '6month' ? '6M' : 
-                   tf === 'ytd' ? 'YTD' : 
+                  {tf === 'ytd' ? 'YTD' : 
                    tf === '1year' ? '1Y' : 
                    tf === '5year' ? '5Y' : 'ALL'}
                 </Button>
