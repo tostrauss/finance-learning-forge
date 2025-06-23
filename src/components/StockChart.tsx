@@ -289,7 +289,7 @@ const StockChart: React.FC<StockChartProps> = ({
       const newPanY = Math.max(-maxYOffset, Math.min(maxYOffset, panOffset.y + panDelta));
       setPanOffset(prev => ({ ...prev, y: newPanY }));
     } else {
-      // Regular scroll for zooming - FIXED: Better pan offset handling
+      // Regular scroll for zooming - FIXED: Complete the zoom logic
       const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
       const newZoomLevel = Math.max(1, Math.min(10, zoomLevel * zoomFactor));
       
@@ -304,6 +304,7 @@ const StockChart: React.FC<StockChartProps> = ({
           const oldMaxOffset = Math.max(0, plotWidth * (zoomLevel - 1) + plotWidth * 0.8);
           const newMaxOffset = Math.max(0, plotWidth * (newZoomLevel - 1) + plotWidth * 0.8);
           
+          // Zoom towards mouse position
           let newPanX = panOffset.x + (newZoomLevel - zoomLevel) * relativeMouseX * plotWidth;
           newPanX = Math.max(-plotWidth * 0.4, Math.min(newMaxOffset, newPanX));
           
@@ -314,6 +315,17 @@ const StockChart: React.FC<StockChartProps> = ({
       }
     }
   };
+
+  // Add useEffect to attach wheel event listener
+  useEffect(() => {
+    const svgElement = svgRef.current;
+    if (svgElement) {
+      svgElement.addEventListener('wheel', handleWheel, { passive: false });
+      return () => {
+        svgElement.removeEventListener('wheel', handleWheel);
+      };
+    }
+  }, [zoomLevel, panOffset.x, panOffset.y, height]);
 
   const resetZoom = () => {
     setZoomLevel(1);
