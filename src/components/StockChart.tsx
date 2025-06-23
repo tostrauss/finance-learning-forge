@@ -631,7 +631,7 @@ const StockChart: React.FC<StockChartProps> = ({
                 strokeWidth="3"
               />
               
-              {/* Data points */}
+              {/* Data points - REMOVED: Commented out to show only the line
               {validDataPoints.map((data, index) => {
                 const x = leftPadding + (index / (validDataPoints.length - 1)) * zoomedPlotWidth - panOffset.x;
                 const y = topPadding + ((adjustedMaxPrice - data.close) / adjustedPriceRange) * plotHeight + panOffset.y;
@@ -654,6 +654,7 @@ const StockChart: React.FC<StockChartProps> = ({
                 }
                 return null;
               })}
+              */}
               
               {/* Crosshair */}
               {isHovering && hoveredDataPoint && 
