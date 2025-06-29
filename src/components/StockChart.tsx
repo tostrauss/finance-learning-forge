@@ -35,9 +35,9 @@ const StockChart: React.FC<StockChartProps> = ({
   const [hoveredDataPoint, setHoveredDataPoint] = useState<ExtendedMarketDataPoint | null>(null);
   const [isHovering, setIsHovering] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 }); // Changed to object for X and Y
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0, panX: 0, panY: 0 }); // Updated drag start
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0, panX: 0, panY: 0 });
   const [selectedInterval, setSelectedInterval] = useState('15m');
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -73,6 +73,203 @@ const StockChart: React.FC<StockChartProps> = ({
     }
   };
 
+  // Enhanced Y-axis scaling based on timeframe and interval
+  const getOptimalPriceRange = (validPrices: number[], timeframe: TimeframeOption, interval: string) => {
+    if (validPrices.length === 0) return { min: 0, max: 100, padding: 10 };
+
+    const minPrice = Math.min(...validPrices);
+    const maxPrice = Math.max(...validPrices);
+    const priceRange = maxPrice - minPrice;
+
+    // Dynamic padding based on timeframe and volatility
+    let paddingMultiplier = 0.05; // Default 5% padding
+
+    // Adjust padding based on specific timeframe characteristics
+    switch (timeframe) {
+      case 'today':
+        // Very short-term intraday - minimal padding for granular view
+        paddingMultiplier = 0.02;
+        break;
+      case '5days':
+        // Short-term intraday - small padding
+        paddingMultiplier = 0.03;
+        break;
+      case 'week':
+        // Week intraday - moderate padding but still tight
+        paddingMultiplier = 0.04;
+        break;
+      case '1month':
+        // Month intraday - slightly more padding
+        paddingMultiplier = 0.05;
+        break;
+      case '3month':
+      case '6month':
+        // Medium-term data - standard padding
+        paddingMultiplier = 0.08;
+        break;
+      case 'ytd':
+      case '1year':
+        // Longer-term data - more padding for better visualization
+        paddingMultiplier = 0.10;
+        break;
+      case '5year':
+      case 'all':
+        // Very long-term data - maximum padding
+        paddingMultiplier = 0.15;
+        break;
+    }
+
+    // Further adjust padding based on interval granularity for intraday timeframes
+    if (isIntradayTimeframe(timeframe)) {
+      const intervalMultiplier = getIntervalPaddingMultiplier(interval, timeframe);
+      paddingMultiplier *= intervalMultiplier;
+    }
+
+    // Calculate volatility-adjusted padding
+    const volatility = priceRange / minPrice; // Price range as percentage of minimum price
+    
+    // If volatility is very low (stable price), use minimum padding
+    if (volatility < 0.005) {
+      paddingMultiplier = Math.max(paddingMultiplier, 0.015); // Minimum 1.5% for very stable prices
+    }
+    // If volatility is very high, cap the padding
+    else if (volatility > 0.3) {
+      paddingMultiplier = Math.min(paddingMultiplier, 0.06); // Cap at 6% for very volatile prices
+    }
+
+    const padding = Math.max(priceRange * paddingMultiplier, 0.01); // Minimum $0.01 padding
+    
+    return {
+      min: minPrice - padding,
+      max: maxPrice + padding,
+      padding: padding
+    };
+  };
+
+  // New helper function to get interval-specific padding multipliers
+  const getIntervalPaddingMultiplier = (interval: string, timeframe: TimeframeOption): number => {
+    switch (interval) {
+      case '1m':
+      case '2m':
+        // Very high frequency - minimal padding for granular detail
+        return timeframe === 'today' ? 0.4 : 0.5;
+      case '5m':
+        // High frequency - reduced padding
+        return timeframe === 'today' ? 0.6 : timeframe === '5days' ? 0.7 : 0.8;
+      case '15m':
+        // Medium frequency - moderate padding
+        return timeframe === '5days' ? 0.8 : timeframe === 'week' ? 0.9 : 1.0;
+      case '30m':
+        // Lower frequency - standard padding
+        return timeframe === 'week' ? 0.9 : timeframe === '1month' ? 1.0 : 1.1;
+      case '60m':
+      case '90m':
+        // Lowest intraday frequency - slightly more padding
+        return 1.0;
+      default:
+        return 1.0;
+    }
+  };
+
+  // Enhanced Y-axis label generation with timeframe-specific logic
+  const generateYAxisLabels = (minPrice: number, maxPrice: number, timeframe: TimeframeOption): number[] => {
+    const priceRange = maxPrice - minPrice;
+    
+    // Determine number of Y-axis labels based on timeframe
+    let numLabels = 6;
+    switch (timeframe) {
+      case 'today':
+        numLabels = 10; // Very granular for today
+        break;
+      case '5days':
+        numLabels = 8; // More granular for 5 days
+        break;
+      case 'week':
+        numLabels = 7; // Moderate granularity for week
+        break;
+      case '1month':
+        numLabels = 6; // Standard for month
+        break;
+      case '3month':
+      case '6month':
+      case 'ytd':
+        numLabels = 5;
+        break;
+      case '1year':
+      case '5year':
+      case 'all':
+        numLabels = 4; // Fewer labels for long-term charts
+        break;
+    }
+
+    // Calculate appropriate step size
+    const rawStep = priceRange / numLabels;
+    
+    // For intraday timeframes, use more precise step calculation
+    if (isIntradayTimeframe(timeframe)) {
+      // Use smaller step sizes for intraday data
+      const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+      const normalizedStep = rawStep / magnitude;
+      
+      let niceStep;
+      if (normalizedStep <= 0.5) niceStep = 0.5;
+      else if (normalizedStep <= 1) niceStep = 1;
+      else if (normalizedStep <= 2) niceStep = 2;
+      else if (normalizedStep <= 5) niceStep = 5;
+      else niceStep = 10;
+      
+      const step = niceStep * magnitude;
+      
+      // Generate labels with finer precision
+      const labels: number[] = [];
+      const startValue = Math.ceil(minPrice / step) * step;
+      
+      for (let value = startValue; value <= maxPrice; value += step) {
+        labels.push(parseFloat(value.toFixed(4))); // Higher precision for intraday
+      }
+      
+      // Ensure we have reasonable coverage
+      if (labels.length === 0 || labels[0] > minPrice + priceRange * 0.05) {
+        labels.unshift(parseFloat(minPrice.toFixed(4)));
+      }
+      if (labels.length === 0 || labels[labels.length - 1] < maxPrice - priceRange * 0.05) {
+        labels.push(parseFloat(maxPrice.toFixed(4)));
+      }
+      
+      return labels;
+    } else {
+      // Original logic for non-intraday timeframes
+      const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+      const normalizedStep = rawStep / magnitude;
+      
+      let niceStep;
+      if (normalizedStep <= 1) niceStep = 1;
+      else if (normalizedStep <= 2) niceStep = 2;
+      else if (normalizedStep <= 5) niceStep = 5;
+      else niceStep = 10;
+      
+      const step = niceStep * magnitude;
+      
+      // Generate labels
+      const labels: number[] = [];
+      const startValue = Math.ceil(minPrice / step) * step;
+      
+      for (let value = startValue; value <= maxPrice; value += step) {
+        labels.push(value);
+      }
+      
+      // Ensure we have at least min and max
+      if (labels.length === 0 || labels[0] > minPrice + priceRange * 0.1) {
+        labels.unshift(minPrice);
+      }
+      if (labels[labels.length - 1] < maxPrice - priceRange * 0.1) {
+        labels.push(maxPrice);
+      }
+      
+      return labels;
+    }
+  };
+
   const getFilteredData = (data: MarketDataPoint[], period: TimeframeOption): ExtendedMarketDataPoint[] => {
     const sortedData = [...data].sort((a, b) => {
       const dateA = new Date(a.date).getTime();
@@ -90,12 +287,11 @@ const StockChart: React.FC<StockChartProps> = ({
         case '5days': return ['1m', '2m', '5m', '15m', '30m', '60m', '90m'];
         case 'week': return ['1m', '2m', '5m', '15m', '30m', '60m', '90m'];
         case '1month': return ['5m', '15m', '30m', '60m', '90m'];
-        case '3month': return ['1d']; // 3-month range only supports daily data
-        case '6month': return ['1d']; // 6-month range only supports daily data
+        case '3month': return ['1d'];
+        case '6month': return ['1d'];
         default: return ['1d'];
       }
     } else {
-      // For daily and longer timeframes (ytd, 1year, 5year, all)
       return ['1d', '5d', '1wk', '1mo'];
     }
   };
@@ -122,23 +318,21 @@ const StockChart: React.FC<StockChartProps> = ({
 
   const getDefaultInterval = (period: TimeframeOption): string => {
     switch (period) {
-      case 'today': return '1m';        // Shortest: 1 minute
-      case '5days': return '1m';        // Shortest: 1 minute  
-      case 'week': return '1m';         // Shortest: 1 minute
-      case '1month': return '5m';       // Shortest: 5 minutes
-      case '3month': return '1d';       // Only daily data available
-      case '6month': return '1d';       // Only daily data available
-      case 'ytd': return '1d';          // Daily data
-      case '1year': return '1d';        // Daily data
-      case '5year': return '1d';        // Daily data
-      case 'all': return '1d';          // Daily data
+      case 'today': return '5m';      // Changed from '1m' to '5m' for better performance
+      case '5days': return '15m';     // Changed from '1m' to '15m'
+      case 'week': return '30m';      // Changed from '5m' to '30m'
+      case '1month': return '1h';     // Changed from '5m' to '1h'
+      case '3month': return '1d';
+      case '6month': return '1d';
+      case 'ytd': return '1d';
+      case '1year': return '1d';
+      case '5year': return '1wk';     // Changed from '1d' to '1wk' for less data points
+      case 'all': return '1mo';       // Changed from '1d' to '1mo' for manageable data
       default: return '1d';
     }
   };
 
-  // Update the isIntradayTimeframe function to reflect API limitations
   const isIntradayTimeframe = (period: TimeframeOption): boolean => {
-    // Only these timeframes support intraday intervals with Yahoo Finance API
     return period === 'today' || period === '5days' || period === 'week' || period === '1month';
   };
 
@@ -180,13 +374,11 @@ const StockChart: React.FC<StockChartProps> = ({
     
     setTimeframe(newTimeframe);
     
-    // Always use the shortest available interval for the new timeframe
     const shortestInterval = getDefaultInterval(newTimeframe);
     console.log(`Setting interval to: ${shortestInterval}`);
     
     setSelectedInterval(shortestInterval);
     
-    // Fetch data with new timeframe and shortest interval
     fetchChartDataWithInterval(newTimeframe, shortestInterval);
     setHoveredDataPoint(null);
     setIsHovering(false);
@@ -222,15 +414,12 @@ const StockChart: React.FC<StockChartProps> = ({
     const plotHeight = height - 60 - 20 - 60;
     
     if (isDragging) {
-      // Handle dragging for both X and Y pan
       const deltaX = event.clientX - dragStart.x;
       const deltaY = event.clientY - dragStart.y;
       
-      // X-axis panning (time) - FIXED: Allow panning even when zoom is 1
-      const maxXOffset = Math.max(0, plotWidth * (zoomLevel - 1) + plotWidth * 0.8); // Allow extra panning
+      const maxXOffset = Math.max(0, plotWidth * (zoomLevel - 1) + plotWidth * 0.8);
       const newPanX = Math.max(-plotWidth * 0.4, Math.min(maxXOffset, dragStart.panX - deltaX));
       
-      // Y-axis panning (price)
       const maxYOffset = plotHeight * 0.5;
       const newPanY = Math.max(-maxYOffset, Math.min(maxYOffset, dragStart.panY + deltaY));
       
@@ -238,11 +427,9 @@ const StockChart: React.FC<StockChartProps> = ({
       return;
     }
     
-    // Handle hover for price display - FIXED: Account for negative pan offsets
     if (mouseX >= leftPadding && mouseX <= leftPadding + plotWidth &&
         mouseY >= topPadding && mouseY <= topPadding + plotHeight) {
       
-      // Fix: Handle negative pan offsets properly
       const adjustedMouseX = (mouseX - leftPadding + Math.max(0, panOffset.x)) / zoomLevel;
       const relativeX = adjustedMouseX / plotWidth;
       
@@ -270,26 +457,22 @@ const StockChart: React.FC<StockChartProps> = ({
     setIsDragging(false);
   };
 
-  // Also fix the wheel handler for X-axis panning
   const handleWheel = (event: WheelEvent) => {
     event.preventDefault();
     
     if (event.shiftKey) {
-      // Shift + scroll for horizontal panning - FIXED
       const panDelta = event.deltaY * 2;
       const plotWidth = 900 - 80 - 20;
       const maxXOffset = Math.max(0, plotWidth * (zoomLevel - 1) + plotWidth * 0.8);
       const newPanX = Math.max(-plotWidth * 0.4, Math.min(maxXOffset, panOffset.x + panDelta));
       setPanOffset(prev => ({ ...prev, x: newPanX }));
     } else if (event.ctrlKey || event.metaKey) {
-      // Ctrl + scroll for vertical panning
       const panDelta = event.deltaY * 2;
       const plotHeight = height - 60 - 20 - 60;
       const maxYOffset = plotHeight * 0.5;
       const newPanY = Math.max(-maxYOffset, Math.min(maxYOffset, panOffset.y + panDelta));
       setPanOffset(prev => ({ ...prev, y: newPanY }));
     } else {
-      // Regular scroll for zooming - FIXED: Complete the zoom logic
       const zoomFactor = event.deltaY > 0 ? 0.9 : 1.1;
       const newZoomLevel = Math.max(1, Math.min(10, zoomLevel * zoomFactor));
       
@@ -304,7 +487,6 @@ const StockChart: React.FC<StockChartProps> = ({
           const oldMaxOffset = Math.max(0, plotWidth * (zoomLevel - 1) + plotWidth * 0.8);
           const newMaxOffset = Math.max(0, plotWidth * (newZoomLevel - 1) + plotWidth * 0.8);
           
-          // Zoom towards mouse position
           let newPanX = panOffset.x + (newZoomLevel - zoomLevel) * relativeMouseX * plotWidth;
           newPanX = Math.max(-plotWidth * 0.4, Math.min(newMaxOffset, newPanX));
           
@@ -316,7 +498,6 @@ const StockChart: React.FC<StockChartProps> = ({
     }
   };
 
-  // Add useEffect to attach wheel event listener
   useEffect(() => {
     const svgElement = svgRef.current;
     if (svgElement) {
@@ -332,7 +513,6 @@ const StockChart: React.FC<StockChartProps> = ({
     setPanOffset({ x: 0, y: 0 });
   };
 
-  // Enhanced getPriceChange to work with any point in time
   const getPriceChange = (dataPoint?: ExtendedMarketDataPoint) => {
     const validData = chartData.filter(d => !d.isWeekend && d.close > 0);
     
@@ -419,6 +599,7 @@ const StockChart: React.FC<StockChartProps> = ({
     }
   };
 
+  // Enhanced chart rendering with optimized Y-axis
   const renderEnhancedChart = () => {
     if (chartData.length === 0) return null;
 
@@ -428,14 +609,19 @@ const StockChart: React.FC<StockChartProps> = ({
     
     if (validPrices.length === 0) return null;
 
-    const minPrice = Math.min(...validPrices);
-    const maxPrice = Math.max(...validPrices);
-    const priceRange = maxPrice - minPrice;
-    
-    const pricePadding = priceRange * 0.1;
-    const adjustedMinPrice = minPrice - pricePadding;
-    const adjustedMaxPrice = maxPrice + pricePadding;
+    // Use enhanced price range calculation
+    const priceRange = getOptimalPriceRange(validPrices, timeframe, selectedInterval);
+    const adjustedMinPrice = priceRange.min;
+    const adjustedMaxPrice = priceRange.max;
     const adjustedPriceRange = adjustedMaxPrice - adjustedMinPrice;
+    
+    // Debug logging to verify Y-axis scaling
+    console.log(`Y-axis scaling for ${timeframe} (${selectedInterval}):`, {
+      originalRange: `${Math.min(...validPrices).toFixed(2)} - ${Math.max(...validPrices).toFixed(2)}`,
+      adjustedRange: `${adjustedMinPrice.toFixed(2)} - ${adjustedMaxPrice.toFixed(2)}`,
+      padding: priceRange.padding.toFixed(2),
+      dataPoints: validPrices.length
+    });
     
     const chartWidth = 900;
     const chartHeight = height - 60;
@@ -453,25 +639,42 @@ const StockChart: React.FC<StockChartProps> = ({
     
     const zoomedPlotWidth = plotWidth * zoomLevel;
     
-    // Apply both X and Y panning
     const points = validDataPoints.map((data, index) => {
       const x = leftPadding + (index / (validDataPoints.length - 1)) * zoomedPlotWidth - panOffset.x;
       const y = topPadding + ((adjustedMaxPrice - data.close) / adjustedPriceRange) * plotHeight + panOffset.y;
       return `${x},${y}`;
     }).join(' ');
 
-    // Y-axis labels with vertical panning
-    const yAxisLabels: { price: number; y: number }[] = [];
-    const numYLabels = 6;
-    for (let i = 0; i <= numYLabels; i++) {
-      const price = adjustedMinPrice + (adjustedPriceRange * (numYLabels - i) / numYLabels);
-      const y = topPadding + (i / numYLabels) * plotHeight + panOffset.y;
-      yAxisLabels.push({ price, y });
-    }
+    // Enhanced Y-axis labels using the new function
+    const yAxisLabelValues = generateYAxisLabels(adjustedMinPrice, adjustedMaxPrice, timeframe);
+    const yAxisLabels = yAxisLabelValues.map(price => ({
+      price,
+      y: topPadding + ((adjustedMaxPrice - price) / adjustedPriceRange) * plotHeight + panOffset.y
+    }));
 
     // X-axis labels with horizontal panning
     const xAxisLabels: { date: string; x: number; label: string }[] = [];
-    const maxXLabels = Math.min(8, Math.max(4, Math.floor(8 / zoomLevel)));
+    
+    // Adjust number of X-axis labels based on timeframe
+    let maxXLabels;
+    switch (timeframe) {
+      case 'today':
+      case '5days':
+        maxXLabels = Math.min(10, Math.max(6, Math.floor(10 / zoomLevel)));
+        break;
+      case 'week':
+      case '1month':
+        maxXLabels = Math.min(8, Math.max(5, Math.floor(8 / zoomLevel)));
+        break;
+      case '3month':
+      case '6month':
+        maxXLabels = Math.min(6, Math.max(4, Math.floor(6 / zoomLevel)));
+        break;
+      default:
+        maxXLabels = Math.min(5, Math.max(3, Math.floor(5 / zoomLevel)));
+        break;
+    }
+    
     const step = Math.max(1, Math.floor(validDataPoints.length / maxXLabels));
     
     for (let i = 0; i < validDataPoints.length; i += step) {
@@ -503,6 +706,8 @@ const StockChart: React.FC<StockChartProps> = ({
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <span>Zoom: {zoomLevel.toFixed(1)}x</span>
+            <span>• Y-axis: ${adjustedMinPrice.toFixed(2)} - ${adjustedMaxPrice.toFixed(2)}</span>
+            <span>• Padding: {((priceRange.padding / (Math.max(...validPrices) - Math.min(...validPrices))) * 100).toFixed(1)}%</span>
             {(zoomLevel > 1 || panOffset.x !== 0 || panOffset.y !== 0) && (
               <span>• Drag to pan • Scroll to zoom • Shift+scroll: horizontal • Ctrl+scroll: vertical</span>
             )}
@@ -593,31 +798,62 @@ const StockChart: React.FC<StockChartProps> = ({
               fill="url(#grid)" 
             />
             
-            {/* Y-axis labels - only show if within visible range */}
+            {/* Enhanced Y-axis labels with timeframe-specific formatting */}
             {yAxisLabels
               .filter(label => label.y >= topPadding - 20 && label.y <= topPadding + plotHeight + 20)
-              .map((label, index) => (
-              <g key={index}>
-                <line
-                  x1={leftPadding}
-                  y1={label.y}
-                  x2={leftPadding + plotWidth}
-                  y2={label.y}
-                  stroke="#e5e7eb"
-                  strokeWidth="1"
-                  strokeDasharray="2,2"
-                />
-                <text
-                  x={leftPadding - 10}
-                  y={label.y + 4}
-                  fontSize="12"
-                  fill="#6b7280"
-                  textAnchor="end"
-                >
-                  ${label.price.toFixed(2)}
-                </text>
-              </g>
-            ))}
+              .map((label, index) => {
+                // Enhanced price formatting based on timeframe and price magnitude
+                let formattedPrice;
+                
+                // For intraday timeframes, show higher precision
+                if (isIntradayTimeframe(timeframe)) {
+                  if (label.price >= 1000) {
+                    formattedPrice = `$${(label.price / 1000).toFixed(2)}K`;
+                  } else if (label.price >= 100) {
+                    formattedPrice = `$${label.price.toFixed(2)}`;
+                  } else if (label.price >= 10) {
+                    formattedPrice = `$${label.price.toFixed(3)}`;
+                  } else {
+                    formattedPrice = `$${label.price.toFixed(4)}`;
+                  }
+                } else {
+                  // For longer timeframes, use standard precision
+                  if (label.price >= 10000) {
+                    formattedPrice = `$${(label.price / 1000).toFixed(1)}K`;
+                  } else if (label.price >= 1000) {
+                    formattedPrice = `$${(label.price / 1000).toFixed(2)}K`;
+                  } else if (label.price >= 100) {
+                    formattedPrice = `$${label.price.toFixed(0)}`;
+                  } else if (label.price >= 10) {
+                    formattedPrice = `$${label.price.toFixed(1)}`;
+                  } else {
+                    formattedPrice = `$${label.price.toFixed(2)}`;
+                  }
+                }
+
+                return (
+                  <g key={index}>
+                    <line
+                      x1={leftPadding}
+                      y1={label.y}
+                      x2={leftPadding + plotWidth}
+                      y2={label.y}
+                      stroke="#e5e7eb"
+                      strokeWidth="1"
+                      strokeDasharray="2,2"
+                    />
+                    <text
+                      x={leftPadding - 10}
+                      y={label.y + 4}
+                      fontSize="12"
+                      fill="#6b7280"
+                      textAnchor="end"
+                    >
+                      {formattedPrice}
+                    </text>
+                  </g>
+                );
+              })}
             
             <g clipPath="url(#plotClip)">
               {/* X-axis grid lines */}
@@ -635,38 +871,13 @@ const StockChart: React.FC<StockChartProps> = ({
                 </g>
               ))}
               
-              {/* Main price line */}
+              {/* Main price line with stroke width based on timeframe */}
               <polyline
                 points={points}
                 fill="none"
                 stroke={priceStats.isPositive ? "#10b981" : "#ef4444"}
-                strokeWidth="3"
+                strokeWidth={isIntradayTimeframe(timeframe) ? "2" : "3"}
               />
-              
-              {/* Data points - REMOVED: Commented out to show only the line
-              {validDataPoints.map((data, index) => {
-                const x = leftPadding + (index / (validDataPoints.length - 1)) * zoomedPlotWidth - panOffset.x;
-                const y = topPadding + ((adjustedMaxPrice - data.close) / adjustedPriceRange) * plotHeight + panOffset.y;
-                const isHovered = isHovering && hoveredDataPoint?.date === data.date;
-                
-                if (x >= leftPadding - 10 && x <= leftPadding + plotWidth + 10 &&
-                    y >= topPadding - 10 && y <= topPadding + plotHeight + 10) {
-                  return (
-                    <circle
-                      key={index}
-                      cx={x}
-                      cy={y}
-                      r={isHovered ? "6" : "4"}
-                      fill={priceStats.isPositive ? "#10b981" : "#ef4444"}
-                      stroke={isHovered ? "#ffffff" : "none"}
-                      strokeWidth={isHovered ? "2" : "0"}
-                      className="transition-all"
-                    />
-                  );
-                }
-                return null;
-              })}
-              */}
               
               {/* Crosshair */}
               {isHovering && hoveredDataPoint && 
@@ -693,11 +904,20 @@ const StockChart: React.FC<StockChartProps> = ({
                     strokeDasharray="4,4"
                     opacity="0.7"
                   />
+                  {/* Price indicator dot */}
+                  <circle
+                    cx={crosshairX}
+                    cy={crosshairY}
+                    r="4"
+                    fill={priceStats.isPositive ? "#10b981" : "#ef4444"}
+                    stroke="white"
+                    strokeWidth="2"
+                  />
                 </g>
               )}
             </g>
             
-            {/* X-axis labels - only show if within visible range */}
+            {/* X-axis labels */}
             {xAxisLabels
               .filter(label => label.x >= leftPadding - 50 && label.x <= leftPadding + plotWidth + 50)
               .map((label, index) => (
@@ -723,32 +943,32 @@ const StockChart: React.FC<StockChartProps> = ({
               strokeWidth="2"
             />
             
-            {/* Hover tooltip */}
+            {/* Enhanced hover tooltip with price formatting */}
             {isHovering && hoveredDataPoint && 
              crosshairX >= leftPadding && crosshairX <= leftPadding + plotWidth &&
              crosshairY >= topPadding && crosshairY <= topPadding + plotHeight && (
               <g>
                 <rect
-                  x={Math.min(chartWidth - 130, crosshairX + 10)}
-                  y={Math.max(10, crosshairY - 40)}
-                  width="120"
-                  height="35"
+                  x={Math.min(chartWidth - 140, crosshairX + 10)}
+                  y={Math.max(10, crosshairY - 45)}
+                  width="130"
+                  height="40"
                   fill="#374151"
                   rx="4"
-                  opacity="0.9"
+                  opacity="0.95"
                 />
                 <text
-                  x={Math.min(chartWidth - 125, crosshairX + 15)}
-                  y={Math.max(25, crosshairY - 25)}
-                  fontSize="11"
+                  x={Math.min(chartWidth - 135, crosshairX + 15)}
+                  y={Math.max(27, crosshairY - 28)}
+                  fontSize="12"
                   fill="white"
                   fontWeight="600"
                 >
-                  ${hoveredDataPoint.close.toFixed(2)}
+                  ${hoveredDataPoint.close.toFixed(isIntradayTimeframe(timeframe) ? 2 : 2)}
                 </text>
                 <text
-                  x={Math.min(chartWidth - 125, crosshairX + 15)}
-                  y={Math.max(38, crosshairY - 12)}
+                  x={Math.min(chartWidth - 135, crosshairX + 15)}
+                  y={Math.max(42, crosshairY - 13)}
                   fontSize="9"
                   fill="#d1d5db"
                 >
